@@ -5,7 +5,7 @@ import br.com.fiap.oficina.presentation.dto.ClienteResponse
 import org.mapstruct.Mapper
 import org.mapstruct.factory.Mappers
 
-@Mapper
+@Mapper(componentModel = "spring")
 interface ClienteMapper {
     companion object {
         val INSTANCE: ClienteMapper = Mappers.getMapper(ClienteMapper::class.java)
