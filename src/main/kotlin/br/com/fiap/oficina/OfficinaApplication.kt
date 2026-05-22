@@ -1,9 +1,9 @@
-package br.com.fiap.oficina.infrastructure
+package br.com.fiap.oficina
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication(scanBasePackages = ["br.com.fiap.oficina"])
+@SpringBootApplication
 class OfficinaApplication
 
 fun main(args: Array<String>) {
