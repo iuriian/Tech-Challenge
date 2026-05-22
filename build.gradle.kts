@@ -1,6 +1,7 @@
 plugins {
 	kotlin("jvm") version "2.2.21"
 	kotlin("plugin.spring") version "2.2.21"
+	kotlin("plugin.jpa") version "2.2.21"
 	kotlin("kapt") version "2.2.21"
 	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
@@ -12,6 +13,7 @@ group = "br.com.fiap.oficina"
 version = "0.0.1"
 
 val mapstructVersion = "1.6.3"
+val openapiVersion  = "2.8.5"
 
 java {
 	toolchain {
@@ -25,10 +27,16 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.mapstruct:mapstruct:$mapstructVersion")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapiVersion")
+	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
 	kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
+	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
