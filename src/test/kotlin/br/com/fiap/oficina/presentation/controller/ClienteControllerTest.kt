@@ -28,7 +28,7 @@ class ClienteControllerTest {
 
     @Test
     fun `deve buscar cliente por id`() {
-        val id = UUID.randomUUID()
+        val id = 1L
         val cliente = Cliente().apply {
             this.id = id
             this.nome = "João Silva"
