@@ -41,10 +41,10 @@ abstract class ClienteMapper {
     fun setDocumento(dto: ClienteDto, @MappingTarget cliente: Cliente) {
         cliente.documento = Documento(dto.numeroDocumento, TipoPessoa.valueOf(dto.tipoPessoa))
         cliente.endereco?.cliente = cliente
-        cliente.contatos = dto.contatos.map {
+        cliente.contatos.addAll(dto.contatos.map {
             val contato = toContatoEntity(it)
             contato.cliente = cliente
             contato
-        }
+        })
     }
 }
