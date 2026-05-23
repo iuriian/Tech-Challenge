@@ -33,8 +33,8 @@ class ClienteController(
         return service.buscarPorNome(nome)?.let { mapper.toResponse(it) }
     }
 
-    @GetMapping("/cpf/{cpf}")
-    fun buscarPorCpf(@PathVariable cpf: String): ClienteDto? {
-        return service.buscarPorCpf(cpf)?.let { mapper.toResponse(it) }
+    @GetMapping("/cpf/{documentoNumero}")
+    fun buscarPorCpf(@PathVariable documentoNumero: String): ClienteDto? {
+        return service.buscarPorDocumento(documentoNumero)?.let { mapper.toResponse(it) }
     }
 }

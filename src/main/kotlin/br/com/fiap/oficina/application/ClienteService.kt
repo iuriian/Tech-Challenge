@@ -16,8 +16,8 @@ class ClienteService(private val repository: ClienteRepository) {
         return repository.findById(id).orElse(null)
     }
 
-    fun buscarPorCpf(cpf: String): Cliente? {
-        return repository.findByCpf(cpf)
+    fun buscarPorDocumento(documentoNumero: String): Cliente? {
+        return repository.findByDocumentoNumero(documentoNumero)
     }
 
     fun buscarPorNome(nome: String): Cliente? = repository.findByNome(nome)
