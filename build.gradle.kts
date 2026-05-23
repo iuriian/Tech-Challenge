@@ -34,6 +34,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapiVersion")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
 	kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
 	runtimeOnly("org.postgresql:postgresql")

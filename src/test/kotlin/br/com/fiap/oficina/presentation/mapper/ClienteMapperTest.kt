@@ -3,7 +3,7 @@ package br.com.fiap.oficina.presentation.mapper
 import br.com.fiap.oficina.domain.entity.Cliente
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.UUID
+
 
 class ClienteMapperTest {
 
@@ -12,7 +12,7 @@ class ClienteMapperTest {
     @Test
     fun `deve mapear Cliente para ClienteResponse`() {
         val cliente = Cliente().apply {
-            id = UUID.randomUUID()
+            id = 1L
             nome = "João Silva"
             cpf = "123.456.789-00"
         }

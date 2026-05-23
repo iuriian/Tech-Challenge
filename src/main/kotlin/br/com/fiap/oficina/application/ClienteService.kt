@@ -12,11 +12,14 @@ class ClienteService(private val repository: ClienteRepository) {
         return repository.save(cliente)
     }
 
-    fun buscarPorId(id: UUID): Cliente? {
+    fun buscarPorId(id: Long): Cliente? {
         return repository.findById(id).orElse(null)
     }
 
     fun buscarPorCpf(cpf: String): Cliente? {
         return repository.findByCpf(cpf)
     }
+
+    fun buscarPorNome(nome: String): Cliente? = repository.findByNome(nome)
+
 }

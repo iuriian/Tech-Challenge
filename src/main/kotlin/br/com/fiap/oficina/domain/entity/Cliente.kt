@@ -8,14 +8,47 @@ import java.util.UUID
 class Cliente {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null
 
     @Column(nullable = false)
     lateinit var nome: String
 
     @Column(nullable = false, unique = true)
     lateinit var cpf: String
+
+
+    lateinit var tipoPessoa: TipoPessoa
+
+//    fun validaDocumento() = tipoPessoa.valida(Documento(this.))
+
+    /*
+
+    PJ
+
+    Razao Social
+    Fantasia
+    cnpj (documento federal)
+
+
+    List<Endereco>
+    List<Contato>
+    Email
+
+    PF
+
+    Nome
+    Cpj (doc federal)
+    Nascimento
+
+
+    Endereco
+
+
+
+
+     */
+
 
 
 
