@@ -24,5 +24,5 @@ class Cliente {
     var endereco: Endereco? = null
 
     @OneToMany(mappedBy = "cliente", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var contatos: List<Contato> = mutableListOf()
+    var contatos: MutableList<Contato> = mutableListOf()
 }
