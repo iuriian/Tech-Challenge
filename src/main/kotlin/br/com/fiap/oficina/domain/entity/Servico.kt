@@ -13,10 +13,11 @@ class Servico {
     @Column(nullable = false)
     lateinit var descricao: String
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     var status: ServicoStatus? = null
 
-    @Column(name = "funcionario_id",nullable = false)
+    @Column(name = "funcionario_id", nullable = false)
     var funcionarioId: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -24,10 +25,10 @@ class Servico {
     lateinit var cliente: Cliente
 
     @Column(name = "veiculo_id", nullable = false)
-    var veiculoId: String? = null
+    var veiculoId: Long? = null
 
-    @Column(name = "pecas_servico", nullable = false)
-    var pecasIds: List<Long>? = null
-
-
+    @ElementCollection
+    @CollectionTable(name = "servico_pecas", joinColumns = [JoinColumn(name = "servico_id")])
+    @Column(name = "peca_id")
+    var pecasIds: List<Long> = mutableListOf()
 }
