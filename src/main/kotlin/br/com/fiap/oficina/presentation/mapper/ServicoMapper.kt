@@ -2,21 +2,31 @@ package br.com.fiap.oficina.presentation.mapper
 
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.presentation.dto.ServicoDto
-import org.mapstruct.Mapper
-import org.mapstruct.Mapping
-import org.mapstruct.factory.Mappers
+import org.springframework.stereotype.Component
 
-@Mapper(componentModel = "spring")
-abstract class ServicoMapper {
-    companion object {
-        val INSTANCE: ServicoMapper = Mappers.getMapper(ServicoMapper::class.java)
+@Component
+class ServicoMapper {
+
+    fun toResponse(servico: Servico): ServicoDto {
+        return ServicoDto(
+            id = servico.id,
+            descricao = servico.descricao,
+            status = servico.status,
+            funcionarioId = servico.funcionarioId ?: "",
+            clienteId = servico.cliente.id ?: 0L,
+            veiculoId = servico.veiculoId ?: 0L,
+            pecasIds = servico.pecasIds
+        )
     }
 
-    @Mapping(source = "cliente.id", target = "clienteId")
-    abstract fun toResponse(servico: Servico): ServicoDto
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toEntity(dto: ServicoDto): Servico
-
+    fun toEntity(dto: ServicoDto): Servico {
+        return Servico().apply {
+            id = dto.id
+            descricao = dto.descricao
+            status = dto.status
+            funcionarioId = dto.funcionarioId
+            veiculoId = dto.veiculoId
+            pecasIds = dto.pecasIds
+        }
+    }
 }
