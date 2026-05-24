@@ -87,6 +87,14 @@ public class ServicoController(
         summary = "Deletar servico por ID",
         description = "Deleta um servico do sistema pelo ID"
     )
-    fun deletarPorId(){}
+    fun deletarPorId(
+        @Parameter(
+            description = "ID do servico a ser removido",
+            required = true,
+            example = "1")
+        @PathVariable id: Long
+    ){
+        service.deletarPorId(id)
+    }
 
 }
