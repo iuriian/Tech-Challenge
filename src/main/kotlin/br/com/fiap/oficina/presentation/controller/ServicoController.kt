@@ -4,6 +4,7 @@ import br.com.fiap.oficina.application.ServicoService;
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper;
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
@@ -56,7 +57,17 @@ public class ServicoController(
         summary = "Listar servico por ID",
         description = "Lista um servico do sistema pelo ID"
     )
-    fun listarPorId(){}
+    fun listarPorId(
+        @Parameter(
+            description = "ID do serviço",
+            required = true,
+            example = "1")
+        @PathVariable id: Long
+    ):ServicoDto? {
+        return service.listarPorId(id)?.let{
+                    mapper.toResponse(it)
+                }
+    }
 
     @GetMapping()
     @RolesAllowed("ATENDENTE", "ADMIN")
