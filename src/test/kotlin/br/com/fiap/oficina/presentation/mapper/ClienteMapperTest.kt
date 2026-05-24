@@ -30,7 +30,7 @@ class ClienteMapperTest {
                 estado = "SP"
                 cep = "01000-000"
             }
-            contatos = listOf(Contato().apply {
+            contatos = mutableListOf(Contato().apply {
                 tipo = "Pessoal"
                 nome = "Contato 1"
                 telefone = "123456789"
