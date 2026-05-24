@@ -1,9 +1,11 @@
 package br.com.fiap.oficina.presentation.controller;
 
 import br.com.fiap.oficina.application.ServicoService;
+import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper;
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.annotation.security.RolesAllowed
+import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -19,7 +21,17 @@ public class ServicoController(
         summary = "Criar um novo servico",
         description = "Cadastra um novo servico no sistema"
     )
-    fun criar(){}
+    @ResponseStatus(HttpStatus.CREATED)
+    fun criar(
+        @Valid
+        @RequestBody
+        dto: ServicoDto
+    ): ServicoDto {
+        val entity = mapper.toEntity(dto)
+        val saved = service.salvar(entity)
+
+        return mapper.toResponse(saved)
+    }
 
     @PostMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
