@@ -75,7 +75,11 @@ public class ServicoController(
         summary = "Listar servicos",
         description = "Lista todos os servicos"
     )
-    fun listarTodos(){}
+    fun listarTodos(): List<ServicoDto> {
+        return service.listarTodos().map{
+            mapper.toResponse(it)
+        }
+    }
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
