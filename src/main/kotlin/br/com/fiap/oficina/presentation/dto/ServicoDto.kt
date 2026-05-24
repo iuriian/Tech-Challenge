@@ -2,7 +2,7 @@ package br.com.fiap.oficina.presentation.dto
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import jakarta.validation.constraints.NotBlank
-import org.jetbrains.annotations.NotNull
+import jakarta.validation.constraints.NotNull
 
 data class ServicoDto(
     val id: Long? = null,
@@ -19,11 +19,9 @@ data class ServicoDto(
 
 
     @field:NotNull
-    @field:NotBlank
     val cliente: Long,
 
     @field:NotNull
-    @field:NotBlank
     val veiculoId: Long,
 
     val pecasIds: List<Long> = emptyList()
