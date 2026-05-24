@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.presentation.dto
 
-
-data class ClienteResponse(
+data class ContatoDto(
+    val tipo: String,
     val nome: String,
-    val cpf: String
+    val telefone: String
 )
