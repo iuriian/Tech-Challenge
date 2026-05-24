@@ -1,5 +1,6 @@
 package br.com.fiap.oficina.domain.entity
 
+import br.com.fiap.oficina.domain.enum.ServicoStatus
 import jakarta.persistence.*
 
 @Entity
@@ -12,6 +13,12 @@ class Servico {
     @Column(nullable = false)
     lateinit var descricao: String
 
+    @Column(nullable = false)
+    var status: ServicoStatus? = null
+
+    @Column(name = "funcionario_id",nullable = false)
+    var funcionarioId: String? = null
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
     lateinit var cliente: Cliente
@@ -22,6 +29,5 @@ class Servico {
     @Column(name = "pecas_servico", nullable = false)
     var pecasIds: List<Long>? = null
 
-    @Column(name = "funcionario_id",nullable = false)
-    var funcionarioId: String? = null
+
 }
