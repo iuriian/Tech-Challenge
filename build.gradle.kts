@@ -33,7 +33,12 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:$mapstructVersion")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapiVersion")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	testImplementation("org.springframework.security:spring-security-test")
 	"developmentOnly"("org.springframework.boot:spring-boot-devtools")
 	kapt("org.mapstruct:mapstruct-processor:$mapstructVersion")
 	runtimeOnly("org.postgresql:postgresql")
