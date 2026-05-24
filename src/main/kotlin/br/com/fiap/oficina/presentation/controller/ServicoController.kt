@@ -5,6 +5,7 @@ import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/servicos")
+@Tag(name = "Serviços", description = "Operações relacionadas ao gerenciamento de serviços")
+
 class ServicoController(
     private val service: ServicoService,
     private val mapper: ServicoMapper,
