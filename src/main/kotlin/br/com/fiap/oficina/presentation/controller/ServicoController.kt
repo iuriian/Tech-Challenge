@@ -7,11 +7,12 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/servicos")
-public class ServicoController(
+ class ServicoController(
     private val service:ServicoService,
     private val mapper:ServicoMapper,
 ) {
@@ -69,7 +70,7 @@ public class ServicoController(
                 }
     }
 
-    @GetMapping()
+    @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(
         summary = "Listar servicos",
