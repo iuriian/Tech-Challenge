@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -26,6 +27,7 @@ class ClienteControllerTest {
     lateinit var mapper: ClienteMapper
 
     @Test
+    @WithMockUser
     fun `deve buscar cliente por id`() {
         val id = 1L
         val cliente = Cliente().apply {
