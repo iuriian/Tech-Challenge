@@ -12,7 +12,7 @@ abstract class ServicoMapper {
         val INSTANCE: ServicoMapper = Mappers.getMapper(ServicoMapper::class.java)
     }
 
-    @Mapping(source = "cliente.id", target = "cliente")
+    @Mapping(source = "cliente.id", target = "clienteId")
     abstract fun toResponse(servico: Servico): ServicoDto
 
     @Mapping(target = "id", ignore = true)
