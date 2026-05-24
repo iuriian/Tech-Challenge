@@ -33,13 +33,22 @@ public class ServicoController(
         return mapper.toResponse(saved)
     }
 
-    @PostMapping("/{id}")
+    @PutMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(
         summary = "Atualizar um servico",
         description = "Atualiza um servico no sistema"
     )
-    fun atualizar(){}
+    fun atualizar(
+        @Valid
+        @RequestBody
+        dto: ServicoDto
+    ): ServicoDto {
+        val entity = mapper.toEntity(dto)
+        val saved = service.salvar(entity)
+
+        return mapper.toResponse(saved)
+    }
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
