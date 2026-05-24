@@ -40,7 +40,7 @@ class ClienteTest {
         val contato1 = Contato().apply { nome = "Contato 1"; tipo = "Celular"; telefone = "11999999999" }
         val contato2 = Contato().apply { nome = "Contato 2"; tipo = "Fixo"; telefone = "1133333333" }
         
-        val contatos = listOf(contato1, contato2)
+        val contatos = mutableListOf(contato1, contato2)
         cliente.contatos = contatos
 
         assertEquals(2, cliente.contatos.size)
