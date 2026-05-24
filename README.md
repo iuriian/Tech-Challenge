@@ -1,9 +1,9 @@
-# Tech-Challenge
+# Tech-Challenge - Fase 1
 Sistema Integrado de Atendimento e Execução de Serviços
 
 ## 📚 Sobre o Projeto
 
-Este projeto é um **trabalho acadêmico** desenvolvido para o curso de **Pós-Graduação em Arquitetura e Desenvolvimento Java** da **FIAP (PosTech)**. O sistema foi criado como parte dos requisitos de avaliação do programa, demonstrando a aplicação prática dos conceitos aprendidos durante o curso.
+Este projeto é um **trabalho acadêmico** desenvolvido para o curso de **Pós-Graduação em Software Architecture** da **FIAP (PosTech)**. O sistema foi criado como parte dos requisitos de avaliação do programa, demonstrando a aplicação prática dos conceitos aprendidos durante o curso.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -116,6 +116,23 @@ Após iniciar a aplicação, a documentação da API estará disponível via Swa
 - **Swagger UI:** `http://localhost:8080/swagger-ui.html`
 - **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
 
+### Como acessar o Swagger UI autenticado
+
+Para testar os endpoints protegidos, siga os passos:
+1. Acesse o [Swagger UI](http://localhost:8080/swagger-ui.html).
+2. Clique no botão **Authorize** (cadeado no topo).
+3. No campo `client_id`, utilize `oficina`.
+4. Utilize um dos usuários abaixo para realizar o login na tela do Keycloak que será exibida (ou via formulário de autorização dependendo da configuração).
+
+### Usuários Pré-configurados (Keycloak)
+
+| Usuário         | Senha           | Perfil (Role) |
+|-----------------|-----------------|---------------|
+| `admin`         | `admin`         | ADMIN         |
+| `atendente`     | `atendente`     | ATENDENTE     |
+| `mecanico`      | `mecanico`      | MECANICO      |
+| `clientepadrao` | `clientepadrao` | CLIENTE       |
+
 ## 🧪 Executando os Testes
 
 ```shell script
@@ -150,6 +167,14 @@ Tech-Challenge/
 
 ## 👥 Autores
 
-Desenvolvido por alunos da **FIAP PosTech** - Turma de Arquitetura e Desenvolvimento Java.
+Desenvolvido por alunos da **FIAP PosTech** - Software Architecture - Grupo 89
 
+| Aluno         | Matricula | Email                           | Github                          |
+|---------------|-----------|---------------------------------|---------------------------------|
+| Alan Alves    | 	RM370177 | 	dev.alan87@gmail.com	          | 	https://github.com/dev-alan87  |
+| Caio Colares  | 	RM375500 | 	colares.caio@gmail.com	        | https://github.com/caiocolares  |
+| Eliézer Lucas | 	RM374476 | 	eliezerlucaslg@gmail.com	      | 	https://github.com/eliezerluca |
+| Nicolas       | 	RM37488  | nicolasmoraes1906@yahoo.com.br	 | 	https://github.com/Nisk-Moraes |
+| Iuri Ian      | 	RM375031 | 	iuriian15@gmail.com	           | 	https://github.com/iuriian     |
 
+---

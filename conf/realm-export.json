@@ -5,7 +5,10 @@
     {
       "clientId": "oficina",
       "publicClient": true,
-      "enabled": true
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "enabled": true,
+      "webOrigins": ["*"]
     }
   ],
   "roles": {
