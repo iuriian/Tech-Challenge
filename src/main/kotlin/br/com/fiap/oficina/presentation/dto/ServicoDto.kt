@@ -19,7 +19,7 @@ data class ServicoDto(
 
 
     @field:NotNull
-    val cliente: Long,
+    val clienteId: Long,
 
     @field:NotNull
     val veiculoId: Long,

@@ -30,7 +30,7 @@ class ServicoController(
         dto: ServicoDto
     ): ServicoDto {
         val entity = mapper.toEntity(dto)
-        val saved = service.salvar(entity, dto.cliente)
+        val saved = service.salvar(entity, dto.clienteId)
 
         return mapper.toResponse(saved)
     }
@@ -52,7 +52,7 @@ class ServicoController(
         dto: ServicoDto
     ): ServicoDto {
         val entity = mapper.toEntity(dto).apply { this.id = id }
-        val saved = service.salvar(entity, dto.cliente)
+        val saved = service.salvar(entity, dto.clienteId)
 
         return mapper.toResponse(saved)
     }
