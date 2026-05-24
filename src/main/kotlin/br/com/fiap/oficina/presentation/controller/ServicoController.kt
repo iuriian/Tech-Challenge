@@ -1,8 +1,8 @@
-package br.com.fiap.oficina.presentation.controller;
+package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.ServicoService;
+import br.com.fiap.oficina.application.ServicoService
 import br.com.fiap.oficina.presentation.dto.ServicoDto
-import br.com.fiap.oficina.presentation.mapper.ServicoMapper;
+import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import jakarta.annotation.security.RolesAllowed
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/servicos")
- class ServicoController(
-    private val service:ServicoService,
-    private val mapper:ServicoMapper,
+class ServicoController(
+    private val service: ServicoService,
+    private val mapper: ServicoMapper,
 ) {
 
     @PostMapping
@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*
         dto: ServicoDto
     ): ServicoDto {
         val entity = mapper.toEntity(dto)
-        val saved = service.salvar(entity)
+        val saved = service.salvar(entity, dto.cliente)
 
         return mapper.toResponse(saved)
     }
@@ -42,12 +42,17 @@ import org.springframework.web.bind.annotation.*
         description = "Atualiza um servico no sistema"
     )
     fun atualizar(
+        @Parameter(
+            description = "ID do serviço a ser atualizado",
+            required = true,
+            example = "1")
+        @PathVariable id: Long,
         @Valid
         @RequestBody
         dto: ServicoDto
     ): ServicoDto {
-        val entity = mapper.toEntity(dto)
-        val saved = service.salvar(entity)
+        val entity = mapper.toEntity(dto).apply { this.id = id }
+        val saved = service.salvar(entity, dto.cliente)
 
         return mapper.toResponse(saved)
     }
@@ -64,10 +69,10 @@ import org.springframework.web.bind.annotation.*
             required = true,
             example = "1")
         @PathVariable id: Long
-    ):ServicoDto? {
-        return service.listarPorId(id)?.let{
-                    mapper.toResponse(it)
-                }
+    ): ServicoDto? {
+        return service.listarPorId(id)?.let {
+            mapper.toResponse(it)
+        }
     }
 
     @GetMapping
@@ -77,7 +82,7 @@ import org.springframework.web.bind.annotation.*
         description = "Lista todos os servicos"
     )
     fun listarTodos(): List<ServicoDto> {
-        return service.listarTodos().map{
+        return service.listarTodos().map {
             mapper.toResponse(it)
         }
     }
@@ -88,13 +93,14 @@ import org.springframework.web.bind.annotation.*
         summary = "Deletar servico por ID",
         description = "Deleta um servico do sistema pelo ID"
     )
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletarPorId(
         @Parameter(
             description = "ID do servico a ser removido",
             required = true,
             example = "1")
         @PathVariable id: Long
-    ){
+    ) {
         service.deletarPorId(id)
     }
 
