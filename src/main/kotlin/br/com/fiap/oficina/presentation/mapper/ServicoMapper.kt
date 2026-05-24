@@ -2,9 +2,11 @@ package br.com.fiap.oficina.presentation.mapper
 
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.presentation.dto.ServicoDto
+import org.mapstruct.Mapper
 import org.mapstruct.Mapping
 import org.mapstruct.factory.Mappers
 
+@Mapper(componentModel = "spring")
 abstract class ServicoMapper {
     companion object {
         val INSTANCE: ServicoMapper = Mappers.getMapper(ServicoMapper::class.java)
@@ -15,8 +17,6 @@ abstract class ServicoMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cliente", ignore = true)
-    @Mapping(target = "funcionario", ignore = true)
-    @Mapping(target = "pecas", ignore = true)
     abstract fun toEntity(dto: ServicoDto): Servico
 
 }
