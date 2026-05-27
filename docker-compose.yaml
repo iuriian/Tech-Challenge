@@ -24,9 +24,11 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: sso.postech.com.br
+#      KC_HOSTNAME: sso.postech.com.br
+      KC_HOSTNAME: localhost
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db:5432/oficina
+#      KC_DB_URL: jdbc:postgresql://db:5432/oficina
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
       KC_DB_USERNAME: user
       KC_DB_PASSWORD: password
 
