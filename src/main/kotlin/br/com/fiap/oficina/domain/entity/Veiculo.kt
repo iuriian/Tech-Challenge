@@ -27,7 +27,7 @@ class Veiculo {
     @Size(min = 7, max = 7, message = "Input must be exactly 7 characters long")
     lateinit var placa: String
 
-    @Column(nullable = false, unique = true)
+    @ManyToOne(cascade = [(CascadeType.ALL)])
     lateinit var motorista: Cliente
 
 }
