@@ -30,7 +30,7 @@ class VeiculoController(
     @Operation(summary = "Buscar veiculo por ID", description = "Busca um veiculo pelo seu ID único")
     fun buscarVeiculoPorId(
         @Parameter(description = "Id do Veiculo", required = true, example = "1")
-        @PathVariable idVeiculo: Long
+        @PathVariable("id") idVeiculo: Long
     ): VeiculoDTO? {
         return service.buscarPorId(idVeiculo)?.let { mapper.toResponse(it) }
     }
@@ -39,7 +39,7 @@ class VeiculoController(
     @Operation(summary = "Buscar veiculo pela sua Placa", description = "Buscar veiculo por sua sua placa")
     fun buscarVeiculoPorPlaca(
         @Parameter(description = "Placa do Veiculo", required = true, example = "abc1234")
-        @PathVariable placa: String
+        @PathVariable("placa") placa: String
     ): VeiculoDTO? {
         return service.buscarPorPlaca(placa)?.let { mapper.toResponse(it) }
     }
@@ -48,7 +48,7 @@ class VeiculoController(
     @Operation(summary = "Buscar veiculos por motorista", description = "Buscar veiculos de um motorista cadastrado")
     fun buscarVeiculosPorMotorista(
         @Parameter(description = "Motorista do veiculo", required = true, example = "João Silva")
-        @PathVariable motorista: Cliente
+        @PathVariable("motorista") motorista: Cliente
     ): List<VeiculoDTO?> {
         return service.buscarPorMotorista(motorista).map { mapper.toResponse(it) }
     }
