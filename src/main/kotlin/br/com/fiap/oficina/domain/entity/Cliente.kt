@@ -1,7 +1,6 @@
 package br.com.fiap.oficina.domain.entity
 
 import jakarta.persistence.*
-import java.util.UUID
 
 @Entity
 @Table(name = "clientes")
@@ -15,41 +14,15 @@ class Cliente {
     lateinit var nome: String
 
     @Column(nullable = false, unique = true)
-    lateinit var cpf: String
+    lateinit var documento: Documento
 
+    @Column(nullable = false, unique = true)
+    lateinit var email: String
 
-    lateinit var tipoPessoa: TipoPessoa
+    @OneToOne(cascade = [CascadeType.ALL], orphanRemoval = true)
+    @JoinColumn(name = "endereco_id", referencedColumnName = "id")
+    var endereco: Endereco? = null
 
-//    fun validaDocumento() = tipoPessoa.valida(Documento(this.))
-
-    /*
-
-    PJ
-
-    Razao Social
-    Fantasia
-    cnpj (documento federal)
-
-
-    List<Endereco>
-    List<Contato>
-    Email
-
-    PF
-
-    Nome
-    Cpj (doc federal)
-    Nascimento
-
-
-    Endereco
-
-
-
-
-     */
-
-
-
-
+    @OneToMany(mappedBy = "cliente", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var contatos: MutableList<Contato> = mutableListOf()
 }
