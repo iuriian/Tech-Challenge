@@ -8,6 +8,9 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./conf/init-db:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d oficina"]
       interval: 10s
@@ -17,7 +20,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.2.1
     container_name: keycloak-oficina
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
@@ -47,21 +50,24 @@ services:
       #      - app
       - keycloak
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: oficina-app
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      DB_URL: jdbc:postgresql://db:5432/oficina
-#      DB_USERNAME: user
-#      DB_PASSWORD: password
-#    depends_on:
-#      db:
-#        condition: service_healthy
+  #  app:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile
+  #    container_name: oficina-app
+  #    ports:
+  #      - "8080:8080"
+  #    environment:
+  #      DB_URL: jdbc:postgresql://db:5432/oficina
+  #      DB_USERNAME: user
+  #      DB_PASSWORD: password
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
 
 networks:
   default:
     driver: bridge
+
+volumes:
+  postgres_data:
