@@ -40,6 +40,7 @@ class ClienteMapperTest {
         val response = mapper.toResponse(cliente)
 
         assertEquals(cliente.nome, response.nome)
+        //assertEquals(cliente.cpf, response.cpf)
         assertEquals(cliente.documento.numero, response.numeroDocumento)
         assertNotNull(response.endereco)
         assertEquals(cliente.endereco?.logradouro, response.endereco?.logradouro)
