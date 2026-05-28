@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.application
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.repository.VeiculoRepository
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Veiculo
+import br.com.fiap.oficina.infrastructure.persistence.repository.VeiculoRepository
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import org.springframework.stereotype.Service
 
