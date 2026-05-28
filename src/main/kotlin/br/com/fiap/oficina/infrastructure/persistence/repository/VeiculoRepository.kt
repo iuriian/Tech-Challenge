@@ -1,9 +1,8 @@
-package br.com.fiap.oficina.domain.repository
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Veiculo
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
 
 interface VeiculoRepository: JpaRepository<Veiculo, Long> {
     fun findByPlaca(placa: String): Veiculo?

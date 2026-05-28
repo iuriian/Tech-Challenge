@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.application
 
-import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.infrastructure.persistence.entity.Peca
+import br.com.fiap.oficina.infrastructure.persistence.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
