@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.application
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Documento
-import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Documento
+import br.com.fiap.oficina.infrastructure.persistence.repository.ClienteRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
