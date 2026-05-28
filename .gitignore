@@ -19,6 +19,7 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
+.run/
 *.iws
 *.iml
 *.ipr
@@ -39,4 +40,8 @@ out/
 ### Kotlin ###
 .kotlin
 
-.env
+### Codex ###
+/.codex/
+
+### Agents ###
+/.agents/
