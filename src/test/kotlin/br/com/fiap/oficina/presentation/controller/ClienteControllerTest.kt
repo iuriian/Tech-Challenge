@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.ClienteService
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Documento
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Documento
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`

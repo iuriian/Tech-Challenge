@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.application
 
-import br.com.fiap.oficina.domain.entity.Servico
-import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.repository.ServicoRepository
+import br.com.fiap.oficina.infrastructure.persistence.entity.Servico
+import br.com.fiap.oficina.infrastructure.persistence.repository.ClienteRepository
+import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

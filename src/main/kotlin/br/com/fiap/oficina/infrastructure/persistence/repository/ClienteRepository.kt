@@ -1,10 +1,8 @@
-package br.com.fiap.oficina.domain.repository
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Documento
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import java.util.UUID
 
 @Repository
 interface ClienteRepository : JpaRepository<Cliente, Long> {

@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.domain.repository
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
-import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.infrastructure.persistence.entity.Peca
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface PecaRepository : JpaRepository<Peca, Long> {

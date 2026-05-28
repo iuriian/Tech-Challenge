@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.dto
 
-import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
 import jakarta.validation.constraints.Size
 
 data class VeiculoDTO(@Size(min=3, max=20) val nome: String,
