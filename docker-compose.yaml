@@ -50,20 +50,20 @@ services:
       #      - app
       - keycloak
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    container_name: oficina-app
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      DB_URL: jdbc:postgresql://db:5432/oficina
-#      DB_USERNAME: user
-#      DB_PASSWORD: password
-#    depends_on:
-#      db:
-#        condition: service_healthy
+  #  app:
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile
+  #    container_name: oficina-app
+  #    ports:
+  #      - "8080:8080"
+  #    environment:
+  #      DB_URL: jdbc:postgresql://db:5432/oficina
+  #      DB_USERNAME: user
+  #      DB_PASSWORD: password
+  #    depends_on:
+  #      db:
+  #        condition: service_healthy
 
 networks:
   default:
