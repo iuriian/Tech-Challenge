@@ -1,6 +1,10 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.domain.entity.*
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
+import br.com.fiap.oficina.infrastructure.persistence.entity.Contato
+import br.com.fiap.oficina.infrastructure.persistence.entity.Documento
+import br.com.fiap.oficina.infrastructure.persistence.entity.Endereco
+import br.com.fiap.oficina.infrastructure.persistence.entity.TipoPessoa
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.dto.ContatoDto
 import br.com.fiap.oficina.presentation.dto.EnderecoDto

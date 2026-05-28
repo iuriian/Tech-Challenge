@@ -1,8 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.VeiculoService
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import io.swagger.v3.oas.annotations.Operation

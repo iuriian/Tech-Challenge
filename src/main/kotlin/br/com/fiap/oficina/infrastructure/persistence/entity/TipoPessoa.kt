@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.domain.entity
+package br.com.fiap.oficina.infrastructure.persistence.entity
 
 
 interface ValidadorDocumento{
