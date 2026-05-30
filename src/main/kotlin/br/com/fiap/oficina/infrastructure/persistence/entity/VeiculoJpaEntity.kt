@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size
 
 @Entity
 @Table(name = "veiculos")
-class Veiculo {
+class VeiculoJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +28,6 @@ class Veiculo {
     lateinit var placa: String
 
     @ManyToOne(cascade = [(CascadeType.ALL)])
-    lateinit var motorista: Cliente
+    lateinit var motorista: ClienteJpaEntity
 
 }

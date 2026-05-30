@@ -1,9 +1,10 @@
 package br.com.fiap.oficina.presentation.mapper
 
 import org.mapstruct.Mapper
+import org.mapstruct.Mapping
 import org.mapstruct.factory.Mappers
 
-import br.com.fiap.oficina.infrastructure.persistence.entity.Veiculo
+import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 
 @Mapper(componentModel = "spring")
@@ -13,6 +14,7 @@ interface VeiculoMapper {
     }
 
     // Validar se está correto
+    @Mapping(target = "idVeiculo", ignore = true)
     fun toEntity(dto: VeiculoDTO): Veiculo
 
     fun toResponse(veiculo: Veiculo): VeiculoDTO
