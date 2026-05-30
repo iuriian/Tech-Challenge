@@ -1,7 +1,5 @@
 package br.com.fiap.oficina.domain.entity
 
-import br.com.fiap.oficina.infrastructure.persistence.entity.Cliente
-import br.com.fiap.oficina.infrastructure.persistence.entity.Endereco
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

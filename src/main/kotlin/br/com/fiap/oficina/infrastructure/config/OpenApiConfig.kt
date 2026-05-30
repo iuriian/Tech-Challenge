@@ -11,13 +11,13 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class OpenApiConfig {
-    @Value("\${KEYCLOAK_URL:http://localhost:8081}")
+    @Value($$"${KEYCLOAK_URL:http://localhost:8081}")
     private val keycloakUrl: String? = null
 
-    @Value("\${KEYCLOAK_REALM:fiap}")
+    @Value($$"${KEYCLOAK_REALM:fiap}")
     private val keycloakRealm: String? = null
 
-    @Value("\${KEYCLOAK_CLIENT_ID:techchallenge}")
+    @Value($$"${KEYCLOAK_CLIENT_ID:techchallenge}")
     private val keycloakClientId: String? = null
 
     @Bean
@@ -28,7 +28,8 @@ class OpenApiConfig {
             .info(
                 Info()
                     .title("TechChallenge API")
-                    .description("API de gerenciamento de oficina mecânica. Use o botão **Authorize** e informe usuário e senha para autenticar.")
+                    .description("API de gerenciamento de oficina mecânica. " +
+                            "Use o botão **Authorize** e informe usuário e senha para autenticar.")
                     .version("1.0.0")
             )
             .addSecurityItem(SecurityRequirement()

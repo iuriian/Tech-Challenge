@@ -4,7 +4,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "enderecos")
-class Endereco {
+class EnderecoJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,5 +32,5 @@ class Endereco {
     lateinit var cep: String
 
     @OneToOne(mappedBy = "endereco")
-    var cliente: Cliente? = null
+    var cliente: ClienteJpaEntity? = null
 }

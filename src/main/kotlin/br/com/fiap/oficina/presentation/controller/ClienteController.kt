@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.ClienteService
+import br.com.fiap.oficina.application.service.ClienteService
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -20,7 +20,6 @@ class ClienteController(
 ) {
 
     @PostMapping
-    @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Criar um novo cliente", description = "Cadastra um novo cliente no sistema")
     fun criar(@Valid @RequestBody cliente: ClienteDto): ClienteDto {
         val entity = this.mapper.toEntity(cliente)
@@ -52,7 +51,8 @@ class ClienteController(
     )
     fun buscarPorCpf(
         @Parameter(
-            description = "Número do documento de identificação. Deve conter apenas números, sem caracteres especiais (pontos, hífens, etc.)",
+            description = "Número do documento de identificação. " +
+                    "Deve conter apenas números, sem caracteres especiais (pontos, hífens, etc.)",
             required = true,
             example = "12345678900"
         )
@@ -62,7 +62,6 @@ class ClienteController(
     }
 
     @PutMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Alterar dados de um cliente", description = "Atualiza as informações de um cliente existente")
     fun alterar(
         @Parameter(description = "ID do cliente a ser alterado", required = true, example = "1")

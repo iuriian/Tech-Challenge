@@ -28,18 +28,12 @@ class KeycloakJwtRoleConverter : Converter<Jwt, MutableCollection<GrantedAuthori
     }
 
     private fun extractClientRoles(jwt: Jwt): MutableList<String> {
-        val clientId = jwt.getClaimAsString("azp")?:return mutableListOf()
+        val clientId = jwt.getClaimAsString("azp") ?: return mutableListOf()
 
-        val resourceAccess: Map<String, Any> = jwt.getClaimAsMap("resource_access")?:return mutableListOf()
+        val resourceAccess: Map<String, Any> = jwt.getClaimAsMap("resource_access") ?: return mutableListOf()
 
-        val clientAccess = resourceAccess[clientId]
-        if (clientAccess !is MutableMap<*, *>) return mutableListOf()
-
-        val roles = clientAccess["roles"]
-        if (roles is MutableList<*>) {
-            return roles.filterIsInstance<String>().toMutableList()
-        }
-        return mutableListOf()
+        val roles = (resourceAccess[clientId] as? MutableMap<*, *>)?.get("roles")
+        return (roles as? MutableList<*>)?.filterIsInstance<String>()?.toMutableList() ?: mutableListOf()
     }
 
 }
