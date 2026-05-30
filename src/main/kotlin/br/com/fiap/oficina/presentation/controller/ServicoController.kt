@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.ServicoService
+import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation

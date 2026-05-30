@@ -10,7 +10,7 @@ import java.math.BigDecimal
 
 @Entity
 @Table(name = "pecas")
-class Peca {
+class PecaJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,33 +42,4 @@ class Peca {
 
     @Column(nullable = false)
     var ativo: Boolean = true
-
-    fun desativar() {
-        ativo = false
-    }
-
-    fun reativar() {
-        ativo = true
-    }
-
-    fun retirarPecas(qtd: Int) {
-        if (qtd <= 0) {
-            throw IllegalArgumentException("Quantidade para retirada deve ser maior que zero")
-        }
-
-        if (qtd > qtdEstoque) {
-            throw IllegalArgumentException("Quantidade em estoque insuficiente")
-        }
-
-        qtdEstoque -= qtd
-    }
-
-    fun reporPecas(qtd: Int) {
-        if (qtd <= 0) {
-            throw IllegalArgumentException("Quantidade para reposição deve ser maior que zero")
-        }
-
-        qtdEstoque += qtd
-    }
-
 }

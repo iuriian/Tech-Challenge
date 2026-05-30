@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.PecaService
+import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
 import br.com.fiap.oficina.presentation.mapper.PecaMapper
@@ -34,7 +34,7 @@ class PecaController(
     ): PecaDto? {
         val entity = mapper.toEntity(peca)
 
-        return service.atualizarPeca(codigo, entity)?.let { mapper.toDto(it) }
+        return service.atualizarPeca(codigo, entity).let { mapper.toDto(it) }
     }
 
     @PatchMapping("/{codigo}/estoque/retirar")
@@ -78,7 +78,7 @@ class PecaController(
 
     @GetMapping("/codigo/{codigo}")
     fun buscarPorCodigo(@PathVariable codigo: String): PecaDto? {
-        return service.buscarPorCodigo(codigo)?.let { mapper.toDto(it) }
+        return service.buscarPorCodigo(codigo).let { mapper.toDto(it) }
     }
 
     @GetMapping("/nome/{nome}")
