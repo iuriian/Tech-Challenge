@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.infrastructure.persistence.entity.Peca
+import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
 import org.mapstruct.Mapper

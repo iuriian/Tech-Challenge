@@ -5,7 +5,8 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "servicos")
-class Servico {
+class ServicoJpaEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
@@ -22,7 +23,7 @@ class Servico {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
-    lateinit var cliente: Cliente
+    lateinit var cliente: ClienteJpaEntity
 
     @Column(name = "veiculo_id", nullable = false)
     var veiculoId: Long? = null

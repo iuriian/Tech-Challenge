@@ -1,28 +1,12 @@
-package br.com.fiap.oficina.infrastructure.persistence.entity
+package br.com.fiap.oficina.domain.valueobject
 
-import jakarta.persistence.Column
-import jakarta.persistence.Embeddable
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.Transient
-
-@Embeddable
 class Documento(
-    @Column(name = "documento_numero", nullable = false, unique = true)
     val numero: String,
-
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_pessoa", nullable = false)
     val tipoPessoa: TipoPessoa
 ) {
 
-
-    protected constructor() : this("", TipoPessoa.PESSOA_FISICA)
-
     fun isFormatoValido(): Boolean = this.tipoPessoa.valida(this)
 
-    @Transient
     fun getNumeroFormatado(): String = this.tipoPessoa.formata(numero)
 
 
