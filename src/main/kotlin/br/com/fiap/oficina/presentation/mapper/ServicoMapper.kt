@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.infrastructure.persistence.entity.Servico
+import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import org.springframework.stereotype.Component
 

@@ -4,7 +4,7 @@ import jakarta.persistence.*
 
 @Entity
 @Table(name = "contatos")
-class Contato {
+class ContatoJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,5 +21,5 @@ class Contato {
 
     @ManyToOne
     @JoinColumn(name = "cliente_id")
-    var cliente: Cliente? = null
+    var cliente: ClienteJpaEntity? = null
 }
