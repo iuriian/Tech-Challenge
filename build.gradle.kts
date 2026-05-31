@@ -1,8 +1,13 @@
+import org.jetbrains.dokka.DokkaConfiguration.Visibility
+import org.jetbrains.dokka.gradle.DokkaTask
+
 plugins {
 	kotlin("jvm") version "2.3.21"
 	kotlin("plugin.spring") version "2.3.21"
 	kotlin("plugin.jpa") version "2.3.21"
 	kotlin("kapt") version "2.3.21"
+
+	id("org.jetbrains.dokka") version "2.0.0"
 	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
 	jacoco
@@ -14,7 +19,7 @@ group = "br.com.fiap.oficina"
 version = "0.0.1"
 
 val mapstructVersion = "1.6.3"
-val openapiVersion  = "3.0.3"
+val openapiVersion  = "2.8.5"
 
 java {
 	toolchain {
@@ -33,6 +38,9 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.mapstruct:mapstruct:$mapstructVersion")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-database-postgresql")
+
 
 
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapiVersion")
@@ -89,6 +97,33 @@ tasks.test {
 	finalizedBy(jacocoTestReport)
 }
 
+
+tasks.withType<DokkaTask>().configureEach {
+	dokkaSourceSets.configureEach {
+		documentedVisibilities.set(
+			setOf(
+				Visibility.PUBLIC,
+				Visibility.PROTECTED,
+				Visibility.PRIVATE,
+				Visibility.PACKAGE,
+				Visibility.INTERNAL
+			)
+		)
+
+		perPackageOption {
+			matchingRegex.set(".*internal.*")
+			suppress.set(true)
+		}
+	}
+}
+
+configurations.matching { it.name.startsWith("dokka") }.configureEach {
+	resolutionStrategy.eachDependency {
+		if (requested.group.startsWith("com.fasterxml.jackson")) {
+			useVersion("2.15.3")
+		}
+	}
+}
 
 detekt {
 	// Version of detekt that will be used. When unspecified the latest detekt
