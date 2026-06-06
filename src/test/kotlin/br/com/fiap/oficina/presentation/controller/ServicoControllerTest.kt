@@ -32,6 +32,9 @@ class ServicoControllerTest {
                     this.id = id
                     this.descricao = "Revisao Geral"
                     this.cliente = Cliente().apply { this.id = 1L }
+                    this.veiculo = br.com.fiap.oficina.domain.entity.Veiculo().apply { this.idVeiculo = 1L }
+                    this.pecas = emptyList()
+                    this.funcionarioId = 1L
                 }
 
         `when`(service.listarPorId(id)).thenReturn(servico)

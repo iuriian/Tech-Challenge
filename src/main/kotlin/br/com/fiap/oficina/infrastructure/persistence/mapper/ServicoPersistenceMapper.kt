@@ -4,7 +4,7 @@ import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
 import org.mapstruct.Mapper
 
-@Mapper(componentModel = "spring", uses = [ClientePersistenceMapper::class])
+@Mapper(componentModel = "spring", uses = [ClientePersistenceMapper::class, VeiculoPersistenceMapper::class, PecaPersistenceMapper::class])
 interface ServicoPersistenceMapper {
 
     fun toDomain(entity: ServicoJpaEntity): Servico
