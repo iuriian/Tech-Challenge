@@ -12,10 +12,10 @@ class ServicoMapper {
             id = servico.id,
             descricao = servico.descricao,
             status = servico.status,
-            funcionarioId = servico.funcionarioId ?: "",
+            funcionarioId = servico.funcionarioId ?: 0L,
             clienteId = servico.cliente.id ?: 0L,
-            veiculoId = servico.veiculoId ?: 0L,
-            pecasIds = servico.pecasIds
+            veiculoId = servico.veiculo.idVeiculo ?: 0L,
+            pecasIds = servico.pecas.map { it.id ?: 0L }
         )
     }
 
@@ -25,8 +25,6 @@ class ServicoMapper {
             descricao = dto.descricao
             status = dto.status
             funcionarioId = dto.funcionarioId
-            veiculoId = dto.veiculoId
-            pecasIds = dto.pecasIds
         }
     }
 }
