@@ -14,8 +14,7 @@ data class ServicoDto(
     val status: ServicoStatus? = ServicoStatus.EM_DIAGNOSTICO,
 
     @field:NotNull
-    @field:NotBlank
-    val funcionarioId: String,
+    val funcionarioId: Long,
 
 
     @field:NotNull
