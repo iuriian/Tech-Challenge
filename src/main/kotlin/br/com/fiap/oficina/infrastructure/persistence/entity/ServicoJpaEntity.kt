@@ -19,17 +19,21 @@ class ServicoJpaEntity {
     var status: ServicoStatus? = null
 
     @Column(name = "funcionario_id", nullable = false)
-    var funcionarioId: String? = null
+    var funcionarioId: Long? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
     lateinit var cliente: ClienteJpaEntity
 
-    @Column(name = "veiculo_id", nullable = false)
-    var veiculoId: Long? = null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "veiculo_id", referencedColumnName = "idVeiculo", nullable = false)
+    lateinit var veiculo: VeiculoJpaEntity
 
-    @ElementCollection
-    @CollectionTable(name = "servico_pecas", joinColumns = [JoinColumn(name = "servico_id")])
-    @Column(name = "peca_id")
-    var pecasIds: List<Long> = mutableListOf()
+    @ManyToMany
+    @JoinTable(
+        name = "servico_pecas",
+        joinColumns = [JoinColumn(name = "servico_id")],
+        inverseJoinColumns = [JoinColumn(name = "peca_id")]
+    )
+    var pecas: List<PecaJpaEntity> = mutableListOf()
 }
