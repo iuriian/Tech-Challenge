@@ -10,11 +10,11 @@ class Servico {
 
     var status: ServicoStatus? = null
 
-    var funcionarioId: String? = null
+    var funcionarioId: Long? = null
 
     lateinit var cliente: Cliente
 
-    var veiculoId: Long? = null
+    lateinit var veiculo: Veiculo
 
-    var pecasIds: List<Long> = mutableListOf()
+    var pecas: List<Peca> = mutableListOf()
 }
