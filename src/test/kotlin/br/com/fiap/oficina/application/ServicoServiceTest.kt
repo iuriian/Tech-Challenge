@@ -9,6 +9,7 @@ import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,6 +18,8 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import java.math.BigDecimal
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class ServicoServiceTest {
@@ -35,6 +38,8 @@ class ServicoServiceTest {
     private lateinit var veiculo: Veiculo
     private lateinit var peca1: Peca
     private lateinit var peca2: Peca
+    private lateinit var pecaId1: Id
+    private lateinit var pecaId2: Id
     private lateinit var servico: Servico
 
     @BeforeEach
@@ -49,8 +54,10 @@ class ServicoServiceTest {
             idVeiculo = 1L
         }
 
-        peca1 = Peca().apply { id = 1L }
-        peca2 = Peca().apply { id = 2L }
+        pecaId1 = Id.from(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+        pecaId2 = Id.from(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+        peca1 = criarPeca(pecaId1, "PEC001")
+        peca2 = criarPeca(pecaId2, "PEC002")
 
         servico =
                 Servico().apply {
@@ -67,11 +74,11 @@ class ServicoServiceTest {
     fun `deve salvar servico com sucesso`() {
         `when`(clienteRepository.buscarPorId(1L)).thenReturn(cliente)
         `when`(veiculoRepository.buscarPorId(1L)).thenReturn(veiculo)
-        `when`(pecaRepository.buscarPorId(1L)).thenReturn(peca1)
-        `when`(pecaRepository.buscarPorId(2L)).thenReturn(peca2)
+        `when`(pecaRepository.buscarPorId(pecaId1)).thenReturn(peca1)
+        `when`(pecaRepository.buscarPorId(pecaId2)).thenReturn(peca2)
         `when`(repository.salvar(servico)).thenReturn(servico)
 
-        val resultado = service.salvar(servico, 1L, 1L, listOf(1L, 2L))
+        val resultado = service.salvar(servico, 1L, 1L, listOf(pecaId1.valor, pecaId2.valor))
 
         assertNotNull(resultado)
         assertEquals(servico.id, resultado.id)
@@ -84,7 +91,9 @@ class ServicoServiceTest {
         `when`(clienteRepository.buscarPorId(1L)).thenReturn(null)
 
         val exception =
-                assertThrows(IllegalArgumentException::class.java) { service.salvar(servico, 1L, 1L, listOf(1L, 2L)) }
+                assertThrows(IllegalArgumentException::class.java) {
+                    service.salvar(servico, 1L, 1L, listOf(pecaId1.valor, pecaId2.valor))
+                }
 
         assertEquals("Cliente não encontrado com o ID: 1", exception.message)
         verify(repository, never()).salvar(servico)
@@ -120,4 +129,12 @@ class ServicoServiceTest {
         assertEquals("Serviço não encontrado para deletar.", exception.message)
         verify(repository, never()).deletarPorId(anyLong())
     }
+
+    private fun criarPeca(id: Id, codigo: String): Peca =
+        Peca(
+            id = id,
+            codigo = codigo,
+            nome = "Peça Teste",
+            precoDeVenda = BigDecimal.TEN
+        )
 }

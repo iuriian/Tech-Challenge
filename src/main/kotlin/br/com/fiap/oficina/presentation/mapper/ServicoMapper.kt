@@ -15,7 +15,7 @@ class ServicoMapper {
             funcionarioId = servico.funcionarioId ?: 0L,
             clienteId = servico.cliente.id ?: 0L,
             veiculoId = servico.veiculo.idVeiculo ?: 0L,
-            pecasIds = servico.pecas.map { it.id ?: 0L }
+            pecasIds = servico.pecas.map { it.id.valor }
         )
     }
 
