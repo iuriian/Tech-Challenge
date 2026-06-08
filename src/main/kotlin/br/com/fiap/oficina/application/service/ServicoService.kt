@@ -5,8 +5,10 @@ import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 class ServicoService(
@@ -17,7 +19,7 @@ class ServicoService(
 ) {
 
     @Transactional
-    fun salvar(servico: Servico, clienteId: Long, veiculoId: Long, pecasIds: List<Long>): Servico {
+    fun salvar(servico: Servico, clienteId: Long, veiculoId: Long, pecasIds: List<UUID>): Servico {
         val cliente = clienteRepository.buscarPorId(clienteId)
             ?: throw IllegalArgumentException("Cliente não encontrado com o ID: $clienteId")
         servico.cliente = cliente
@@ -27,7 +29,7 @@ class ServicoService(
         servico.veiculo = veiculo
 
         if (pecasIds.isNotEmpty()) {
-            val pecas = pecasIds.mapNotNull { pecaRepository.buscarPorId(it) }
+            val pecas = pecasIds.mapNotNull { pecaRepository.buscarPorId(Id.from(it)) }
             servico.pecas = pecas
         } else {
             servico.pecas = emptyList()

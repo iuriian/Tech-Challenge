@@ -2,6 +2,7 @@ package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.PecaJpaRepository
 import org.springframework.stereotype.Component
@@ -33,6 +34,6 @@ class PecaRepositoryAdapter(
     override fun existePorCodigo(codigo: String): Boolean =
         jpaRepository.existsByCodigo(codigo)
 
-    override fun buscarPorId(id: Long): Peca? =
-        jpaRepository.findById(id).map(mapper::toDomain).orElse(null)
+    override fun buscarPorId(id: Id): Peca? =
+        jpaRepository.findById(id.valor).map(mapper::toDomain).orElse(null)
 }
