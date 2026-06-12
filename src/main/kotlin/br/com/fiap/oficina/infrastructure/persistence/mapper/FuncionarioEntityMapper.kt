@@ -1,0 +1,20 @@
+package br.com.fiap.oficina.infrastructure.persistence.mapper
+
+import br.com.fiap.oficina.domain.model.Cargo
+import br.com.fiap.oficina.domain.model.Funcionario
+import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.infrastructure.persistence.entity.FuncionarioEntity
+
+fun Funcionario.toEntity(): FuncionarioEntity =
+    FuncionarioEntity(
+        id = id.valor,
+        nome = nome,
+        cargo = cargo.id,
+    )
+
+fun FuncionarioEntity.toDomain(): Funcionario =
+    Funcionario(
+        id = Id(id),
+        nome = nome,
+        cargo = Cargo.fromId(cargo),
+    )
