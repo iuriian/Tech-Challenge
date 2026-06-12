@@ -2,6 +2,7 @@ package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
@@ -16,35 +17,34 @@ class PecaService(private val repository: PecaRepository) {
     fun atualizarPeca(codigo: String, dadosAtualizados: Peca): Peca {
         val peca = buscarPorCodigo(codigo)
 
-        peca.nome = dadosAtualizados.nome
-        peca.descricao = dadosAtualizados.descricao
-        peca.fabricante = dadosAtualizados.fabricante
-        peca.fornecedor = dadosAtualizados.fornecedor
-        peca.precoDeCompra = dadosAtualizados.precoDeCompra
-        peca.precoDeVenda = dadosAtualizados.precoDeVenda
-
-        return repository.salvar(peca)
+        return repository.salvar(
+            peca.copy(
+                nome = dadosAtualizados.nome,
+                descricao = dadosAtualizados.descricao,
+                fabricante = dadosAtualizados.fabricante,
+                fornecedor = dadosAtualizados.fornecedor,
+                precoDeCompra = dadosAtualizados.precoDeCompra,
+                precoDeVenda = dadosAtualizados.precoDeVenda
+            )
+        )
     }
 
     fun retirarPecas(codigo: String, qtd: Int): Peca? {
         val peca = buscarPorCodigo(codigo)
 
-        peca.retirarPecas(qtd)
-        return repository.salvar(peca)
+        return repository.salvar(peca.retirarPecas(qtd))
     }
 
     fun reporPecas(codigo: String, qtd: Int): Peca? {
         val peca = buscarPorCodigo(codigo)
 
-        peca.reporPecas(qtd)
-        return repository.salvar(peca)
+        return repository.salvar(peca.reporPecas(qtd))
     }
 
     fun desativarPeca(codigo: String): Boolean {
         val peca = buscarPorCodigo(codigo)
 
-        peca.desativar()
-        repository.salvar(peca)
+        repository.salvar(peca.desativar())
         return true
     }
 
@@ -53,8 +53,7 @@ class PecaService(private val repository: PecaRepository) {
     fun reativarPeca(codigo: String): Boolean {
         val peca = buscarEntreTodosPorCodigo(codigo) ?: return false
 
-        peca.reativar()
-        repository.salvar(peca)
+        repository.salvar(peca.reativar())
         return true
     }
 
@@ -65,7 +64,7 @@ class PecaService(private val repository: PecaRepository) {
 
     fun existePorCodigo(codigo: String) = repository.existeAtivoPorCodigo(codigo)
 
-    fun buscarGerencialPorId(id: Long) = repository.buscarPorId(id)
+    fun buscarGerencialPorId(id: Id) = repository.buscarPorId(id)
 
     fun buscarEntreTodosPorCodigo(codigo: String) = repository.buscarPorCodigo(codigo)
 

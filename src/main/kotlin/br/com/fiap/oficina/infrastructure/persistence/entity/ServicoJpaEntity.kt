@@ -35,5 +35,5 @@ class ServicoJpaEntity {
         joinColumns = [JoinColumn(name = "servico_id")],
         inverseJoinColumns = [JoinColumn(name = "peca_id")]
     )
-    var pecas: List<PecaJpaEntity> = mutableListOf()
+    var pecas: MutableList<PecaJpaEntity> = mutableListOf()
 }

@@ -2,8 +2,9 @@ package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.infrastructure.persistence.entity.PecaJpaEntity
 import org.springframework.data.jpa.repository.JpaRepository
+import java.util.UUID
 
-interface PecaJpaRepository : JpaRepository<PecaJpaEntity, Long> {
+interface PecaJpaRepository : JpaRepository<PecaJpaEntity, UUID> {
 
     fun findAllByAtivoTrue(): List<PecaJpaEntity>
 

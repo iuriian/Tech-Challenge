@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.repository
 
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.valueobject.Id
 
 interface PecaRepository {
 
@@ -18,5 +19,5 @@ interface PecaRepository {
 
     fun existePorCodigo(codigo: String): Boolean
 
-    fun buscarPorId(id: Long): Peca?
+    fun buscarPorId(id: Id): Peca?
 }
