@@ -2,14 +2,15 @@ package br.com.fiap.oficina.infrastructure.persistence.entity
 
 import jakarta.persistence.*
 import jakarta.validation.constraints.Size
+import java.util.UUID
 
 @Entity
 @Table(name = "veiculos")
 class VeiculoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var idVeiculo: Long? = null
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var idVeiculo: UUID = UUID.randomUUID()
 
     @Column(nullable = false)
     lateinit var marca: String

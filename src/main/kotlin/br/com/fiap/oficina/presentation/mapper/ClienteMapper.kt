@@ -8,47 +8,64 @@ import br.com.fiap.oficina.domain.valueobject.TipoPessoa
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.dto.ContatoDto
 import br.com.fiap.oficina.presentation.dto.EnderecoDto
-import org.mapstruct.AfterMapping
-import org.mapstruct.Mapper
-import org.mapstruct.Mapping
-import org.mapstruct.MappingTarget
-import org.mapstruct.factory.Mappers
+import org.springframework.stereotype.Component
 
-@Mapper(componentModel = "spring")
-abstract class ClienteMapper {
-    companion object {
-        val INSTANCE: ClienteMapper = Mappers.getMapper(ClienteMapper::class.java)
-    }
+@Component
+class ClienteMapper {
 
-    @Mapping(source = "documento.numero", target = "numeroDocumento")
-    @Mapping(source = "documento.tipoPessoa", target = "tipoPessoa")
-    abstract fun toResponse(cliente: Cliente): ClienteDto
+    fun toResponse(cliente: Cliente): ClienteDto =
+        ClienteDto(
+            id = cliente.id.valor,
+            nome = cliente.nome,
+            numeroDocumento = cliente.documento.numero,
+            tipoPessoa = cliente.documento.tipoPessoa.name,
+            email = cliente.email,
+            endereco = cliente.endereco?.let(::toEnderecoDto),
+            contatos = cliente.contatos.map(::toContatoDto)
+        )
 
-    abstract fun toEnderecoDto(endereco: Endereco?): EnderecoDto?
+    fun toEntity(dto: ClienteDto): Cliente =
+        Cliente.criar(
+            nome = dto.nome,
+            documento = Documento(dto.numeroDocumento, TipoPessoa.valueOf(dto.tipoPessoa)),
+            email = dto.email,
+            endereco = dto.endereco?.let(::toEnderecoEntity),
+            contatos = dto.contatos.map(::toContatoEntity)
+        )
 
-    abstract fun toContatoDto(contato: Contato): ContatoDto
+    fun toEnderecoDto(endereco: Endereco): EnderecoDto =
+        EnderecoDto(
+            logradouro = endereco.logradouro,
+            numero = endereco.numero,
+            complemento = endereco.complemento,
+            bairro = endereco.bairro,
+            cidade = endereco.cidade,
+            estado = endereco.estado,
+            cep = endereco.cep
+        )
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "documento", ignore = true)
-    @Mapping(target = "contatos", ignore = true)
-    abstract fun toEntity(dto: ClienteDto): Cliente
+    fun toContatoDto(contato: Contato): ContatoDto =
+        ContatoDto(
+            tipo = contato.tipo,
+            nome = contato.nome,
+            telefone = contato.telefone
+        )
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toContatoEntity(dto: ContatoDto): Contato
+    fun toEnderecoEntity(dto: EnderecoDto): Endereco =
+        Endereco.criar(
+            logradouro = dto.logradouro,
+            numero = dto.numero,
+            complemento = dto.complemento,
+            bairro = dto.bairro,
+            cidade = dto.cidade,
+            estado = dto.estado,
+            cep = dto.cep
+        )
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toEnderecoEntity(dto: EnderecoDto?): Endereco?
-
-    @AfterMapping
-    fun setDocumento(dto: ClienteDto, @MappingTarget cliente: Cliente) {
-        cliente.documento = Documento(dto.numeroDocumento, TipoPessoa.valueOf(dto.tipoPessoa))
-        cliente.endereco?.cliente = cliente
-        cliente.contatos.addAll(dto.contatos.map {
-            val contato = toContatoEntity(it)
-            contato.cliente = cliente
-            contato
-        })
-    }
+    fun toContatoEntity(dto: ContatoDto): Contato =
+        Contato.criar(
+            tipo = dto.tipo,
+            nome = dto.nome,
+            telefone = dto.telefone
+        )
 }

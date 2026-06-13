@@ -7,24 +7,14 @@ import org.springframework.stereotype.Component
 @Component
 class ServicoMapper {
 
-    fun toResponse(servico: Servico): ServicoDto {
-        return ServicoDto(
-            id = servico.id,
+    fun toResponse(servico: Servico): ServicoDto =
+        ServicoDto(
+            id = servico.id.valor,
             descricao = servico.descricao,
             status = servico.status,
-            funcionarioId = servico.funcionarioId ?: 0L,
-            clienteId = servico.cliente.id ?: 0L,
-            veiculoId = servico.veiculo.idVeiculo ?: 0L,
+            funcionarioId = servico.funcionarioId,
+            clienteId = servico.cliente.id.valor,
+            veiculoId = servico.veiculo.id.valor,
             pecasIds = servico.pecas.map { it.id.valor }
         )
-    }
-
-    fun toEntity(dto: ServicoDto): Servico {
-        return Servico().apply {
-            id = dto.id
-            descricao = dto.descricao
-            status = dto.status
-            funcionarioId = dto.funcionarioId
-        }
-    }
 }
