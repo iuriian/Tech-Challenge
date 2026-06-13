@@ -1,14 +1,30 @@
 package br.com.fiap.oficina.domain.entity
 
-class Contato {
+import br.com.fiap.oficina.domain.valueobject.Id
 
-    var id: Long? = null
+data class Contato(
+    val id: Id,
+    val tipo: String,
+    val nome: String,
+    val telefone: String
+) {
 
-    lateinit var tipo: String
+    companion object {
+        fun criar(
+            tipo: String,
+            nome: String,
+            telefone: String
+        ): Contato {
+            require(tipo.isNotBlank()) { "Tipo do contato é obrigatório" }
+            require(nome.isNotBlank()) { "Nome do contato é obrigatório" }
+            require(telefone.isNotBlank()) { "Telefone do contato é obrigatório" }
 
-    lateinit var nome: String
-
-    lateinit var telefone: String
-
-    var cliente: Cliente? = null
+            return Contato(
+                id = Id.gerar(),
+                tipo = tipo,
+                nome = nome,
+                telefone = telefone
+            )
+        }
+    }
 }

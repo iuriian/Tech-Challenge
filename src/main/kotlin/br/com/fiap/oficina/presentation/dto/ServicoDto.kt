@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull
 import java.util.UUID
 
 data class ServicoDto(
-    val id: Long? = null,
+    val id: UUID? = null,
 
     @field:NotNull
     @field:NotBlank
@@ -19,10 +19,10 @@ data class ServicoDto(
 
 
     @field:NotNull
-    val clienteId: Long,
+    val clienteId: UUID,
 
     @field:NotNull
-    val veiculoId: Long,
+    val veiculoId: UUID,
 
     val pecasIds: List<UUID> = emptyList()
 )
