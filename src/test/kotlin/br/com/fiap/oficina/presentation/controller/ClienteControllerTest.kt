@@ -3,6 +3,7 @@ package br.com.fiap.oficina.presentation.controller
 import br.com.fiap.oficina.application.service.ClienteService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
+import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
@@ -13,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.UUID
 
 @WebMvcTest(ClienteController::class)
 class ClienteControllerTest {
@@ -29,15 +31,16 @@ class ClienteControllerTest {
     @Test
     @WithMockUser
     fun `deve buscar cliente por id`() {
-        val id = 1L
-        val cliente = Cliente().apply {
-            this.id = id
-            this.nome = "João Silva"
-            this.documento = Documento.cpf( "123.456.789-00")
-        }
-        
-        `when`(service.buscarPorId(id)).thenReturn(cliente)
-        
+        val id = UUID.randomUUID()
+        val cliente = Cliente(
+            id = Id.from(id),
+            nome = "João Silva",
+            documento = Documento.cpf("39053344705"),
+            email = "joao.silva@example.com"
+        )
+
+        `when`(service.buscarPorId(Id.from(id))).thenReturn(cliente)
+
         mockMvc.perform(get("/clientes/$id"))
             .andExpect(status().isOk)
     }

@@ -1,14 +1,24 @@
 package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
-import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.UUID
+
+data class ServicoComando(
+    val id: Id? = null,
+    val descricao: String,
+    val funcionarioId: Long,
+    val status: ServicoStatus = ServicoStatus.RECEBIDA,
+    val clienteId: Id,
+    val veiculoId: Id,
+    val pecasIds: List<Id> = emptyList()
+)
 
 @Service
 class ServicoService(
@@ -19,35 +29,43 @@ class ServicoService(
 ) {
 
     @Transactional
-    fun salvar(servico: Servico, clienteId: Long, veiculoId: Long, pecasIds: List<UUID>): Servico {
-        val cliente = clienteRepository.buscarPorId(clienteId)
-            ?: throw IllegalArgumentException("Cliente não encontrado com o ID: $clienteId")
-        servico.cliente = cliente
+    fun salvar(comando: ServicoComando): Servico {
+        val cliente = clienteRepository.buscarPorId(comando.clienteId)
+            ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.clienteId}")
 
-        val veiculo = veiculoRepository.buscarPorId(veiculoId)
-            ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $veiculoId")
-        servico.veiculo = veiculo
+        val veiculo = veiculoRepository.buscarPorId(comando.veiculoId)
+            ?: throw IllegalArgumentException("Veículo não encontrado com o ID: ${comando.veiculoId}")
 
-        if (pecasIds.isNotEmpty()) {
-            val pecas = pecasIds.mapNotNull { pecaRepository.buscarPorId(Id.from(it)) }
-            servico.pecas = pecas
-        } else {
-            servico.pecas = emptyList()
-        }
+        val pecas = comando.pecasIds.mapNotNull { pecaRepository.buscarPorId(it) }
+
+        val servico = comando.id?.let { id ->
+            Servico(
+                id = id,
+                descricao = comando.descricao,
+                status = comando.status,
+                funcionarioId = comando.funcionarioId,
+                cliente = cliente,
+                veiculo = veiculo,
+                pecas = pecas
+            )
+        } ?: Servico.criar(
+            descricao = comando.descricao,
+            funcionarioId = comando.funcionarioId,
+            cliente = cliente,
+            veiculo = veiculo,
+            status = comando.status,
+            pecas = pecas
+        )
 
         return repository.salvar(servico)
     }
 
-    fun listarPorId(id: Long): Servico? {
-        return repository.buscarPorId(id)
-    }
+    fun listarPorId(id: Id): Servico? = repository.buscarPorId(id)
 
-    fun listarTodos(): List<Servico> {
-        return repository.listarTodos()
-    }
+    fun listarTodos(): List<Servico> = repository.listarTodos()
 
     @Transactional
-    fun deletarPorId(id: Long): String? {
+    fun deletarPorId(id: Id): String {
         require(repository.existePorId(id)) { "Serviço não encontrado para deletar." }
         repository.deletarPorId(id)
 

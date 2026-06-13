@@ -1,6 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
+import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
+import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -10,6 +13,7 @@ import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/servicos")
@@ -32,8 +36,7 @@ class ServicoController(
         @RequestBody
         dto: ServicoDto
     ): ServicoDto {
-        val entity = mapper.toEntity(dto)
-        val saved = service.salvar(entity, dto.clienteId, dto.veiculoId, dto.pecasIds)
+        val saved = service.salvar(toComando(dto, id = null))
 
         return mapper.toResponse(saved)
     }
@@ -45,17 +48,13 @@ class ServicoController(
         description = "Atualiza um servico no sistema"
     )
     fun atualizar(
-        @Parameter(
-            description = "ID do serviço a ser atualizado",
-            required = true,
-            example = "1")
-        @PathVariable id: Long,
+        @Parameter(description = "ID do serviço a ser atualizado", required = true)
+        @PathVariable id: UUID,
         @Valid
         @RequestBody
         dto: ServicoDto
     ): ServicoDto {
-        val entity = mapper.toEntity(dto).apply { this.id = id }
-        val saved = service.salvar(entity, dto.clienteId, dto.veiculoId, dto.pecasIds)
+        val saved = service.salvar(toComando(dto, id = Id.from(id)))
 
         return mapper.toResponse(saved)
     }
@@ -67,13 +66,10 @@ class ServicoController(
         description = "Lista um servico do sistema pelo ID"
     )
     fun listarPorId(
-        @Parameter(
-            description = "ID do serviço",
-            required = true,
-            example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
     ): ServicoDto? {
-        return service.listarPorId(id)?.let {
+        return service.listarPorId(Id.from(id))?.let {
             mapper.toResponse(it)
         }
     }
@@ -98,13 +94,21 @@ class ServicoController(
     )
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletarPorId(
-        @Parameter(
-            description = "ID do servico a ser removido",
-            required = true,
-            example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID do servico a ser removido", required = true)
+        @PathVariable id: UUID
     ) {
-        service.deletarPorId(id)
+        service.deletarPorId(Id.from(id))
     }
+
+    private fun toComando(dto: ServicoDto, id: Id?): ServicoComando =
+        ServicoComando(
+            id = id,
+            descricao = dto.descricao,
+            funcionarioId = dto.funcionarioId,
+            status = dto.status ?: ServicoStatus.RECEBIDA,
+            clienteId = Id.from(dto.clienteId),
+            veiculoId = Id.from(dto.veiculoId),
+            pecasIds = dto.pecasIds.map { Id.from(it) }
+        )
 
 }
