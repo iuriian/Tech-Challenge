@@ -2,6 +2,7 @@ package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
+import java.util.UUID
 
 
 @RestController
@@ -28,10 +30,10 @@ class VeiculoController(
     @GetMapping("/{id}")
     @Operation(summary = "Buscar veiculo por ID", description = "Busca um veiculo pelo seu ID único")
     fun buscarVeiculoPorId(
-        @Parameter(description = "Id do Veiculo", required = true, example = "1")
-        @PathVariable("id") idVeiculo: Long
+        @Parameter(description = "Id do Veiculo", required = true)
+        @PathVariable("id") idVeiculo: UUID
     ): VeiculoDTO? {
-        return service.buscarPorId(idVeiculo)?.let { mapper.toResponse(it) }
+        return service.buscarPorId(Id.from(idVeiculo))?.let { mapper.toResponse(it) }
     }
 
     @GetMapping("/placa/{placa}")
