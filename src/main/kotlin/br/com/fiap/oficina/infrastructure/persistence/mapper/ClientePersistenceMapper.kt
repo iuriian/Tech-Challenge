@@ -4,49 +4,87 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Contato
 import br.com.fiap.oficina.domain.entity.Endereco
 import br.com.fiap.oficina.domain.valueobject.Documento
+import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.ClienteJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.entity.ContatoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.entity.DocumentoEmbeddable
 import br.com.fiap.oficina.infrastructure.persistence.entity.EnderecoJpaEntity
-import org.mapstruct.AfterMapping
-import org.mapstruct.Mapper
-import org.mapstruct.Mapping
-import org.mapstruct.MappingTarget
+import org.springframework.stereotype.Component
 
-@Mapper(componentModel = "spring")
-abstract class ClientePersistenceMapper {
+@Component
+class ClientePersistenceMapper {
 
-    abstract fun toDomain(entity: ClienteJpaEntity): Cliente
+    fun toDomain(entity: ClienteJpaEntity): Cliente =
+        Cliente(
+            id = Id.from(entity.id),
+            nome = entity.nome,
+            documento = toDocumentoDomain(entity.documento),
+            email = entity.email,
+            endereco = entity.endereco?.let(::toEnderecoDomain),
+            contatos = entity.contatos.map(::toContatoDomain)
+        )
 
-    abstract fun toJpa(domain: Cliente): ClienteJpaEntity
-
-    // O lado "cliente" das associações é religado em @AfterMapping para evitar
-    // a recursão infinita do mapeamento bidirecional.
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toEndereco(entity: EnderecoJpaEntity): Endereco
-
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toEnderecoJpa(domain: Endereco): EnderecoJpaEntity
-
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toContato(entity: ContatoJpaEntity): Contato
-
-    @Mapping(target = "cliente", ignore = true)
-    abstract fun toContatoJpa(domain: Contato): ContatoJpaEntity
-
-    abstract fun toDocumento(embeddable: DocumentoEmbeddable): Documento
-
-    abstract fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable
-
-    @AfterMapping
-    protected fun linkDomainBackReferences(@MappingTarget cliente: Cliente) {
-        cliente.endereco?.cliente = cliente
-        cliente.contatos.forEach { it.cliente = cliente }
-    }
-
-    @AfterMapping
-    protected fun linkJpaBackReferences(@MappingTarget entity: ClienteJpaEntity) {
+    fun toJpa(domain: Cliente): ClienteJpaEntity {
+        val entity = ClienteJpaEntity().apply {
+            id = domain.id.valor
+            nome = domain.nome
+            documento = toDocumentoEmbeddable(domain.documento)
+            email = domain.email
+            endereco = domain.endereco?.let(::toEnderecoJpa)
+            contatos = domain.contatos.map(::toContatoJpa).toMutableList()
+        }
+        // Religa o lado "cliente" das associações para manter o mapeamento bidirecional.
         entity.endereco?.cliente = entity
         entity.contatos.forEach { it.cliente = entity }
+        return entity
     }
+
+    fun toEnderecoDomain(entity: EnderecoJpaEntity): Endereco =
+        Endereco(
+            id = Id.from(entity.id),
+            logradouro = entity.logradouro,
+            numero = entity.numero,
+            complemento = entity.complemento,
+            bairro = entity.bairro,
+            cidade = entity.cidade,
+            estado = entity.estado,
+            cep = entity.cep
+        )
+
+    fun toEnderecoJpa(domain: Endereco): EnderecoJpaEntity =
+        EnderecoJpaEntity().apply {
+            id = domain.id.valor
+            logradouro = domain.logradouro
+            numero = domain.numero
+            complemento = domain.complemento
+            bairro = domain.bairro
+            cidade = domain.cidade
+            estado = domain.estado
+            cep = domain.cep
+        }
+
+    fun toContatoDomain(entity: ContatoJpaEntity): Contato =
+        Contato(
+            id = Id.from(entity.id),
+            tipo = entity.tipo,
+            nome = entity.nome,
+            telefone = entity.telefone
+        )
+
+    fun toContatoJpa(domain: Contato): ContatoJpaEntity =
+        ContatoJpaEntity().apply {
+            id = domain.id.valor
+            tipo = domain.tipo
+            nome = domain.nome
+            telefone = domain.telefone
+        }
+
+    private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento =
+        Documento(embeddable.numero, embeddable.tipoPessoa)
+
+    private fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable =
+        DocumentoEmbeddable().apply {
+            numero = documento.numero
+            tipoPessoa = documento.tipoPessoa
+        }
 }

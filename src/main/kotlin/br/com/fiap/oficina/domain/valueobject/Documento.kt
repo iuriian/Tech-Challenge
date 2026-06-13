@@ -28,7 +28,7 @@ class Documento(
     }
 
     companion object {
-        private const val NUMBER_PATTERN = "[ˆ0-9]"
+        private const val NUMBER_PATTERN = "[^0-9]"
         fun cpf(numero: String) = Documento(numero, TipoPessoa.PESSOA_FISICA)
         fun cnpj(numero: String) = Documento(numero, TipoPessoa.PESSOA_JURIDICA)
     }

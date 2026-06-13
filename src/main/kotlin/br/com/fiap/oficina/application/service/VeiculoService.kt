@@ -3,6 +3,7 @@ package br.com.fiap.oficina.application.service
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
@@ -14,8 +15,8 @@ class VeiculoService(
         return repository.salvar(veiculo)
     }
 
-    fun buscarPorId(idVeiculo: Long): Veiculo? {
-        return repository.buscarPorId(idVeiculo)
+    fun buscarPorId(id: Id): Veiculo? {
+        return repository.buscarPorId(id)
     }
 
     fun buscarPorPlaca(placa: String): Veiculo? {

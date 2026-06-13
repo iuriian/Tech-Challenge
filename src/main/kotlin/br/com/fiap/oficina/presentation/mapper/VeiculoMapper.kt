@@ -1,22 +1,31 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import org.mapstruct.Mapper
-import org.mapstruct.Mapping
-import org.mapstruct.factory.Mappers
-
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
+import org.springframework.stereotype.Component
 
-@Mapper(componentModel = "spring")
-interface VeiculoMapper {
-    companion object{
-        val INSTANCE : VeiculoMapper = Mappers.getMapper(VeiculoMapper::class.java)
+@Component
+class VeiculoMapper {
+
+    fun toEntity(dto: VeiculoDTO): Veiculo {
+        val motorista = requireNotNull(dto.motorista) { "Motorista é obrigatório" }
+        return Veiculo.criar(
+            marca = dto.marca,
+            nome = dto.nome,
+            modelo = dto.modelo,
+            ano = dto.ano,
+            placa = dto.placa,
+            motorista = motorista
+        )
     }
 
-    // Validar se está correto
-    @Mapping(target = "idVeiculo", ignore = true)
-    fun toEntity(dto: VeiculoDTO): Veiculo
-
-    fun toResponse(veiculo: Veiculo): VeiculoDTO
-
+    fun toResponse(veiculo: Veiculo): VeiculoDTO =
+        VeiculoDTO(
+            nome = veiculo.nome,
+            marca = veiculo.marca,
+            modelo = veiculo.modelo,
+            ano = veiculo.ano,
+            placa = veiculo.placa,
+            motorista = veiculo.motorista
+        )
 }

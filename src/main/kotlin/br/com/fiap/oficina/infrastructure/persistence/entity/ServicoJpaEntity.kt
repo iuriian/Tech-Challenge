@@ -2,14 +2,15 @@ package br.com.fiap.oficina.infrastructure.persistence.entity
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import jakarta.persistence.*
+import java.util.UUID
 
 @Entity
 @Table(name = "servicos")
 class ServicoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID = UUID.randomUUID()
 
     @Column(nullable = false)
     lateinit var descricao: String
