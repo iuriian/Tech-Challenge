@@ -1,9 +1,21 @@
 package br.com.fiap.oficina.presentation.dto
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
+import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
+import java.math.BigDecimal
 import java.util.UUID
+
+data class PecaServicoDto(
+    @field:NotNull
+    val pecaId: UUID,
+
+    @field:NotNull
+    @field:Positive
+    val quantidade: BigDecimal
+)
 
 data class ServicoDto(
     val id: UUID? = null,
@@ -24,5 +36,6 @@ data class ServicoDto(
     @field:NotNull
     val veiculoId: UUID,
 
-    val pecasIds: List<UUID> = emptyList()
+    @field:Valid
+    val pecas: List<PecaServicoDto> = emptyList()
 )

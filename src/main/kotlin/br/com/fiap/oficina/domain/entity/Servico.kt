@@ -2,6 +2,9 @@ package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
+import br.com.fiap.oficina.domain.valueobject.Orcamento
+import java.math.BigDecimal
 
 data class Servico(
     val id: Id,
@@ -10,7 +13,7 @@ data class Servico(
     val funcionarioId: Long,
     val cliente: Cliente,
     val veiculo: Veiculo,
-    val pecas: List<Peca> = emptyList()
+    val pecas: List<PecaServico> = emptyList()
 ) {
 
     companion object {
@@ -20,7 +23,7 @@ data class Servico(
             cliente: Cliente,
             veiculo: Veiculo,
             status: ServicoStatus = ServicoStatus.RECEBIDA,
-            pecas: List<Peca> = emptyList()
+            pecas: List<PecaServico> = emptyList()
         ): Servico {
             require(descricao.isNotBlank()) { "Descrição do serviço é obrigatória" }
 
@@ -36,7 +39,30 @@ data class Servico(
         }
     }
 
-    fun adicionarPeca(peca: Peca): Servico = copy(pecas = pecas + peca)
+    fun adicionarPeca(pecaServico: PecaServico): Servico = copy(pecas = pecas + pecaServico)
+
+    fun adicionarPeca(peca: Peca, quantidade: BigDecimal): Servico =
+        adicionarPeca(PecaServico.criar(peca, quantidade))
 
     fun alterarStatus(novoStatus: ServicoStatus): Servico = copy(status = novoStatus)
+
+    /**
+     * Gera o orçamento do serviço, discriminando cada peça consumida e
+     * totalizando o valor das peças (preço de venda × quantidade).
+     */
+    fun gerarOrcamento(): Orcamento {
+        val itens = pecas.map { item ->
+            ItemOrcamento(
+                pecaId = item.peca.id,
+                codigo = item.peca.codigo,
+                nome = item.peca.nome,
+                precoUnitario = item.peca.precoDeVenda,
+                quantidade = item.quantidade,
+                subtotal = item.subtotal()
+            )
+        }
+        val valorTotal = itens.fold(BigDecimal.ZERO) { acc, item -> acc + item.subtotal }
+
+        return Orcamento(servicoId = id, itens = itens, valorTotal = valorTotal)
+    }
 }
