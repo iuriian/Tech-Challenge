@@ -2,6 +2,7 @@ package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -47,7 +48,10 @@ class ServicoPersistenceMapperTest {
             cliente = cliente,
             veiculo = veiculo,
             pecas = listOf(
-                Peca(Id.gerar(), "PEC001", "Filtro", precoDeVenda = BigDecimal.TEN)
+                PecaServico(
+                    Peca(Id.gerar(), "PEC001", "Filtro", precoDeVenda = BigDecimal.TEN),
+                    BigDecimal("2")
+                )
             )
         )
 
@@ -56,6 +60,7 @@ class ServicoPersistenceMapperTest {
         assertEquals(servico.id.valor, jpa.id)
         assertEquals(ServicoStatus.EM_EXECUCAO, jpa.status)
         assertEquals(7L, jpa.funcionarioId)
+        assertEquals(BigDecimal("2"), jpa.pecas.first().quantidade)
         assertEquals(servico, mapper.toDomain(jpa))
     }
 

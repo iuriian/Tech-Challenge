@@ -1,9 +1,11 @@
 package br.com.fiap.oficina.presentation.controller
 
+import br.com.fiap.oficina.application.service.PecaServicoComando
 import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.presentation.dto.OrcamentoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -13,6 +15,7 @@ import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.util.UUID
 
 @RestController
@@ -74,6 +77,24 @@ class ServicoController(
         }
     }
 
+    @GetMapping("/{id}/orcamento")
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(
+        summary = "Obter orçamento do servico",
+        description = "Retorna o orçamento do servico, totalizando o valor das peças " +
+            "(preço de venda multiplicado pela quantidade)"
+    )
+    fun obterOrcamento(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
+    ): OrcamentoDto {
+        return try {
+            mapper.toResponse(service.obterOrcamento(Id.from(id)))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        }
+    }
+
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(
@@ -108,7 +129,7 @@ class ServicoController(
             status = dto.status ?: ServicoStatus.RECEBIDA,
             clienteId = Id.from(dto.clienteId),
             veiculoId = Id.from(dto.veiculoId),
-            pecasIds = dto.pecasIds.map { Id.from(it) }
+            pecas = dto.pecas.map { PecaServicoComando(Id.from(it.pecaId), it.quantidade) }
         )
 
 }

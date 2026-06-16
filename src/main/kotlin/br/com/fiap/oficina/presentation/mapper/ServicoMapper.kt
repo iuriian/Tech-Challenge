@@ -1,6 +1,10 @@
 package br.com.fiap.oficina.presentation.mapper
 
 import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.valueobject.Orcamento
+import br.com.fiap.oficina.presentation.dto.ItemOrcamentoDto
+import br.com.fiap.oficina.presentation.dto.OrcamentoDto
+import br.com.fiap.oficina.presentation.dto.PecaServicoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import org.springframework.stereotype.Component
 
@@ -15,6 +19,22 @@ class ServicoMapper {
             funcionarioId = servico.funcionarioId,
             clienteId = servico.cliente.id.valor,
             veiculoId = servico.veiculo.id.valor,
-            pecasIds = servico.pecas.map { it.id.valor }
+            pecas = servico.pecas.map { PecaServicoDto(it.peca.id.valor, it.quantidade) }
+        )
+
+    fun toResponse(orcamento: Orcamento): OrcamentoDto =
+        OrcamentoDto(
+            servicoId = orcamento.servicoId.valor,
+            itens = orcamento.itens.map { item ->
+                ItemOrcamentoDto(
+                    pecaId = item.pecaId.valor,
+                    codigo = item.codigo,
+                    nome = item.nome,
+                    precoUnitario = item.precoUnitario,
+                    quantidade = item.quantidade,
+                    subtotal = item.subtotal
+                )
+            },
+            valorTotal = orcamento.valorTotal
         )
 }
