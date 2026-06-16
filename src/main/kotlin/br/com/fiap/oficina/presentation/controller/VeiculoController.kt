@@ -7,6 +7,7 @@ import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.*
@@ -15,6 +16,7 @@ import java.util.UUID
 
 @RestController
 @RequestMapping("/v1/veiculos")
+@Tag(name = "Veículos", description = "Operações relacionadas ao gerenciamento de veículos")
 class VeiculoController(
     private val service: VeiculoService,
     private val mapper: VeiculoMapper
