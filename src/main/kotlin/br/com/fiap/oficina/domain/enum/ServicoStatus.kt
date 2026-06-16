@@ -7,4 +7,5 @@ enum class ServicoStatus(val descricao: String) {
     EM_EXECUCAO("Em Execução"),
     FINALIZADA("Finalizada"),
     ENTREGUE("Entregue"),
+    CANCELADA("Cancelada pelo cliente")
 }

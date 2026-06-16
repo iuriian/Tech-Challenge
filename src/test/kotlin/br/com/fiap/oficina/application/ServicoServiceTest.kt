@@ -1,9 +1,12 @@
 package br.com.fiap.oficina.application
 
+import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.service.PecaServicoComando
 import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -17,6 +20,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
@@ -78,6 +84,12 @@ class ServicoServiceTest {
 
     @Test
     fun `deve salvar servico com sucesso`() {
+        val quantidade1 = BigDecimal("2")
+        val quantidade2 = BigDecimal("3")
+        val pecasEsperadas = listOf(
+            PecaServico.criar(peca1, quantidade1),
+            PecaServico.criar(peca2, quantidade2)
+        )
         val esperado = Servico(
             id = servicoId,
             descricao = "Troca de Óleo",
@@ -85,7 +97,7 @@ class ServicoServiceTest {
             funcionarioId = 1L,
             cliente = cliente,
             veiculo = veiculo,
-            pecas = listOf(peca1, peca2)
+            pecas = pecasEsperadas
         )
 
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
@@ -102,14 +114,17 @@ class ServicoServiceTest {
                 status = ServicoStatus.RECEBIDA,
                 clienteId = clienteId,
                 veiculoId = veiculoId,
-                pecasIds = listOf(pecaId1, pecaId2)
+                pecas = listOf(
+                    PecaServicoComando(pecaId1, quantidade1),
+                    PecaServicoComando(pecaId2, quantidade2)
+                )
             )
         )
 
         assertNotNull(resultado)
         assertEquals(servicoId, resultado.id)
         assertEquals(cliente, resultado.cliente)
-        assertEquals(listOf(peca1, peca2), resultado.pecas)
+        assertEquals(pecasEsperadas, resultado.pecas)
         verify(repository, times(1)).salvar(esperado)
     }
 
@@ -126,7 +141,10 @@ class ServicoServiceTest {
                         funcionarioId = 1L,
                         clienteId = clienteId,
                         veiculoId = veiculoId,
-                        pecasIds = listOf(pecaId1, pecaId2)
+                        pecas = listOf(
+                            PecaServicoComando(pecaId1, BigDecimal("2")),
+                            PecaServicoComando(pecaId2, BigDecimal("3"))
+                        )
                     )
                 )
             }
@@ -154,6 +172,40 @@ class ServicoServiceTest {
     }
 
     @Test
+    fun `deve obter orcamento totalizando valor das pecas`() {
+        val servico = Servico(
+            id = servicoId,
+            descricao = "Troca de Óleo",
+            funcionarioId = 1L,
+            cliente = cliente,
+            veiculo = veiculo,
+            pecas = listOf(
+                PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
+                PecaServico.criar(peca2, BigDecimal("3"))  // 10 * 3 = 30
+            )
+        )
+        `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
+
+        val orcamento = service.obterOrcamento(servicoId)
+
+        assertEquals(servicoId, orcamento.servicoId)
+        assertEquals(2, orcamento.itens.size)
+        assertEquals(0, BigDecimal("50").compareTo(orcamento.valorTotal))
+        verify(repository, times(1)).buscarPorId(servicoId)
+    }
+
+    @Test
+    fun `deve lancar excecao ao obter orcamento de servico inexistente`() {
+        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.obterOrcamento(servicoId)
+        }
+
+        assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
+    }
+
+    @Test
     fun `deve remover servico com sucesso`() {
         `when`(repository.existePorId(servicoId)).thenReturn(true)
 
@@ -173,6 +225,103 @@ class ServicoServiceTest {
         assertEquals("Serviço não encontrado para deletar.", exception.message)
         verify(repository, never()).deletarPorId(idInexistente)
     }
+
+    @ParameterizedTest
+    @CsvSource(
+        "RECEBIDA, EM_DIAGNOSTICO",
+        "EM_DIAGNOSTICO, AGUARDANDO_APROVACAO",
+        "AGUARDANDO_APROVACAO, EM_EXECUCAO",
+        "EM_EXECUCAO, FINALIZADA",
+        "FINALIZADA, ENTREGUE"
+    )
+    fun `avancarStatus deve seguir a ordem de declaracao do enum`(
+        de: ServicoStatus,
+        esperado: ServicoStatus
+    ) {
+        val atual = servicoComStatus(de)
+        val salvo = atual.alterarStatus(esperado)
+        `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
+        `when`(repository.salvar(salvo)).thenReturn(salvo)
+
+        val resultado = service.avancarStatus(servicoId)
+
+        assertEquals(esperado, resultado.status)
+        verify(repository, times(1)).salvar(salvo)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ServicoStatus::class, names = ["ENTREGUE", "CANCELADA"])
+    fun `avancarStatus deve falhar em estado final`(status: ServicoStatus) {
+        `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(status))
+
+        assertThrows(IllegalStateException::class.java) { service.avancarStatus(servicoId) }
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `avancarStatus deve lancar excecao quando servico nao existe`() {
+        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.avancarStatus(servicoId)
+        }
+
+        assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ServicoStatus::class, names = ["EM_EXECUCAO", "CANCELADA"])
+    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: ServicoStatus) {
+        val atual = servicoComStatus(ServicoStatus.AGUARDANDO_APROVACAO)
+        val salvo = atual.alterarStatus(alvo)
+        `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
+        `when`(repository.salvar(salvo)).thenReturn(salvo)
+
+        val resultado = service.alterarStatus(servicoId, alvo)
+
+        assertEquals(alvo, resultado.status)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "RECEBIDA, EM_EXECUCAO",
+        "RECEBIDA, CANCELADA",
+        "AGUARDANDO_APROVACAO, FINALIZADA",
+        "EM_EXECUCAO, CANCELADA",
+        "ENTREGUE, CANCELADA"
+    )
+    fun `alterarStatus deve rejeitar transicoes invalidas`(
+        de: ServicoStatus,
+        alvo: ServicoStatus
+    ) {
+        `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
+
+        assertThrows(IllegalStateException::class.java) {
+            service.alterarStatus(servicoId, alvo)
+        }
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `alterarStatus deve lancar excecao quando servico nao existe`() {
+        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            service.alterarStatus(servicoId, ServicoStatus.EM_DIAGNOSTICO)
+        }
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    private fun servicoComStatus(status: ServicoStatus): Servico =
+        Servico(
+            id = servicoId,
+            descricao = "Troca de Óleo",
+            status = status,
+            funcionarioId = 1L,
+            cliente = cliente,
+            veiculo = veiculo
+        )
 
     private fun criarPeca(id: Id, codigo: String): Peca =
         Peca(
