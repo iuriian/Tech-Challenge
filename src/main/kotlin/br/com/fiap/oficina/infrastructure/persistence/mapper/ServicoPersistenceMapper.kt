@@ -1,8 +1,10 @@
 package br.com.fiap.oficina.infrastructure.persistence.mapper
 
+import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.infrastructure.persistence.entity.PecaServicoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
 import org.springframework.stereotype.Component
 
@@ -21,17 +23,27 @@ class ServicoPersistenceMapper(
             funcionarioId = entity.funcionarioId ?: 0L,
             cliente = clienteMapper.toDomain(entity.cliente),
             veiculo = veiculoMapper.toDomain(entity.veiculo),
-            pecas = entity.pecas.map(pecaMapper::toDomain)
+            pecas = entity.pecas.map {
+                PecaServico(peca = pecaMapper.toDomain(it.peca), quantidade = it.quantidade)
+            }
         )
 
-    fun toJpa(domain: Servico): ServicoJpaEntity =
-        ServicoJpaEntity().apply {
+    fun toJpa(domain: Servico): ServicoJpaEntity {
+        val entity = ServicoJpaEntity().apply {
             id = domain.id.valor
             descricao = domain.descricao
             status = domain.status
             funcionarioId = domain.funcionarioId
             cliente = clienteMapper.toJpa(domain.cliente)
             veiculo = veiculoMapper.toJpa(domain.veiculo)
-            pecas = domain.pecas.map(pecaMapper::toJpa).toMutableList()
         }
+        entity.pecas = domain.pecas.map { pecaServico ->
+            PecaServicoJpaEntity().apply {
+                servico = entity
+                peca = pecaMapper.toJpa(pecaServico.peca)
+                quantidade = pecaServico.quantidade
+            }
+        }.toMutableList()
+        return entity
+    }
 }

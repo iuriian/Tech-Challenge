@@ -30,11 +30,6 @@ class ServicoJpaEntity {
     @JoinColumn(name = "veiculo_id", referencedColumnName = "idVeiculo", nullable = false)
     lateinit var veiculo: VeiculoJpaEntity
 
-    @ManyToMany
-    @JoinTable(
-        name = "servico_pecas",
-        joinColumns = [JoinColumn(name = "servico_id")],
-        inverseJoinColumns = [JoinColumn(name = "peca_id")]
-    )
-    var pecas: MutableList<PecaJpaEntity> = mutableListOf()
+    @OneToMany(mappedBy = "servico", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var pecas: MutableList<PecaServicoJpaEntity> = mutableListOf()
 }
