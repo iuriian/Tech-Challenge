@@ -16,7 +16,7 @@ INSERT INTO pecas (id, codigo, nome, descricao, fabricante, fornecedor, preco_de
 -- João da Silva (cliente 1) trouxe o Gol (veículo 1) para troca de óleo (finalizado)
 -- Maria Oliveira (cliente 2) trouxe o Onix (veículo 3) para troca de pastilha (em diagnóstico)
 INSERT INTO servicos (id, descricao, status, funcionario_id, cliente_id, veiculo_id) VALUES
-    (1, 'Troca de Óleo e Filtro', 'FINALIZADO', 1, 1, 1),
+    (1, 'Troca de Óleo e Filtro', 'FINALIZADA', 1, 1, 1),
     (2, 'Troca de Pastilha de Freio', 'EM_DIAGNOSTICO', 2, 2, 3);
 
 -- ------------------------------------------------------------
