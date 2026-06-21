@@ -18,7 +18,7 @@ class PecaServicoJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID = UUID.randomUUID()
+    lateinit var id: UUID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servico_id", referencedColumnName = "id", nullable = false)

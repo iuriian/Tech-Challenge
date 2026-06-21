@@ -32,7 +32,7 @@ class VeiculoRepositoryAdapterTest {
 
     @BeforeEach
     fun setup() {
-        adapter = VeiculoRepositoryAdapter(jpaRepository, mapper, clienteMapper)
+        adapter = VeiculoRepositoryAdapter(jpaRepository, mapper)
         cliente = Cliente(
             id = Id.gerar(),
             nome = "Dono",
@@ -74,9 +74,9 @@ class VeiculoRepositoryAdapterTest {
 
     @Test
     fun `buscarPorMotorista deve mapear lista`() {
-        `when`(jpaRepository.findByMotorista(anyObject())).thenReturn(listOf(jpa))
+        `when`(jpaRepository.findByMotoristaId(cliente.id.valor)).thenReturn(listOf(jpa))
 
-        assertEquals(listOf(veiculo), adapter.buscarPorMotorista(cliente))
+        assertEquals(listOf(veiculo), adapter.buscarPorMotorista(cliente.id))
     }
 
     @Test
