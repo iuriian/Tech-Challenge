@@ -1,8 +1,10 @@
 package br.com.fiap.oficina.application
 
+import br.com.fiap.oficina.application.service.VeiculoComando
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -10,7 +12,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
+import br.com.fiap.oficina.anyObject
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
@@ -21,14 +23,19 @@ class VeiculoServiceTest {
     @Mock
     lateinit var repository: VeiculoRepository
 
-    @InjectMocks
-    lateinit var service: VeiculoService
+    @Mock
+    lateinit var clienteRepository: ClienteRepository
 
+    private lateinit var service: VeiculoService
+
+    private lateinit var motorista: Cliente
     private lateinit var veiculo: Veiculo
+    private lateinit var comando: VeiculoComando
 
     @BeforeEach
     fun setup() {
-        val cliente = Cliente(
+        service = VeiculoService(repository, clienteRepository)
+        motorista = Cliente(
             id = Id.gerar(),
             nome = "Dono",
             documento = Documento.cpf("39053344705"),
@@ -41,17 +48,28 @@ class VeiculoServiceTest {
             modelo = "Gol 1.6",
             ano = "2020",
             placa = "ABC1D23",
-            motorista = cliente
+            motorista = motorista
+        )
+        comando = VeiculoComando(
+            marca = "Volkswagen",
+            nome = "Gol",
+            modelo = "Gol 1.6",
+            ano = "2020",
+            placa = "ABC1D23",
+            motoristaId = motorista.id
         )
     }
 
     @Test
     fun `deve salvar veiculo quando placa nao existe`() {
         `when`(repository.existePorPlaca("ABC1D23")).thenReturn(false)
-        `when`(repository.salvar(veiculo)).thenReturn(veiculo)
+        `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(motorista)
+        `when`(repository.salvar(anyObject())).thenReturn(veiculo)
 
-        assertEquals(veiculo, service.salvarVeiculo(veiculo))
-        verify(repository).salvar(veiculo)
+        val resultado = service.salvarVeiculo(comando)
+
+        assertEquals(veiculo, resultado)
+        verify(repository).salvar(anyObject())
     }
 
     @Test
@@ -59,11 +77,23 @@ class VeiculoServiceTest {
         `when`(repository.existePorPlaca("ABC1D23")).thenReturn(true)
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.salvarVeiculo(veiculo)
+            service.salvarVeiculo(comando)
         }
 
         assertEquals("Veiculo já cadastrado", exception.message)
-        verify(repository, never()).salvar(veiculo)
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `deve lancar excecao quando motorista nao encontrado`() {
+        `when`(repository.existePorPlaca("ABC1D23")).thenReturn(false)
+        `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.salvarVeiculo(comando)
+        }
+
+        assertTrue(exception.message!!.contains("Cliente não encontrado"))
     }
 
     @Test
@@ -82,9 +112,8 @@ class VeiculoServiceTest {
 
     @Test
     fun `deve buscar veiculos por motorista`() {
-        val motorista = veiculo.motorista
-        `when`(repository.buscarPorMotorista(motorista)).thenReturn(listOf(veiculo))
+        `when`(repository.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
 
-        assertEquals(listOf(veiculo), service.buscarPorMotorista(motorista))
+        assertEquals(listOf(veiculo), service.buscarPorMotorista(motorista.id))
     }
 }

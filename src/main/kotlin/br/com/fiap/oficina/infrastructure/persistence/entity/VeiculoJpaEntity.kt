@@ -9,7 +9,6 @@ import java.util.UUID
 class VeiculoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     var idVeiculo: UUID = UUID.randomUUID()
 
     @Column(nullable = false)
@@ -28,7 +27,8 @@ class VeiculoJpaEntity {
     @Size(min = 7, max = 7, message = "Input must be exactly 7 characters long")
     lateinit var placa: String
 
-    @ManyToOne(cascade = [(CascadeType.ALL)])
+    @ManyToOne
+    @JoinColumn(name = "motorista_id")
     lateinit var motorista: ClienteJpaEntity
 
 }

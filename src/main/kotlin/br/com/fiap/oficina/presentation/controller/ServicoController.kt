@@ -5,6 +5,7 @@ import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
 import br.com.fiap.oficina.presentation.dto.OrcamentoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
@@ -63,10 +64,10 @@ class ServicoController(
     }
 
     @GetMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
     @Operation(
         summary = "Listar servico por ID",
-        description = "Lista um servico do sistema pelo ID"
+        description = "Lista um servico do sistema pelo ID. Clientes podem consultar o status da própria OS."
     )
     fun listarPorId(
         @Parameter(description = "ID do serviço", required = true)
@@ -78,11 +79,12 @@ class ServicoController(
     }
 
     @GetMapping("/{id}/orcamento")
-    @RolesAllowed("ATENDENTE", "ADMIN")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
     @Operation(
         summary = "Obter orçamento do servico",
         description = "Retorna o orçamento do servico, totalizando o valor das peças " +
-            "(preço de venda multiplicado pela quantidade)"
+            "(preço de venda multiplicado pela quantidade). " +
+            "Clientes podem consultar o orçamento para decidir sobre a aprovação."
     )
     fun obterOrcamento(
         @Parameter(description = "ID do serviço", required = true)
@@ -92,6 +94,50 @@ class ServicoController(
             mapper.toResponse(service.obterOrcamento(Id.from(id)))
         } catch (exception: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        }
+    }
+
+    @PatchMapping("/{id}/avancar")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
+    @Operation(
+        summary = "Avançar status da OS",
+        description = "Move a ordem de serviço para o próximo status no fluxo. " +
+            "A partir de AGUARDANDO_APROVACAO o próximo passo é EM_EXECUCAO. " +
+            "Retorna 422 se o serviço já estiver em um estado final."
+    )
+    fun avancarStatus(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
+    ): ServicoDto {
+        return try {
+            mapper.toResponse(service.avancarStatus(Id.from(id)))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        } catch (exception: IllegalStateException) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
+    @Operation(
+        summary = "Alterar status da OS",
+        description = "Altera o status da ordem de serviço para um status específico, " +
+            "respeitando as transições permitidas pela máquina de estados. " +
+            "Clientes só podem aprovar (EM_EXECUCAO) ou recusar (CANCELADA) a partir de AGUARDANDO_APROVACAO. " +
+            "Retorna 422 se a transição solicitada não for permitida."
+    )
+    fun alterarStatus(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID,
+        @Valid @RequestBody dto: AlterarStatusDto
+    ): ServicoDto {
+        return try {
+            mapper.toResponse(service.alterarStatus(Id.from(id), dto.status))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        } catch (exception: IllegalStateException) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
         }
     }
 
