@@ -9,7 +9,6 @@ import java.util.UUID
 class ServicoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID = UUID.randomUUID()
 
     @Column(nullable = false)

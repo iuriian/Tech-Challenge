@@ -9,7 +9,15 @@
 SELECT 'CREATE DATABASE keycloak'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
 
--- Conectar ao banco oficina
--- \c oficina
 \c keycloak
--- Aqui você pode adicionar outras inicializações se necessário
+
+
+SELECT 'CREATE DATABASE oficina'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'oficina')\gexec
+
+\c oficina
+
+SELECT 'CREATE DATABASE sonarqube'
+    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sonarqube')\gexec
+
+\c sonarqube

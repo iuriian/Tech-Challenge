@@ -7,6 +7,7 @@ import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
@@ -21,6 +22,8 @@ class PecaController(
 ) {
 
     @PostMapping
+    @RolesAllowed("ADMIN")
+    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "Criar uma nova peça",
         description = "Cadastra uma nova peça no sistema. Retorna conflito (409) se o código já existir."
@@ -36,6 +39,7 @@ class PecaController(
     }
 
     @PutMapping("/{codigo}")
+    @RolesAllowed("ADMIN")
     @Operation(
         summary = "Atualizar uma peça",
         description = "Atualiza os dados de uma peça existente identificada pelo código"
@@ -51,6 +55,7 @@ class PecaController(
     }
 
     @PatchMapping("/{codigo}/estoque/retirar")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
         summary = "Retirar peças do estoque",
         description = "Reduz a quantidade em estoque de uma peça pela quantidade informada"
@@ -69,6 +74,7 @@ class PecaController(
     }
 
     @PatchMapping("/{codigo}/estoque/repor")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
         summary = "Repor peças no estoque",
         description = "Aumenta a quantidade em estoque de uma peça pela quantidade informada"
@@ -87,6 +93,7 @@ class PecaController(
     }
 
     @PatchMapping("/{codigo}/reativar")
+    @RolesAllowed("ADMIN")
     @Operation(
         summary = "Reativar uma peça",
         description = "Reativa uma peça previamente desativada"
@@ -99,6 +106,8 @@ class PecaController(
     }
 
     @DeleteMapping("/{codigo}")
+    @RolesAllowed("ADMIN")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "Desativar uma peça",
         description = "Desativa (remoção lógica) uma peça identificada pelo código"
@@ -111,6 +120,7 @@ class PecaController(
     }
 
     @GetMapping
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
         summary = "Listar peças",
         description = "Lista todas as peças cadastradas no sistema"
@@ -120,6 +130,7 @@ class PecaController(
     }
 
     @GetMapping("/codigo/{codigo}")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
         summary = "Buscar peça por código",
         description = "Busca uma peça pelo seu código único"
@@ -132,6 +143,7 @@ class PecaController(
     }
 
     @GetMapping("/nome/{nome}")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
         summary = "Buscar peça por nome",
         description = "Busca uma peça pelo seu nome"
