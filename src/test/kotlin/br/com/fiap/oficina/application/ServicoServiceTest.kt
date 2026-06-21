@@ -100,11 +100,12 @@ class ServicoServiceTest {
             pecas = pecasEsperadas
         )
 
+        `when`(repository.buscarPorId(servicoId)).thenReturn(esperado)
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
         `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
         `when`(pecaRepository.buscarPorId(pecaId1)).thenReturn(peca1)
         `when`(pecaRepository.buscarPorId(pecaId2)).thenReturn(peca2)
-        `when`(repository.salvar(esperado)).thenReturn(esperado)
+        `when`(repository.salvar(anyObject())).thenReturn(esperado)
 
         val resultado = service.salvar(
             ServicoComando(

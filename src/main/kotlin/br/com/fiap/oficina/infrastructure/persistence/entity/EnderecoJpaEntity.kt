@@ -8,8 +8,7 @@ import java.util.UUID
 class EnderecoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID = UUID.randomUUID()
+    lateinit var id: UUID
 
     @Column(nullable = false)
     lateinit var logradouro: String
