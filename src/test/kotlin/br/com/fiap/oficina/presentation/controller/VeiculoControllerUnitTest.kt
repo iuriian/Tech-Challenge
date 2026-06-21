@@ -40,10 +40,11 @@ class VeiculoControllerUnitTest {
         `when`(service.salvarVeiculo(anyObject())).thenReturn(veiculo)
 
         val dto = controller.criar(
-            VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista)
+            VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor)
         )
 
         assertEquals("ABC1D23", dto.placa)
+        assertEquals(motorista.id.valor, dto.motoristaId)
     }
 
     @Test
@@ -63,8 +64,8 @@ class VeiculoControllerUnitTest {
 
     @Test
     fun `buscarVeiculosPorMotorista deve mapear lista`() {
-        `when`(service.buscarPorMotorista(motorista)).thenReturn(listOf(veiculo))
+        `when`(service.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
 
-        assertEquals(1, controller.buscarVeiculosPorMotorista(motorista).size)
+        assertEquals(1, controller.buscarVeiculosPorMotorista(motorista.id.valor).size)
     }
 }

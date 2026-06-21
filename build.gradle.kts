@@ -11,7 +11,7 @@ plugins {
 	id("org.springframework.boot") version "3.4.0"
 	id("io.spring.dependency-management") version "1.1.6"
 	jacoco
-	id("org.sonarqube") version "6.0.1.5171"
+	id("org.sonarqube") version "7.3.1.8318"
 	id("dev.detekt") version("2.0.0-alpha.3")
 }
 
@@ -95,6 +95,40 @@ val jacocoTestReport by tasks.getting(JacocoReport::class) {
 
 tasks.test {
 	finalizedBy(jacocoTestReport)
+}
+
+tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+	dependsOn(jacocoTestReport)
+	violationRules {
+		rule {
+			limit {
+				counter = "INSTRUCTION"
+				value = "COVEREDRATIO"
+				minimum = "0.80".toBigDecimal()
+			}
+			limit {
+				counter = "BRANCH"
+				value = "COVEREDRATIO"
+				minimum = "0.75".toBigDecimal()
+			}
+			limit {
+				counter = "LINE"
+				value = "COVEREDRATIO"
+				minimum = "0.80".toBigDecimal()
+			}
+		}
+	}
+	classDirectories.setFrom(
+		files(classDirectories.files.map {
+			fileTree(it) {
+				exclude("**/OfficinaApplication*")
+			}
+		})
+	)
+}
+
+tasks.named("check") {
+	dependsOn("jacocoTestCoverageVerification")
 }
 
 
@@ -187,10 +221,15 @@ sonar {
 	properties {
 		property("sonar.projectKey", "br.com.fiap.oficina:tech-challenge")
 		property("sonar.projectName", "Tech-Challenge")
-		property("sonar.host.url", "http://localhost:9000") // URL padrão
-		property("sonar.language", "kotlin")
+		property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000")
+		property("sonar.login", System.getenv("SONAR_LOGIN") ?: "admin")
+		property("sonar.password", System.getenv("SONAR_PASSWORD") ?: "c0cada")
 		property("sonar.sourceEncoding", "UTF-8")
+		property("sonar.sources", "src/main/kotlin")
+		property("sonar.tests", "src/test/kotlin")
 		property("sonar.coverage.jacoco.xmlReportPaths", layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.absolutePath)
-		property("sonar.exclusions", "**/OfficinaApplication.kt")
+		property("sonar.exclusions", "**/OfficinaApplication.kt,**/config/**,**/dto/**")
+		property("sonar.coverage.exclusions", "**/OfficinaApplication.kt,**/config/**,**/dto/**")
+		property("sonar.kotlin.detekt.reportPaths", layout.buildDirectory.file("reports/detekt/detekt.xml").get().asFile.absolutePath)
 	}
 }

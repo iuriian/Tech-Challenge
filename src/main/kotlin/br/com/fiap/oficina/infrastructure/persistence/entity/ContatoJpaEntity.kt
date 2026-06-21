@@ -8,8 +8,7 @@ import java.util.UUID
 class ContatoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID = UUID.randomUUID()
+    lateinit var id: UUID
 
     @Column(nullable = false)
     lateinit var tipo: String

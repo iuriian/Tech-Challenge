@@ -51,10 +51,10 @@ class ServicoService(
         }
 
         val servico = comando.id?.let { id ->
-            Servico(
-                id = id,
+            val existing = repository.buscarPorId(id)
+                ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
+            existing.copy(
                 descricao = comando.descricao,
-                status = comando.status,
                 funcionarioId = comando.funcionarioId,
                 cliente = cliente,
                 veiculo = veiculo,

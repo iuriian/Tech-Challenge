@@ -8,8 +8,7 @@ import java.util.UUID
 class ClienteJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID = UUID.randomUUID()
+    lateinit var id: UUID
 
     @Column(nullable = false)
     lateinit var nome: String

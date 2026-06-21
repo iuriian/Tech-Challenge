@@ -10,6 +10,7 @@ import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
+import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import org.junit.jupiter.api.Assertions.*
@@ -131,5 +132,79 @@ class ServicoControllerUnitTest {
         controller.deletarPorId(id)
 
         verify(service).deletarPorId(Id.from(id))
+    }
+
+    @Test
+    fun `avancarStatus deve retornar dto com novo status`() {
+        val id = servico.id.valor
+        val servicoAvancado = servico.copy(status = ServicoStatus.EM_DIAGNOSTICO)
+        `when`(service.avancarStatus(Id.from(id))).thenReturn(servicoAvancado)
+
+        val dto = controller.avancarStatus(id)
+
+        assertEquals(ServicoStatus.EM_DIAGNOSTICO, dto.status)
+    }
+
+    @Test
+    fun `avancarStatus deve retornar 404 quando servico nao existe`() {
+        val id = UUID.randomUUID()
+        `when`(service.avancarStatus(Id.from(id)))
+            .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
+
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            controller.avancarStatus(id)
+        }
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
+    }
+
+    @Test
+    fun `avancarStatus deve retornar 422 quando status e final`() {
+        val id = UUID.randomUUID()
+        `when`(service.avancarStatus(Id.from(id)))
+            .thenThrow(IllegalStateException("Serviço no status 'ENTREGUE' é um estado final e não pode avançar."))
+
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            controller.avancarStatus(id)
+        }
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.statusCode)
+    }
+
+    @Test
+    fun `alterarStatus deve retornar dto com status alterado`() {
+        val id = servico.id.valor
+        val servicoCancelado = servico.copy(status = ServicoStatus.CANCELADA)
+        `when`(service.alterarStatus(Id.from(id), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+
+        val dto = controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.CANCELADA))
+
+        assertEquals(ServicoStatus.CANCELADA, dto.status)
+    }
+
+    @Test
+    fun `alterarStatus deve retornar 404 quando servico nao existe`() {
+        val id = UUID.randomUUID()
+        `when`(service.alterarStatus(Id.from(id), ServicoStatus.CANCELADA))
+            .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
+
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.CANCELADA))
+        }
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
+    }
+
+    @Test
+    fun `alterarStatus deve retornar 422 para transicao invalida`() {
+        val id = UUID.randomUUID()
+        `when`(service.alterarStatus(Id.from(id), ServicoStatus.ENTREGUE))
+            .thenThrow(IllegalStateException("Transição inválida de 'RECEBIDA' para 'ENTREGUE'."))
+
+        val exception = assertThrows(ResponseStatusException::class.java) {
+            controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.ENTREGUE))
+        }
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.statusCode)
     }
 }

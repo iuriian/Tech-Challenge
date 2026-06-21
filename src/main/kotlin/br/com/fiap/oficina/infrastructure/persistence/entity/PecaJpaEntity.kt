@@ -13,7 +13,6 @@ import java.util.UUID
 @Table(name = "pecas")
 class PecaJpaEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID = UUID.randomUUID(),
 
     @Column(nullable = false, unique = true, length = 10)
