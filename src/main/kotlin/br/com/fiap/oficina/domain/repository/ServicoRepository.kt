@@ -11,6 +11,8 @@ interface ServicoRepository {
 
     fun listarTodos(): List<Servico>
 
+    fun listarPorCliente(clienteId: Id): List<Servico>
+
     fun existePorId(id: Id): Boolean
 
     fun deletarPorId(id: Id)

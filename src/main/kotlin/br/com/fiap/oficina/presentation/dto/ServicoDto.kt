@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Positive
 import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 data class PecaServicoDto(
@@ -29,7 +30,6 @@ data class ServicoDto(
     @field:NotNull
     val funcionarioId: Long,
 
-
     @field:NotNull
     val clienteId: UUID,
 
@@ -37,5 +37,14 @@ data class ServicoDto(
     val veiculoId: UUID,
 
     @field:Valid
-    val pecas: List<PecaServicoDto> = emptyList()
+    val pecas: List<PecaServicoDto> = emptyList(),
+
+    val dataAbertura: Instant? = null,
+    val dataInicioExecucao: Instant? = null,
+    val dataFinalizacao: Instant? = null
+)
+
+data class TempoMedioExecucaoDto(
+    val totalServicosFinalizados: Int,
+    val tempoMedioMinutos: Double?
 )

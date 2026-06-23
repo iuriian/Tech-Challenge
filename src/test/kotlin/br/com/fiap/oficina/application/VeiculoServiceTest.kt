@@ -116,4 +116,106 @@ class VeiculoServiceTest {
 
         assertEquals(listOf(veiculo), service.buscarPorMotorista(motorista.id))
     }
+
+    @Test
+    fun `deve listar todos os veiculos`() {
+        `when`(repository.listarTodos()).thenReturn(listOf(veiculo))
+
+        val resultado = service.listarTodos()
+
+        assertEquals(listOf(veiculo), resultado)
+        verify(repository).listarTodos()
+    }
+
+    @Test
+    fun `deve atualizar veiculo mantendo a mesma placa`() {
+        `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+        `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(motorista)
+        `when`(repository.salvar(anyObject())).thenReturn(veiculo)
+
+        val resultado = service.atualizarVeiculo(veiculo.id, comando)
+
+        assertEquals(veiculo, resultado)
+        verify(repository, never()).existePorPlaca(anyObject())
+        verify(repository).salvar(anyObject())
+    }
+
+    @Test
+    fun `deve atualizar veiculo com nova placa disponivel`() {
+        val novaPlaca = "XYZ9876"
+        val comandoNovaPlaca = comando.copy(placa = novaPlaca)
+        val veiculoAtualizado = veiculo.copy(placa = novaPlaca)
+        `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+        `when`(repository.existePorPlaca(novaPlaca)).thenReturn(false)
+        `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(motorista)
+        `when`(repository.salvar(anyObject())).thenReturn(veiculoAtualizado)
+
+        val resultado = service.atualizarVeiculo(veiculo.id, comandoNovaPlaca)
+
+        assertEquals(novaPlaca, resultado.placa)
+        verify(repository).existePorPlaca(novaPlaca)
+    }
+
+    @Test
+    fun `deve rejeitar atualizacao quando nova placa ja esta em uso`() {
+        val novaPlaca = "XYZ9876"
+        `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+        `when`(repository.existePorPlaca(novaPlaca)).thenReturn(true)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.atualizarVeiculo(veiculo.id, comando.copy(placa = novaPlaca))
+        }
+
+        assertTrue(exception.message!!.contains(novaPlaca))
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `deve lancar excecao ao atualizar veiculo inexistente`() {
+        val idInexistente = Id.gerar()
+        `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.atualizarVeiculo(idInexistente, comando)
+        }
+
+        assertTrue(exception.message!!.contains("não encontrado"))
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `deve lancar excecao ao atualizar quando novo motorista nao existe`() {
+        val motoristaIdInexistente = Id.gerar()
+        `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+        `when`(clienteRepository.buscarPorId(motoristaIdInexistente)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.atualizarVeiculo(veiculo.id, comando.copy(motoristaId = motoristaIdInexistente))
+        }
+
+        assertTrue(exception.message!!.contains("não encontrado"))
+        verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `deve remover veiculo existente`() {
+        `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+
+        service.removerVeiculo(veiculo.id)
+
+        verify(repository).remover(veiculo.id)
+    }
+
+    @Test
+    fun `deve lancar excecao ao remover veiculo inexistente`() {
+        val idInexistente = Id.gerar()
+        `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.removerVeiculo(idInexistente)
+        }
+
+        assertTrue(exception.message!!.contains("não encontrado"))
+        verify(repository, never()).remover(anyObject())
+    }
 }

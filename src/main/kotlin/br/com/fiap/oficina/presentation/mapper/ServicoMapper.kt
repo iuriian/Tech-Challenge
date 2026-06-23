@@ -1,11 +1,13 @@
 package br.com.fiap.oficina.presentation.mapper
 
+import br.com.fiap.oficina.application.service.TempoMedioExecucao
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import br.com.fiap.oficina.presentation.dto.ItemOrcamentoDto
 import br.com.fiap.oficina.presentation.dto.OrcamentoDto
 import br.com.fiap.oficina.presentation.dto.PecaServicoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
+import br.com.fiap.oficina.presentation.dto.TempoMedioExecucaoDto
 import org.springframework.stereotype.Component
 
 @Component
@@ -19,7 +21,16 @@ class ServicoMapper {
             funcionarioId = servico.funcionarioId,
             clienteId = servico.cliente.id.valor,
             veiculoId = servico.veiculo.id.valor,
-            pecas = servico.pecas.map { PecaServicoDto(it.peca.id.valor, it.quantidade) }
+            pecas = servico.pecas.map { PecaServicoDto(it.peca.id.valor, it.quantidade) },
+            dataAbertura = servico.dataAbertura,
+            dataInicioExecucao = servico.dataInicioExecucao,
+            dataFinalizacao = servico.dataFinalizacao
+        )
+
+    fun toResponse(tempo: TempoMedioExecucao): TempoMedioExecucaoDto =
+        TempoMedioExecucaoDto(
+            totalServicosFinalizados = tempo.totalServicosFinalizados,
+            tempoMedioMinutos = tempo.tempoMedioMinutos
         )
 
     fun toResponse(orcamento: Orcamento): OrcamentoDto =

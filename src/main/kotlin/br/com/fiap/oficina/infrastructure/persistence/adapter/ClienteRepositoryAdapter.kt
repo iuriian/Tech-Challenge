@@ -25,5 +25,8 @@ class ClienteRepositoryAdapter(
     override fun buscarPorNome(nome: String): Cliente? =
         jpaRepository.findByNome(nome)?.let(mapper::toDomain)
 
+    override fun listarTodos(): List<Cliente> =
+        jpaRepository.findAll().map(mapper::toDomain)
+
     override fun remover(id: Id) = jpaRepository.deleteById(id.valor)
 }

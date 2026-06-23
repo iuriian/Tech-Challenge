@@ -13,5 +13,9 @@ interface VeiculoRepository {
 
     fun buscarPorMotorista(motoristaId: Id): List<Veiculo>
 
+    fun listarTodos(): List<Veiculo>
+
     fun existePorPlaca(placa: String): Boolean
+
+    fun remover(id: Id)
 }

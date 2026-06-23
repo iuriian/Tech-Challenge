@@ -13,7 +13,7 @@ data class Veiculo(
 ) {
 
     companion object {
-        const val PLACA_TAMANHO = 7
+        private val PLACA_REGEX = Regex("^[A-Za-z]{3}[0-9][A-Za-z0-9][0-9]{2}$")
 
         fun criar(
             marca: String,
@@ -27,7 +27,9 @@ data class Veiculo(
             require(nome.isNotBlank()) { "Nome do veículo é obrigatório" }
             require(modelo.isNotBlank()) { "Modelo é obrigatório" }
             require(ano.isNotBlank()) { "Ano é obrigatório" }
-            require(placa.length == PLACA_TAMANHO) { "Placa deve ter exatamente $PLACA_TAMANHO caracteres" }
+            require(PLACA_REGEX.matches(placa)) {
+                "Placa inválida: use o formato antigo (ABC1234) ou Mercosul (ABC1D23)"
+            }
 
             return Veiculo(
                 id = Id.gerar(),
