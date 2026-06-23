@@ -75,4 +75,53 @@ class VeiculoController(
     ): List<VeiculoDTO> {
         return service.buscarPorMotorista(Id.from(motoristaId)).map { mapper.toResponse(it) }
     }
+
+    @GetMapping
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(summary = "Listar veículos", description = "Lista todos os veículos cadastrados no sistema")
+    fun listarTodos(): List<VeiculoDTO> {
+        return service.listarTodos().map { mapper.toResponse(it) }
+    }
+
+    @PutMapping("/{id}")
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(summary = "Atualizar um veículo", description = "Atualiza os dados de um veículo existente")
+    fun atualizar(
+        @Parameter(description = "ID do veículo a ser atualizado", required = true)
+        @PathVariable id: UUID,
+        @Valid @RequestBody dto: VeiculoDTO
+    ): VeiculoDTO {
+        return try {
+            mapper.toResponse(
+                service.atualizarVeiculo(
+                    Id.from(id),
+                    VeiculoComando(
+                        marca = dto.marca,
+                        nome = dto.nome,
+                        modelo = dto.modelo,
+                        ano = dto.ano,
+                        placa = dto.placa,
+                        motoristaId = Id.from(dto.motoristaId)
+                    )
+                )
+            )
+        } catch (e: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @RolesAllowed("ADMIN")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Remover um veículo", description = "Exclui um veículo do sistema pelo seu ID")
+    fun remover(
+        @Parameter(description = "ID do veículo a ser removido", required = true)
+        @PathVariable id: UUID
+    ) {
+        try {
+            service.removerVeiculo(Id.from(id))
+        } catch (e: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message, e)
+        }
+    }
 }

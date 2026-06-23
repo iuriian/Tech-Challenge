@@ -25,7 +25,10 @@ class ServicoPersistenceMapper(
             veiculo = veiculoMapper.toDomain(entity.veiculo),
             pecas = entity.pecas.map {
                 PecaServico(peca = pecaMapper.toDomain(it.peca), quantidade = it.quantidade)
-            }
+            },
+            dataAbertura = entity.dataAbertura,
+            dataInicioExecucao = entity.dataInicioExecucao,
+            dataFinalizacao = entity.dataFinalizacao
         )
 
     fun toJpa(domain: Servico): ServicoJpaEntity {
@@ -36,6 +39,9 @@ class ServicoPersistenceMapper(
             funcionarioId = domain.funcionarioId
             cliente = clienteMapper.toJpa(domain.cliente)
             veiculo = veiculoMapper.toJpa(domain.veiculo)
+            dataAbertura = domain.dataAbertura
+            dataInicioExecucao = domain.dataInicioExecucao
+            dataFinalizacao = domain.dataFinalizacao
         }
         entity.pecas = domain.pecas.map { pecaServico ->
             PecaServicoJpaEntity().apply {
