@@ -37,6 +37,19 @@ class VeiculoTest {
     }
 
     @Test
+    fun `deve criar veiculo com placa no formato antigo`() {
+        val veiculo = Veiculo.criar(
+            marca = "Ford",
+            nome = "Ka",
+            modelo = "Ka 1.0",
+            ano = "2015",
+            placa = "ABC1234",
+            motorista = motorista()
+        )
+        assertEquals("ABC1234", veiculo.placa)
+    }
+
+    @Test
     fun `deve rejeitar placa com tamanho invalido`() {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             Veiculo.criar(
@@ -49,7 +62,52 @@ class VeiculoTest {
             )
         }
 
-        assertEquals("Placa deve ter exatamente 7 caracteres", exception.message)
+        assertEquals("Placa inválida: use o formato antigo (ABC1234) ou Mercosul (ABC1D23)", exception.message)
+    }
+
+    @Test
+    fun `deve rejeitar placa iniciada com digito`() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            Veiculo.criar(
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "1BC1234",
+                motorista = motorista()
+            )
+        }
+
+        assertEquals("Placa inválida: use o formato antigo (ABC1234) ou Mercosul (ABC1D23)", exception.message)
+    }
+
+    @Test
+    fun `deve rejeitar placa com letras nas posicoes de digito`() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            Veiculo.criar(
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABCDEFG",
+                motorista = motorista()
+            )
+        }
+
+        assertEquals("Placa inválida: use o formato antigo (ABC1234) ou Mercosul (ABC1D23)", exception.message)
+    }
+
+    @Test
+    fun `deve aceitar placa mercosul com letra minuscula`() {
+        val veiculo = Veiculo.criar(
+            marca = "Honda",
+            nome = "Civic",
+            modelo = "Civic 2.0",
+            ano = "2023",
+            placa = "abc1d23",
+            motorista = motorista()
+        )
+        assertEquals("abc1d23", veiculo.placa)
     }
 
     @Test

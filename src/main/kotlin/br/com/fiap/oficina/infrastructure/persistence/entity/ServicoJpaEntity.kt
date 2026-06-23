@@ -2,6 +2,7 @@ package br.com.fiap.oficina.infrastructure.persistence.entity
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import jakarta.persistence.*
+import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -31,4 +32,13 @@ class ServicoJpaEntity {
 
     @OneToMany(mappedBy = "servico", cascade = [CascadeType.ALL], orphanRemoval = true)
     var pecas: MutableList<PecaServicoJpaEntity> = mutableListOf()
+
+    @Column(name = "data_abertura", nullable = false)
+    lateinit var dataAbertura: Instant
+
+    @Column(name = "data_inicio_execucao")
+    var dataInicioExecucao: Instant? = null
+
+    @Column(name = "data_finalizacao")
+    var dataFinalizacao: Instant? = null
 }

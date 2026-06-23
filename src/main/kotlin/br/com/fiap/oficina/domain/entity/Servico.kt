@@ -5,6 +5,7 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import java.math.BigDecimal
+import java.time.Instant
 
 data class Servico(
     val id: Id,
@@ -13,7 +14,10 @@ data class Servico(
     val funcionarioId: Long,
     val cliente: Cliente,
     val veiculo: Veiculo,
-    val pecas: List<PecaServico> = emptyList()
+    val pecas: List<PecaServico> = emptyList(),
+    val dataAbertura: Instant = Instant.now(),
+    val dataInicioExecucao: Instant? = null,
+    val dataFinalizacao: Instant? = null
 ) {
 
     companion object {
@@ -34,7 +38,8 @@ data class Servico(
                 funcionarioId = funcionarioId,
                 cliente = cliente,
                 veiculo = veiculo,
-                pecas = pecas
+                pecas = pecas,
+                dataAbertura = Instant.now()
             )
         }
     }
@@ -44,7 +49,12 @@ data class Servico(
     fun adicionarPeca(peca: Peca, quantidade: BigDecimal): Servico =
         adicionarPeca(PecaServico.criar(peca, quantidade))
 
-    fun alterarStatus(novoStatus: ServicoStatus): Servico = copy(status = novoStatus)
+    fun alterarStatus(novoStatus: ServicoStatus, agora: Instant = Instant.now()): Servico =
+        when (novoStatus) {
+            ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
+            ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
+            else -> copy(status = novoStatus)
+        }
 
     /**
      * Gera o orçamento do serviço, discriminando cada peça consumida e

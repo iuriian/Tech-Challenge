@@ -28,6 +28,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -240,14 +241,13 @@ class ServicoServiceTest {
         esperado: ServicoStatus
     ) {
         val atual = servicoComStatus(de)
-        val salvo = atual.alterarStatus(esperado)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(salvo)).thenReturn(salvo)
+        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
 
         val resultado = service.avancarStatus(servicoId)
 
         assertEquals(esperado, resultado.status)
-        verify(repository, times(1)).salvar(salvo)
+        verify(repository, times(1)).salvar(anyObject())
     }
 
     @ParameterizedTest
@@ -275,9 +275,8 @@ class ServicoServiceTest {
     @EnumSource(value = ServicoStatus::class, names = ["EM_EXECUCAO", "CANCELADA"])
     fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: ServicoStatus) {
         val atual = servicoComStatus(ServicoStatus.AGUARDANDO_APROVACAO)
-        val salvo = atual.alterarStatus(alvo)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(salvo)).thenReturn(salvo)
+        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
 
         val resultado = service.alterarStatus(servicoId, alvo)
 
@@ -312,6 +311,69 @@ class ServicoServiceTest {
             service.alterarStatus(servicoId, ServicoStatus.EM_DIAGNOSTICO)
         }
         verify(repository, never()).salvar(anyObject())
+    }
+
+    @Test
+    fun `listarPorCliente deve retornar servicos do cliente`() {
+        `when`(repository.listarPorCliente(clienteId)).thenReturn(listOf(servicoComStatus(ServicoStatus.RECEBIDA)))
+
+        val resultado = service.listarPorCliente(clienteId)
+
+        assertEquals(1, resultado.size)
+        assertEquals(clienteId, resultado.first().cliente.id)
+        verify(repository).listarPorCliente(clienteId)
+    }
+
+    @Test
+    fun `listarPorCliente deve retornar lista vazia quando cliente nao tem servicos`() {
+        `when`(repository.listarPorCliente(clienteId)).thenReturn(emptyList())
+
+        val resultado = service.listarPorCliente(clienteId)
+
+        assertTrue(resultado.isEmpty())
+    }
+
+    @Test
+    fun `calcularTempoMedioExecucao deve retornar null quando nao ha servicos finalizados`() {
+        `when`(repository.listarTodos()).thenReturn(listOf(servicoComStatus(ServicoStatus.EM_EXECUCAO)))
+
+        val resultado = service.calcularTempoMedioExecucao()
+
+        assertEquals(0, resultado.totalServicosFinalizados)
+        assertNull(resultado.tempoMedioMinutos)
+    }
+
+    @Test
+    fun `calcularTempoMedioExecucao deve calcular media em minutos`() {
+        val inicio = Instant.parse("2025-01-01T08:00:00Z")
+        val fim1   = Instant.parse("2025-01-01T10:00:00Z") // 120 min
+        val fim2   = Instant.parse("2025-01-01T11:00:00Z") // 180 min (inicio até fim2)
+        val s1 = servicoComStatus(ServicoStatus.FINALIZADA)
+            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim1)
+        val s2 = servicoComStatus(ServicoStatus.FINALIZADA)
+            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim2)
+        `when`(repository.listarTodos()).thenReturn(listOf(s1, s2))
+
+        val resultado = service.calcularTempoMedioExecucao()
+
+        assertEquals(2, resultado.totalServicosFinalizados)
+        assertEquals(150.0, resultado.tempoMedioMinutos)
+    }
+
+    @Test
+    fun `calcularTempoMedioExecucao deve ignorar servicos sem dataInicioExecucao`() {
+        val inicio = Instant.parse("2025-01-01T08:00:00Z")
+        val fim    = Instant.parse("2025-01-01T09:00:00Z") // 60 min
+        val completo    = servicoComStatus(ServicoStatus.FINALIZADA)
+            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim)
+        val semInicio   = servicoComStatus(ServicoStatus.FINALIZADA)
+            .copy(dataInicioExecucao = null, dataFinalizacao = fim)
+        `when`(repository.listarTodos()).thenReturn(listOf(completo, semInicio))
+
+        val resultado = service.calcularTempoMedioExecucao()
+
+        assertEquals(1, resultado.totalServicosFinalizados)
+        assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
     private fun servicoComStatus(status: ServicoStatus): Servico =

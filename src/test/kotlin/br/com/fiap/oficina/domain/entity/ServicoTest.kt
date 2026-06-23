@@ -6,6 +6,7 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.Instant
 
 class ServicoTest {
 
@@ -125,6 +126,52 @@ class ServicoTest {
 
         assertEquals(ServicoStatus.RECEBIDA, servico.status)
         assertEquals(ServicoStatus.FINALIZADA, finalizado.status)
+    }
+
+    @Test
+    fun `deve registrar dataInicioExecucao ao transitar para EM_EXECUCAO`() {
+        val agora = Instant.now()
+        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+
+        val emExecucao = servico.alterarStatus(ServicoStatus.EM_EXECUCAO, agora)
+
+        assertEquals(agora, emExecucao.dataInicioExecucao)
+        assertNull(emExecucao.dataFinalizacao)
+    }
+
+    @Test
+    fun `deve registrar dataFinalizacao ao transitar para FINALIZADA`() {
+        val agora = Instant.now()
+        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+
+        val finalizado = servico.alterarStatus(ServicoStatus.FINALIZADA, agora)
+
+        assertEquals(agora, finalizado.dataFinalizacao)
+        assertNull(finalizado.dataInicioExecucao)
+    }
+
+    @Test
+    fun `deve preservar timestamps ao transitar para outros status`() {
+        val inicio = Instant.now()
+        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+            .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
+
+        val entregue = servico.alterarStatus(ServicoStatus.ENTREGUE)
+
+        assertEquals(inicio, entregue.dataInicioExecucao)
+        assertNull(entregue.dataFinalizacao)
+    }
+
+    @Test
+    fun `criar deve registrar dataAbertura`() {
+        val antes = Instant.now()
+        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+        val depois = Instant.now()
+
+        assertFalse(servico.dataAbertura.isBefore(antes))
+        assertFalse(servico.dataAbertura.isAfter(depois))
+        assertNull(servico.dataInicioExecucao)
+        assertNull(servico.dataFinalizacao)
     }
 
     @Test
