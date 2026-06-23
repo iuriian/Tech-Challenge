@@ -22,6 +22,9 @@ class ServicoRepositoryAdapter(
     override fun listarTodos(): List<Servico> =
         jpaRepository.findAll().map(mapper::toDomain)
 
+    override fun listarPorCliente(clienteId: Id): List<Servico> =
+        jpaRepository.findByClienteId(clienteId.valor).map(mapper::toDomain)
+
     override fun existePorId(id: Id): Boolean =
         jpaRepository.existsById(id.valor)
 

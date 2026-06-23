@@ -25,6 +25,11 @@ class VeiculoRepositoryAdapter(
     override fun buscarPorMotorista(motoristaId: Id): List<Veiculo> =
         jpaRepository.findByMotoristaId(motoristaId.valor).map(mapper::toDomain)
 
+    override fun listarTodos(): List<Veiculo> =
+        jpaRepository.findAll().map(mapper::toDomain)
+
     override fun existePorPlaca(placa: String): Boolean =
         jpaRepository.existsByPlaca(placa)
+
+    override fun remover(id: Id) = jpaRepository.deleteById(id.valor)
 }

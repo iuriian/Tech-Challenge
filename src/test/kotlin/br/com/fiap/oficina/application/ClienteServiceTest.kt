@@ -118,4 +118,21 @@ class ClienteServiceTest {
         assertNull(resultado)
         verify(repository, times(1)).buscarPorNome(nome)
     }
+
+    @Test
+    fun `deve listar todos os clientes`() {
+        `when`(repository.listarTodos()).thenReturn(listOf(cliente))
+
+        val resultado = service.listarTodos()
+
+        assertEquals(listOf(cliente), resultado)
+        verify(repository, times(1)).listarTodos()
+    }
+
+    @Test
+    fun `deve remover cliente por id`() {
+        service.removerCliente(clienteId)
+
+        verify(repository, times(1)).remover(clienteId)
+    }
 }

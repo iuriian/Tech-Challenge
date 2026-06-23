@@ -81,6 +81,13 @@ class ClienteController(
         return mapper.toResponse(service.salvarCliente(entity))
     }
 
+    @GetMapping
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(summary = "Listar clientes", description = "Lista todos os clientes cadastrados no sistema")
+    fun listarTodos(): List<ClienteDto> {
+        return service.listarTodos().map { mapper.toResponse(it) }
+    }
+
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
     @ResponseStatus(HttpStatus.NO_CONTENT)
