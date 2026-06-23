@@ -1,7 +1,9 @@
 package br.com.fiap.oficina.application.service
 
+import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
@@ -12,6 +14,12 @@ import br.com.fiap.oficina.domain.valueobject.Orcamento
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Duration
+
+data class TempoMedioExecucao(
+    val totalServicosFinalizados: Int,
+    val tempoMedioMinutos: Double?
+)
 
 data class PecaServicoComando(
     val pecaId: Id,
@@ -50,31 +58,43 @@ class ServicoService(
             }
         }
 
-        val servico = comando.id?.let { id ->
-            val existing = repository.buscarPorId(id)
-                ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
-            existing.copy(
+        val servico = comando.id
+            ?.let { id -> atualizarExistente(id, comando, cliente, veiculo, pecas) }
+            ?: Servico.criar(
                 descricao = comando.descricao,
                 funcionarioId = comando.funcionarioId,
                 cliente = cliente,
                 veiculo = veiculo,
+                status = comando.status,
                 pecas = pecas
             )
-        } ?: Servico.criar(
+
+        return repository.salvar(servico)
+    }
+
+    private fun atualizarExistente(
+        id: Id,
+        comando: ServicoComando,
+        cliente: Cliente,
+        veiculo: Veiculo,
+        pecas: List<PecaServico>
+    ): Servico {
+        val existente = repository.buscarPorId(id)
+            ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
+        return existente.copy(
             descricao = comando.descricao,
             funcionarioId = comando.funcionarioId,
             cliente = cliente,
             veiculo = veiculo,
-            status = comando.status,
             pecas = pecas
         )
-
-        return repository.salvar(servico)
     }
 
     fun listarPorId(id: Id): Servico? = repository.buscarPorId(id)
 
     fun listarTodos(): List<Servico> = repository.listarTodos()
+
+    fun listarPorCliente(clienteId: Id): List<Servico> = repository.listarPorCliente(clienteId)
 
     /**
      * Retorna o orçamento do serviço, totalizando o valor das peças
@@ -119,6 +139,18 @@ class ServicoService(
         }
 
         return repository.salvar(servico.alterarStatus(novoStatus))
+    }
+
+    fun calcularTempoMedioExecucao(): TempoMedioExecucao {
+        val finalizados = repository.listarTodos()
+            .filter { it.dataInicioExecucao != null && it.dataFinalizacao != null }
+
+        val tempoMedio = finalizados
+            .takeIf { it.isNotEmpty() }
+            ?.map { Duration.between(it.dataInicioExecucao, it.dataFinalizacao).toMinutes().toDouble() }
+            ?.average()
+
+        return TempoMedioExecucao(finalizados.size, tempoMedio)
     }
 
     private fun buscarObrigatorio(id: Id): Servico =

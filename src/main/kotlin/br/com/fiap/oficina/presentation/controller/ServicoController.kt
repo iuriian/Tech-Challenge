@@ -8,6 +8,7 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
 import br.com.fiap.oficina.presentation.dto.OrcamentoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
+import br.com.fiap.oficina.presentation.dto.TempoMedioExecucaoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -140,6 +141,30 @@ class ServicoController(
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
         }
     }
+
+    @GetMapping("/cliente/{clienteId}")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
+    @Operation(
+        summary = "Listar serviços por cliente",
+        description = "Lista todas as ordens de serviço associadas a um cliente. " +
+            "Clientes podem usar este endpoint para acompanhar o progresso de seus próprios serviços."
+    )
+    fun listarPorCliente(
+        @Parameter(description = "ID do cliente", required = true)
+        @PathVariable clienteId: UUID
+    ): List<ServicoDto> =
+        service.listarPorCliente(Id.from(clienteId)).map { mapper.toResponse(it) }
+
+    @GetMapping("/metricas/tempo-medio")
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(
+        summary = "Tempo médio de execução",
+        description = "Retorna o tempo médio (em minutos) entre o início e a finalização dos serviços concluídos, " +
+            "junto com o total de ordens consideradas. Retorna null para tempoMedioMinutos quando não há " +
+            "serviços finalizados."
+    )
+    fun tempoMedioExecucao(): TempoMedioExecucaoDto =
+        mapper.toResponse(service.calcularTempoMedioExecucao())
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")

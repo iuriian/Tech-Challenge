@@ -17,6 +17,8 @@ class ClienteService(private val repository: ClienteRepository) {
 
     fun buscarPorNome(nome: String): Cliente? = repository.buscarPorNome(nome)
 
+    fun listarTodos(): List<Cliente> = repository.listarTodos()
+
     fun removerCliente(id: Id) {
         this.repository.remover(id)
     }

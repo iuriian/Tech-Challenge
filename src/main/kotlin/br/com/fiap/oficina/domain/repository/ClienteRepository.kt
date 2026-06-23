@@ -13,5 +13,7 @@ interface ClienteRepository {
 
     fun buscarPorNome(nome: String): Cliente?
 
+    fun listarTodos(): List<Cliente>
+
     fun remover(id: Id)
 }

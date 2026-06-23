@@ -13,7 +13,7 @@ Este projeto é um **trabalho acadêmico** desenvolvido para o curso de **Pós-G
 - **Spring Boot** 3.4.0
 - **Spring Data JPA**
 - **Spring MVC**
-- **MapStruct** 1.6.3 - Mapeamento de objetos
+- ~~**MapStruct** 1.6.3 - Mapeamento de objetos~~ (Removido e alterado para Mapper com Function Extension)
 - **SpringDoc OpenAPI** 2.8.5 - Documentação da API
 
 ### Banco de Dados

@@ -86,6 +86,25 @@ class ServicoControllerUnitTest {
     }
 
     @Test
+    fun `listarPorCliente deve mapear lista de servicos do cliente`() {
+        val clienteId = cliente.id.valor
+        `when`(service.listarPorCliente(Id.from(clienteId))).thenReturn(listOf(servico))
+
+        val resultado = controller.listarPorCliente(clienteId)
+
+        assertEquals(1, resultado.size)
+        assertEquals(clienteId, resultado.first().clienteId)
+    }
+
+    @Test
+    fun `listarPorCliente deve retornar lista vazia quando cliente nao tem servicos`() {
+        val clienteId = UUID.randomUUID()
+        `when`(service.listarPorCliente(Id.from(clienteId))).thenReturn(emptyList())
+
+        assertTrue(controller.listarPorCliente(clienteId).isEmpty())
+    }
+
+    @Test
     fun `obterOrcamento deve retornar dto do orcamento`() {
         val id = UUID.randomUUID()
         val orcamento = Orcamento(
