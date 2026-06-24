@@ -10,7 +10,7 @@ class PecaPersistenceMapper {
 
     fun toDomain(entity: PecaJpaEntity): Peca =
         Peca(
-            id = Id.from(entity.id),
+            id = Id.from(entity.id!!),
             codigo = entity.codigo,
             nome = entity.nome,
             descricao = entity.descricao,

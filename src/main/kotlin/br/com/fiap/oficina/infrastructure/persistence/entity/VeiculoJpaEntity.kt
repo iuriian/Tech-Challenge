@@ -27,7 +27,7 @@ class VeiculoJpaEntity {
     @Size(min = 7, max = 7, message = "Input must be exactly 7 characters long")
     lateinit var placa: String
 
-    @ManyToOne(cascade = [(CascadeType.ALL)])
+    @ManyToOne(cascade = [CascadeType.MERGE])
     lateinit var motorista: ClienteJpaEntity
 
 }

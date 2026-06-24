@@ -13,8 +13,15 @@ class PecaRepositoryAdapter(
     private val mapper: PecaPersistenceMapper
 ) : PecaRepository {
 
-    override fun salvar(peca: Peca): Peca =
-        mapper.toDomain(jpaRepository.save(mapper.toJpa(peca)))
+    override fun salvar(peca: Peca): Peca {
+        val jpaEntity = mapper.toJpa(peca)
+        // Spring Data calls merge() when id != null, which Hibernate 6 rejects for non-existent rows.
+        // Setting id to null for new entities forces persist() so Hibernate generates the UUID.
+        if (!jpaRepository.existsById(jpaEntity.id!!)) {
+            jpaEntity.id = null
+        }
+        return mapper.toDomain(jpaRepository.save(jpaEntity))
+    }
 
     override fun listarAtivos(): List<Peca> =
         jpaRepository.findAllByAtivoTrue().map(mapper::toDomain)

@@ -14,7 +14,7 @@ import java.util.UUID
 class PecaJpaEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID = UUID.randomUUID(),
+    var id: UUID? = null,
 
     @Column(nullable = false, unique = true, length = 10)
     var codigo: String = "",
