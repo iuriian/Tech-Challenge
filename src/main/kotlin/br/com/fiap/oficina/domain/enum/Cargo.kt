@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.domain.model
+package br.com.fiap.oficina.domain.enum
 
 enum class Cargo(
     val id: Int,
@@ -10,6 +10,6 @@ enum class Cargo(
     companion object {
         fun fromId(id: Int): Cargo = entries.first { it.id == id }
 
-        fun fromName(name: String): Cargo = Cargo.valueOf(name)
+        fun fromName(name: String): Cargo = valueOf(name)
     }
 }
