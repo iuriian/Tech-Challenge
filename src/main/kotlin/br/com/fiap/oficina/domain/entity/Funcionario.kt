@@ -1,5 +1,6 @@
-package br.com.fiap.oficina.domain.model
+package br.com.fiap.oficina.domain.entity
 
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.valueobject.Id
 
 data class Funcionario(
