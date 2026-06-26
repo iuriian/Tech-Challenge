@@ -1,7 +1,14 @@
 package br.com.fiap.oficina.presentation.controller
 
+import br.com.fiap.oficina.application.service.PecaServicoComando
+import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
+import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
+import br.com.fiap.oficina.presentation.dto.OrcamentoDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
+import br.com.fiap.oficina.presentation.dto.TempoMedioExecucaoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -10,6 +17,8 @@ import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 @RestController
 @RequestMapping("/servicos")
@@ -32,8 +41,7 @@ class ServicoController(
         @RequestBody
         dto: ServicoDto
     ): ServicoDto {
-        val entity = mapper.toEntity(dto)
-        val saved = service.salvar(entity, dto.clienteId, dto.veiculoId, dto.pecasIds)
+        val saved = service.salvar(toComando(dto, id = null))
 
         return mapper.toResponse(saved)
     }
@@ -45,38 +53,118 @@ class ServicoController(
         description = "Atualiza um servico no sistema"
     )
     fun atualizar(
-        @Parameter(
-            description = "ID do serviço a ser atualizado",
-            required = true,
-            example = "1")
-        @PathVariable id: Long,
+        @Parameter(description = "ID do serviço a ser atualizado", required = true)
+        @PathVariable id: UUID,
         @Valid
         @RequestBody
         dto: ServicoDto
     ): ServicoDto {
-        val entity = mapper.toEntity(dto).apply { this.id = id }
-        val saved = service.salvar(entity, dto.clienteId, dto.veiculoId, dto.pecasIds)
+        val saved = service.salvar(toComando(dto, id = Id.from(id)))
 
         return mapper.toResponse(saved)
     }
 
     @GetMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
     @Operation(
         summary = "Listar servico por ID",
-        description = "Lista um servico do sistema pelo ID"
+        description = "Lista um servico do sistema pelo ID. Clientes podem consultar o status da própria OS."
     )
     fun listarPorId(
-        @Parameter(
-            description = "ID do serviço",
-            required = true,
-            example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
     ): ServicoDto? {
-        return service.listarPorId(id)?.let {
+        return service.listarPorId(Id.from(id))?.let {
             mapper.toResponse(it)
         }
     }
+
+    @GetMapping("/{id}/orcamento")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
+    @Operation(
+        summary = "Obter orçamento do servico",
+        description = "Retorna o orçamento do servico, totalizando o valor das peças " +
+            "(preço de venda multiplicado pela quantidade). " +
+            "Clientes podem consultar o orçamento para decidir sobre a aprovação."
+    )
+    fun obterOrcamento(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
+    ): OrcamentoDto {
+        return try {
+            mapper.toResponse(service.obterOrcamento(Id.from(id)))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        }
+    }
+
+    @PatchMapping("/{id}/avancar")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
+    @Operation(
+        summary = "Avançar status da OS",
+        description = "Move a ordem de serviço para o próximo status no fluxo. " +
+            "A partir de AGUARDANDO_APROVACAO o próximo passo é EM_EXECUCAO. " +
+            "Retorna 422 se o serviço já estiver em um estado final."
+    )
+    fun avancarStatus(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID
+    ): ServicoDto {
+        return try {
+            mapper.toResponse(service.avancarStatus(Id.from(id)))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        } catch (exception: IllegalStateException) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
+    @Operation(
+        summary = "Alterar status da OS",
+        description = "Altera o status da ordem de serviço para um status específico, " +
+            "respeitando as transições permitidas pela máquina de estados. " +
+            "Clientes só podem aprovar (EM_EXECUCAO) ou recusar (CANCELADA) a partir de AGUARDANDO_APROVACAO. " +
+            "Retorna 422 se a transição solicitada não for permitida."
+    )
+    fun alterarStatus(
+        @Parameter(description = "ID do serviço", required = true)
+        @PathVariable id: UUID,
+        @Valid @RequestBody dto: AlterarStatusDto
+    ): ServicoDto {
+        return try {
+            mapper.toResponse(service.alterarStatus(Id.from(id), dto.status))
+        } catch (exception: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
+        } catch (exception: IllegalStateException) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
+        }
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
+    @Operation(
+        summary = "Listar serviços por cliente",
+        description = "Lista todas as ordens de serviço associadas a um cliente. " +
+            "Clientes podem usar este endpoint para acompanhar o progresso de seus próprios serviços."
+    )
+    fun listarPorCliente(
+        @Parameter(description = "ID do cliente", required = true)
+        @PathVariable clienteId: UUID
+    ): List<ServicoDto> =
+        service.listarPorCliente(Id.from(clienteId)).map { mapper.toResponse(it) }
+
+    @GetMapping("/metricas/tempo-medio")
+    @RolesAllowed("ATENDENTE", "ADMIN")
+    @Operation(
+        summary = "Tempo médio de execução",
+        description = "Retorna o tempo médio (em minutos) entre o início e a finalização dos serviços concluídos, " +
+            "junto com o total de ordens consideradas. Retorna null para tempoMedioMinutos quando não há " +
+            "serviços finalizados."
+    )
+    fun tempoMedioExecucao(): TempoMedioExecucaoDto =
+        mapper.toResponse(service.calcularTempoMedioExecucao())
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -98,13 +186,21 @@ class ServicoController(
     )
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletarPorId(
-        @Parameter(
-            description = "ID do servico a ser removido",
-            required = true,
-            example = "1")
-        @PathVariable id: Long
+        @Parameter(description = "ID do servico a ser removido", required = true)
+        @PathVariable id: UUID
     ) {
-        service.deletarPorId(id)
+        service.deletarPorId(Id.from(id))
     }
+
+    private fun toComando(dto: ServicoDto, id: Id?): ServicoComando =
+        ServicoComando(
+            id = id,
+            descricao = dto.descricao,
+            funcionarioId = dto.funcionarioId,
+            status = dto.status ?: ServicoStatus.RECEBIDA,
+            clienteId = Id.from(dto.clienteId),
+            veiculoId = Id.from(dto.veiculoId),
+            pecas = dto.pecas.map { PecaServicoComando(Id.from(it.pecaId), it.quantidade) }
+        )
 
 }

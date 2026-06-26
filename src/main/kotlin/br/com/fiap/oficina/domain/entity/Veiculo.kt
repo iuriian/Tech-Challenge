@@ -1,18 +1,45 @@
 package br.com.fiap.oficina.domain.entity
 
-class Veiculo {
+import br.com.fiap.oficina.domain.valueobject.Id
 
-    var idVeiculo: Long? = null
+data class Veiculo(
+    val id: Id,
+    val marca: String,
+    val nome: String,
+    val modelo: String,
+    val ano: String,
+    val placa: String,
+    val motorista: Cliente
+) {
 
-    lateinit var marca: String
+    companion object {
+        private val PLACA_REGEX = Regex("^[A-Za-z]{3}[0-9][A-Za-z0-9][0-9]{2}$")
 
-    lateinit var nome: String
+        fun criar(
+            marca: String,
+            nome: String,
+            modelo: String,
+            ano: String,
+            placa: String,
+            motorista: Cliente
+        ): Veiculo {
+            require(marca.isNotBlank()) { "Marca é obrigatória" }
+            require(nome.isNotBlank()) { "Nome do veículo é obrigatório" }
+            require(modelo.isNotBlank()) { "Modelo é obrigatório" }
+            require(ano.isNotBlank()) { "Ano é obrigatório" }
+            require(PLACA_REGEX.matches(placa)) {
+                "Placa inválida: use o formato antigo (ABC1234) ou Mercosul (ABC1D23)"
+            }
 
-    lateinit var modelo: String
-
-    lateinit var ano: String
-
-    lateinit var placa: String
-
-    lateinit var motorista: Cliente
+            return Veiculo(
+                id = Id.gerar(),
+                marca = marca,
+                nome = nome,
+                modelo = modelo,
+                ano = ano,
+                placa = placa,
+                motorista = motorista
+            )
+        }
+    }
 }

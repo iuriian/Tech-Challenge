@@ -1,28 +1,50 @@
 package br.com.fiap.oficina.presentation.dto
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
+import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Positive
+import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
+data class PecaServicoDto(
+    @field:NotNull
+    val pecaId: UUID,
+
+    @field:NotNull
+    @field:Positive
+    val quantidade: BigDecimal
+)
+
 data class ServicoDto(
-    val id: Long? = null,
+    val id: UUID? = null,
 
     @field:NotNull
     @field:NotBlank
     val descricao: String,
 
-    val status: ServicoStatus? = ServicoStatus.EM_DIAGNOSTICO,
+    val status: ServicoStatus? = null,
 
     @field:NotNull
     val funcionarioId: Long,
 
+    @field:NotNull
+    val clienteId: UUID,
 
     @field:NotNull
-    val clienteId: Long,
+    val veiculoId: UUID,
 
-    @field:NotNull
-    val veiculoId: Long,
+    @field:Valid
+    val pecas: List<PecaServicoDto> = emptyList(),
 
-    val pecasIds: List<UUID> = emptyList()
+    val dataAbertura: Instant? = null,
+    val dataInicioExecucao: Instant? = null,
+    val dataFinalizacao: Instant? = null
+)
+
+data class TempoMedioExecucaoDto(
+    val totalServicosFinalizados: Int,
+    val tempoMedioMinutos: Double?
 )

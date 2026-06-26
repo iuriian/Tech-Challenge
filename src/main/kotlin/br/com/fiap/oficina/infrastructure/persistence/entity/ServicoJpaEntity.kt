@@ -2,14 +2,15 @@ package br.com.fiap.oficina.infrastructure.persistence.entity
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import jakarta.persistence.*
+import java.time.Instant
+import java.util.UUID
 
 @Entity
 @Table(name = "servicos")
 class ServicoJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    var id: UUID = UUID.randomUUID()
 
     @Column(nullable = false)
     lateinit var descricao: String
@@ -29,11 +30,15 @@ class ServicoJpaEntity {
     @JoinColumn(name = "veiculo_id", referencedColumnName = "idVeiculo", nullable = false)
     lateinit var veiculo: VeiculoJpaEntity
 
-    @ManyToMany
-    @JoinTable(
-        name = "servico_pecas",
-        joinColumns = [JoinColumn(name = "servico_id")],
-        inverseJoinColumns = [JoinColumn(name = "peca_id")]
-    )
-    var pecas: MutableList<PecaJpaEntity> = mutableListOf()
+    @OneToMany(mappedBy = "servico", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var pecas: MutableList<PecaServicoJpaEntity> = mutableListOf()
+
+    @Column(name = "data_abertura", nullable = false)
+    lateinit var dataAbertura: Instant
+
+    @Column(name = "data_inicio_execucao")
+    var dataInicioExecucao: Instant? = null
+
+    @Column(name = "data_finalizacao")
+    var dataFinalizacao: Instant? = null
 }

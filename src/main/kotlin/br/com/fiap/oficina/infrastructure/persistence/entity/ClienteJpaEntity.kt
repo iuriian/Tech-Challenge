@@ -1,14 +1,14 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
 import jakarta.persistence.*
+import java.util.UUID
 
 @Entity
 @Table(name = "clientes")
 class ClienteJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
+    lateinit var id: UUID
 
     @Column(nullable = false)
     lateinit var nome: String

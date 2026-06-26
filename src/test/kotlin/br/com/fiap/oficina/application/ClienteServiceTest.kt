@@ -4,6 +4,7 @@ import br.com.fiap.oficina.application.service.ClienteService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,16 +23,18 @@ class ClienteServiceTest {
     @InjectMocks
     lateinit var service: ClienteService
 
+    private lateinit var clienteId: Id
     private lateinit var cliente: Cliente
 
     @BeforeEach
     fun setup() {
-        cliente = Cliente().apply {
-            id = 1L
-            nome = "João Silva"
-            documento = Documento.cpf("12345678909")
+        clienteId = Id.gerar()
+        cliente = Cliente(
+            id = clienteId,
+            nome = "João Silva",
+            documento = Documento.cpf("12345678909"),
             email = "joao@email.com"
-        }
+        )
     }
 
     @Test
@@ -49,26 +52,25 @@ class ClienteServiceTest {
 
     @Test
     fun `deve buscar cliente por id com sucesso`() {
-        val id = 1L
-        `when`(repository.buscarPorId(id)).thenReturn(cliente)
+        `when`(repository.buscarPorId(clienteId)).thenReturn(cliente)
 
-        val resultado = service.buscarPorId(id)
+        val resultado = service.buscarPorId(clienteId)
 
         assertNotNull(resultado)
         assertEquals(cliente.id, resultado?.id)
         assertEquals(cliente.nome, resultado?.nome)
-        verify(repository, times(1)).buscarPorId(id)
+        verify(repository, times(1)).buscarPorId(clienteId)
     }
 
     @Test
     fun `deve retornar null quando cliente nao encontrado por id`() {
-        val id = 999L
-        `when`(repository.buscarPorId(id)).thenReturn(null)
+        val idInexistente = Id.gerar()
+        `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
 
-        val resultado = service.buscarPorId(id)
+        val resultado = service.buscarPorId(idInexistente)
 
         assertNull(resultado)
-        verify(repository, times(1)).buscarPorId(id)
+        verify(repository, times(1)).buscarPorId(idInexistente)
     }
 
     @Test
@@ -115,5 +117,22 @@ class ClienteServiceTest {
 
         assertNull(resultado)
         verify(repository, times(1)).buscarPorNome(nome)
+    }
+
+    @Test
+    fun `deve listar todos os clientes`() {
+        `when`(repository.listarTodos()).thenReturn(listOf(cliente))
+
+        val resultado = service.listarTodos()
+
+        assertEquals(listOf(cliente), resultado)
+        verify(repository, times(1)).listarTodos()
+    }
+
+    @Test
+    fun `deve remover cliente por id`() {
+        service.removerCliente(clienteId)
+
+        verify(repository, times(1)).remover(clienteId)
     }
 }

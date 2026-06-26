@@ -1,16 +1,19 @@
 package br.com.fiap.oficina.domain.repository
 
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.valueobject.Id
 
 interface ClienteRepository {
 
     fun salvar(cliente: Cliente): Cliente
 
-    fun buscarPorId(id: Long): Cliente?
+    fun buscarPorId(id: Id): Cliente?
 
     fun buscarPorDocumento(numeroDocumento: String): Cliente?
 
     fun buscarPorNome(nome: String): Cliente?
 
-    fun remover(id: Long)
+    fun listarTodos(): List<Cliente>
+
+    fun remover(id: Id)
 }
