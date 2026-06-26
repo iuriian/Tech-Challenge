@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component
 
 @Component
 class PecaPersistenceMapper {
-
     fun toDomain(entity: PecaJpaEntity): Peca =
         Peca(
-            id = Id.from(entity.id),
+            id = Id(entity.id),
             codigo = entity.codigo,
             nome = entity.nome,
             descricao = entity.descricao,
@@ -19,7 +18,7 @@ class PecaPersistenceMapper {
             precoDeCompra = entity.precoDeCompra,
             precoDeVenda = entity.precoDeVenda,
             qtdEstoque = entity.qtdEstoque,
-            ativo = entity.ativo
+            ativo = entity.ativo,
         )
 
     fun toJpa(domain: Peca): PecaJpaEntity =
@@ -33,6 +32,6 @@ class PecaPersistenceMapper {
             precoDeCompra = domain.precoDeCompra,
             precoDeVenda = domain.precoDeVenda,
             qtdEstoque = domain.qtdEstoque,
-            ativo = domain.ativo
+            ativo = domain.ativo,
         )
 }
