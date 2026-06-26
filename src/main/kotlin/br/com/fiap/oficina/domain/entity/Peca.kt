@@ -13,9 +13,8 @@ data class Peca(
     val precoDeCompra: BigDecimal? = null,
     val precoDeVenda: BigDecimal,
     val qtdEstoque: Int = 0,
-    val ativo: Boolean = true
+    val ativo: Boolean = true,
 ) {
-
     companion object {
         fun criar(
             codigo: String,
@@ -25,7 +24,7 @@ data class Peca(
             fornecedor: String? = null,
             precoDeCompra: BigDecimal? = null,
             precoDeVenda: BigDecimal,
-            qtdEstoque: Int
+            qtdEstoque: Int,
         ): Peca {
             require(codigo.isNotBlank()) { "Código da peça é obrigatório" }
             require(nome.isNotBlank()) { "Nome da peça é obrigatório" }
@@ -36,7 +35,7 @@ data class Peca(
             require(qtdEstoque >= 0) { "Quantidade em estoque não pode ser negativa" }
 
             return Peca(
-                id = Id.gerar(),
+                id = Id.generate(),
                 codigo = codigo,
                 nome = nome,
                 descricao = descricao,
@@ -44,7 +43,7 @@ data class Peca(
                 fornecedor = fornecedor,
                 precoDeCompra = precoDeCompra,
                 precoDeVenda = precoDeVenda,
-                qtdEstoque = qtdEstoque
+                qtdEstoque = qtdEstoque,
             )
         }
     }

@@ -19,8 +19,9 @@ class ServicoJpaEntity {
     @Column(nullable = false)
     var status: ServicoStatus? = null
 
-    @Column(name = "funcionario_id", nullable = false)
-    var funcionarioId: Long? = null
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "funcionario_id", referencedColumnName = "id", nullable = false)
+    lateinit var funcionario: FuncionarioEntity
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
