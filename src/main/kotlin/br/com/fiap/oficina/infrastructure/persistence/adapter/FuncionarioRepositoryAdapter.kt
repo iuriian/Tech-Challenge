@@ -1,13 +1,15 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
-import br.com.fiap.oficina.domain.model.Funcionario
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toDomain
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toEntity
 import br.com.fiap.oficina.infrastructure.persistence.repository.FuncionarioRepositoryJpa
 import jakarta.persistence.EntityNotFoundException
+import org.springframework.stereotype.Component
 
+@Component
 class FuncionarioRepositoryAdapter(
     private val repository: FuncionarioRepositoryJpa,
 ) : FuncionarioRepository {
@@ -29,6 +31,13 @@ class FuncionarioRepositoryAdapter(
     override fun buscarPorId(id: Id): Funcionario? =
         try {
             repository.findById(id.valor).map { it.toDomain() }.orElse(null)
+        } catch (e: EntityNotFoundException) {
+            throw EntityNotFoundException("Funcionário não encontrado!")
+        }
+
+    override fun buscarPorNome(nome: String): Funcionario? =
+        try {
+            repository.findByNome(nome)?.toDomain()
         } catch (e: EntityNotFoundException) {
             throw EntityNotFoundException("Funcionário não encontrado!")
         }
