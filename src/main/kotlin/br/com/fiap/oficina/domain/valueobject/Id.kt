@@ -7,5 +7,7 @@ data class Id(
 ) {
     companion object {
         fun generate(): Id = Id(UUID.randomUUID())
+
+        fun fromString(id: String): Id = Id(UUID.fromString(id))
     }
 }

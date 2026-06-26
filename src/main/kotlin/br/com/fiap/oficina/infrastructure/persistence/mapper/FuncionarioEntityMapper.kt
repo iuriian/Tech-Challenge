@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.mapper
 
-import br.com.fiap.oficina.domain.model.Cargo
-import br.com.fiap.oficina.domain.model.Funcionario
+import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.FuncionarioEntity
 
