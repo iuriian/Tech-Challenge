@@ -14,7 +14,7 @@ env:
 
 jobs:
   test:
-    name: Test and coverage
+    name: Test, coverage gate and detekt
     runs-on: ubuntu-latest
 
     steps:
@@ -29,9 +29,12 @@ jobs:
           java-version: '21'
           cache: gradle
 
-      - name: Run tests and generate JaCoCo report
-        # --no-daemon evita que o Gradle reaproveite uma JVM de versao incorreta no daemon
-        run: ./gradlew --no-daemon test jacocoTestReport
+      - name: Run tests, coverage gate and detekt
+        # 'check' encadeia: test -> jacocoTestReport -> jacocoTestCoverageVerification, aplicando o
+        # gate de cobertura (instruction >= 80%, branch >= 75%, line >= 80%) e falhando o pipeline se
+        # nao for atingido. 'detekt' explicito garante a analise estatica (falha em severidade Error).
+        # --no-daemon evita que o Gradle reaproveite uma JVM de versao incorreta no daemon.
+        run: ./gradlew --no-daemon check detekt
 
       - name: Upload JaCoCo report
         if: always()
@@ -40,6 +43,14 @@ jobs:
           name: jacoco-report
           path: build/reports/jacoco/test/
           if-no-files-found: error
+
+      - name: Upload detekt report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-report
+          path: build/reports/detekt/
+          if-no-files-found: warn
 
       - name: Upload test results
         if: always()
