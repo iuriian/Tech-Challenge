@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop]
+
+jobs:
+#  lint:
+#    name: Lint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: ./.github/actions/setup-kotlin
+#      - run: ./gradlew lint
+
+  unit_test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+#    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-kotlin
+
+      - run: ./gradlew test jacocoTestReport
+
+      - run: ./.github/actions/upload-reports
+
+  build:
+    name: Build
+    needs: unit_test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-kotlin
+
+      - run: ./gradlew build
