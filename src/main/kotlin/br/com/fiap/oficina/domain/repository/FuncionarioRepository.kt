@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.domain.repository
 
-import br.com.fiap.oficina.domain.model.Funcionario
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface FuncionarioRepository {
@@ -9,6 +9,8 @@ interface FuncionarioRepository {
     fun listarTodos(): List<Funcionario>
 
     fun buscarPorId(id: Id): Funcionario?
+
+    fun buscarPorNome(nome: String): Funcionario?
 
     fun editar(funcionario: Funcionario): Funcionario
 
