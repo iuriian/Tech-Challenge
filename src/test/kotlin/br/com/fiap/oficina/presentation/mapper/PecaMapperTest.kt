@@ -9,23 +9,23 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class PecaMapperTest {
-
     private val mapper = PecaMapper()
 
     @Test
     fun `deve mapear Peca para PecaDto`() {
-        val peca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            descricao = "Filtro padrão",
-            fabricante = "Bosch",
-            fornecedor = "AutoParts",
-            precoDeCompra = BigDecimal("25.00"),
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 50,
-            ativo = true
-        )
+        val peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC001",
+                nome = "Filtro de Óleo",
+                descricao = "Filtro padrão",
+                fabricante = "Bosch",
+                fornecedor = "AutoParts",
+                precoDeCompra = BigDecimal("25.00"),
+                precoDeVenda = BigDecimal("45.00"),
+                qtdEstoque = 50,
+                ativo = true,
+            )
 
         val dto = mapper.toDto(peca)
 
@@ -39,13 +39,14 @@ class PecaMapperTest {
 
     @Test
     fun `deve mapear PecaDto para Peca`() {
-        val dto = PecaDto(
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            descricao = "Filtro padrão",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 50
-        )
+        val dto =
+            PecaDto(
+                codigo = "PEC001",
+                nome = "Filtro de Óleo",
+                descricao = "Filtro padrão",
+                precoDeVenda = BigDecimal("45.00"),
+                qtdEstoque = 50,
+            )
 
         val peca = mapper.toEntity(dto)
 
@@ -57,11 +58,12 @@ class PecaMapperTest {
 
     @Test
     fun `deve mapear PecaAtualizacaoDto usando codigo temporario e estoque zero`() {
-        val dto = PecaAtualizacaoDto(
-            nome = "Filtro de Ar",
-            descricao = "Novo filtro",
-            precoDeVenda = BigDecimal("65.00")
-        )
+        val dto =
+            PecaAtualizacaoDto(
+                nome = "Filtro de Ar",
+                descricao = "Novo filtro",
+                precoDeVenda = BigDecimal("65.00"),
+            )
 
         val peca = mapper.toEntity(dto)
 

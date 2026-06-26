@@ -9,39 +9,42 @@ import java.math.BigDecimal
 import java.time.Instant
 
 class ServicoTest {
+    private val cliente =
+        Cliente(
+            id = Id.generate(),
+            nome = "Cliente",
+            documento = Documento.cpf("39053344705"),
+            email = "cliente@example.com",
+        )
 
-    private val cliente = Cliente(
-        id = Id.gerar(),
-        nome = "Cliente",
-        documento = Documento.cpf("39053344705"),
-        email = "cliente@example.com"
-    )
+    private val veiculo =
+        Veiculo(
+            id = Id.generate(),
+            marca = "Volkswagen",
+            nome = "Gol",
+            modelo = "Gol 1.6",
+            ano = "2020",
+            placa = "ABC1D23",
+            motorista = cliente,
+        )
 
-    private val veiculo = Veiculo(
-        id = Id.gerar(),
-        marca = "Volkswagen",
-        nome = "Gol",
-        modelo = "Gol 1.6",
-        ano = "2020",
-        placa = "ABC1D23",
-        motorista = cliente
-    )
-
-    private val peca = Peca(
-        id = Id.gerar(),
-        codigo = "PEC001",
-        nome = "Filtro",
-        precoDeVenda = BigDecimal.TEN
-    )
+    private val peca =
+        Peca(
+            id = Id.generate(),
+            codigo = "PEC001",
+            nome = "Filtro",
+            precoDeVenda = BigDecimal.TEN,
+        )
 
     @Test
     fun `deve criar servico valido com status padrao`() {
-        val servico = Servico.criar(
-            descricao = "Troca de óleo",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Troca de óleo",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
 
         assertNotNull(servico.id)
         assertEquals("Troca de óleo", servico.descricao)
@@ -55,14 +58,15 @@ class ServicoTest {
     @Test
     fun `deve criar servico com status e pecas informados`() {
         val pecaServico = PecaServico.criar(peca, BigDecimal("2"))
-        val servico = Servico.criar(
-            descricao = "Troca de óleo",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo,
-            status = ServicoStatus.EM_EXECUCAO,
-            pecas = listOf(pecaServico)
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Troca de óleo",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = ServicoStatus.EM_EXECUCAO,
+                pecas = listOf(pecaServico),
+            )
 
         assertEquals(ServicoStatus.EM_EXECUCAO, servico.status)
         assertEquals(listOf(pecaServico), servico.pecas)
@@ -70,26 +74,28 @@ class ServicoTest {
 
     @Test
     fun `deve rejeitar descricao em branco`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            Servico.criar(
-                descricao = "",
-                funcionarioId = 1L,
-                cliente = cliente,
-                veiculo = veiculo
-            )
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                Servico.criar(
+                    descricao = "",
+                    funcionarioId = 1L,
+                    cliente = cliente,
+                    veiculo = veiculo,
+                )
+            }
 
         assertEquals("Descrição do serviço é obrigatória", exception.message)
     }
 
     @Test
     fun `deve adicionar peca preservando imutabilidade`() {
-        val servico = Servico.criar(
-            descricao = "Revisão",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Revisão",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
 
         val comPeca = servico.adicionarPeca(peca, BigDecimal("3"))
 
@@ -99,12 +105,13 @@ class ServicoTest {
 
     @Test
     fun `deve adicionar peca-servico diretamente preservando imutabilidade`() {
-        val servico = Servico.criar(
-            descricao = "Revisão",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Revisão",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
         val pecaServico = PecaServico.criar(peca, BigDecimal("1.5"))
 
         val comPeca = servico.adicionarPeca(pecaServico)
@@ -115,12 +122,13 @@ class ServicoTest {
 
     @Test
     fun `deve alterar status preservando imutabilidade`() {
-        val servico = Servico.criar(
-            descricao = "Revisão",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Revisão",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
 
         val finalizado = servico.alterarStatus(ServicoStatus.FINALIZADA)
 
@@ -153,8 +161,10 @@ class ServicoTest {
     @Test
     fun `deve preservar timestamps ao transitar para outros status`() {
         val inicio = Instant.now()
-        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
-            .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
+        val servico =
+            Servico
+                .criar("Revisão", 1L, cliente, veiculo)
+                .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
 
         val entregue = servico.alterarStatus(ServicoStatus.ENTREGUE)
 
@@ -176,22 +186,25 @@ class ServicoTest {
 
     @Test
     fun `deve gerar orcamento totalizando valor das pecas por quantidade`() {
-        val outraPeca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC002",
-            nome = "Óleo",
-            precoDeVenda = BigDecimal("30.00")
-        )
-        val servico = Servico.criar(
-            descricao = "Revisão",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo,
-            pecas = listOf(
-                PecaServico.criar(peca, BigDecimal("2")),       // 10 * 2 = 20
-                PecaServico.criar(outraPeca, BigDecimal("1.5"))  // 30 * 1.5 = 45.0
+        val outraPeca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC002",
+                nome = "Óleo",
+                precoDeVenda = BigDecimal("30.00"),
             )
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Revisão",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+                pecas =
+                    listOf(
+                        PecaServico.criar(peca, BigDecimal("2")), // 10 * 2 = 20
+                        PecaServico.criar(outraPeca, BigDecimal("1.5")), // 30 * 1.5 = 45.0
+                    ),
+            )
 
         val orcamento = servico.gerarOrcamento()
 
@@ -208,12 +221,13 @@ class ServicoTest {
 
     @Test
     fun `deve gerar orcamento zerado para servico sem pecas`() {
-        val servico = Servico.criar(
-            descricao = "Diagnóstico",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico.criar(
+                descricao = "Diagnóstico",
+                funcionarioId = 1L,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
 
         val orcamento = servico.gerarOrcamento()
 

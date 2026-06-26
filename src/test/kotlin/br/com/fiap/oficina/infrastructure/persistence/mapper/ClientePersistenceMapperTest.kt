@@ -9,28 +9,29 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class ClientePersistenceMapperTest {
-
     private val mapper = ClientePersistenceMapper()
 
     private fun clienteCompleto(): Cliente =
         Cliente(
-            id = Id.gerar(),
+            id = Id.generate(),
             nome = "João da Silva",
             documento = Documento.cpf("39053344705"),
             email = "joao@example.com",
-            endereco = Endereco(
-                id = Id.gerar(),
-                logradouro = "Rua A",
-                numero = "100",
-                complemento = "Apto 1",
-                bairro = "Centro",
-                cidade = "São Paulo",
-                estado = "SP",
-                cep = "01000000"
-            ),
-            contatos = listOf(
-                Contato(Id.gerar(), "CELULAR", "João", "11999990000")
-            )
+            endereco =
+                Endereco(
+                    id = Id.generate(),
+                    logradouro = "Rua A",
+                    numero = "100",
+                    complemento = "Apto 1",
+                    bairro = "Centro",
+                    cidade = "São Paulo",
+                    estado = "SP",
+                    cep = "01000000",
+                ),
+            contatos =
+                listOf(
+                    Contato(Id.generate(), "CELULAR", "João", "11999990000"),
+                ),
         )
 
     @Test
@@ -56,12 +57,13 @@ class ClientePersistenceMapperTest {
 
     @Test
     fun `deve fazer round-trip de cliente sem endereco e sem contatos`() {
-        val cliente = Cliente(
-            id = Id.gerar(),
-            nome = "Empresa LTDA",
-            documento = Documento.cnpj("11222333000181"),
-            email = "empresa@example.com"
-        )
+        val cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "Empresa LTDA",
+                documento = Documento.cnpj("11222333000181"),
+                email = "empresa@example.com",
+            )
 
         val jpa = mapper.toJpa(cliente)
 

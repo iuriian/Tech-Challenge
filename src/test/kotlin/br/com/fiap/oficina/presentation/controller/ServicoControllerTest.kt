@@ -28,45 +28,47 @@ import java.util.UUID
 
 @WebMvcTest(ServicoController::class)
 class ServicoControllerTest {
-
     @Autowired lateinit var mockMvc: MockMvc
 
     @MockitoBean lateinit var service: ServicoService
 
     @MockitoBean lateinit var mapper: ServicoMapper
 
-    private val cliente = Cliente(
-        id = Id.gerar(),
-        nome = "Cliente Teste",
-        documento = Documento.cpf("39053344705"),
-        email = "cliente@teste.com"
-    )
+    private val cliente =
+        Cliente(
+            id = Id.generate(),
+            nome = "Cliente Teste",
+            documento = Documento.cpf("39053344705"),
+            email = "cliente@teste.com",
+        )
 
-    private val veiculo = Veiculo(
-        id = Id.gerar(),
-        marca = "Volkswagen",
-        nome = "Gol",
-        modelo = "Gol 1.6",
-        ano = "2020",
-        placa = "ABC1D23",
-        motorista = cliente
-    )
+    private val veiculo =
+        Veiculo(
+            id = Id.generate(),
+            marca = "Volkswagen",
+            nome = "Gol",
+            modelo = "Gol 1.6",
+            ano = "2020",
+            placa = "ABC1D23",
+            motorista = cliente,
+        )
 
-    private fun buildServico(id: UUID) = Servico(
-        id = Id.from(id),
-        descricao = "Revisao Geral",
-        status = ServicoStatus.RECEBIDA,
-        funcionarioId = 1L,
-        cliente = cliente,
-        veiculo = veiculo,
-        pecas = emptyList()
-    )
+    private fun buildServico(id: UUID) =
+        Servico(
+            id = Id.fromString(id),
+            descricao = "Revisao Geral",
+            status = ServicoStatus.RECEBIDA,
+            funcionarioId = 1L,
+            cliente = cliente,
+            veiculo = veiculo,
+            pecas = emptyList(),
+        )
 
     @Test
     @WithMockUser
     fun `deve buscar servico por id`() {
         val id = UUID.randomUUID()
-        `when`(service.listarPorId(Id.from(id))).thenReturn(buildServico(id))
+        `when`(service.listarPorId(Id.fromString(id))).thenReturn(buildServico(id))
 
         mockMvc.perform(get("/servicos/$id")).andExpect(status().isOk)
     }
@@ -76,7 +78,7 @@ class ServicoControllerTest {
     fun `cliente pode consultar servico por id`() {
         val id = UUID.randomUUID()
         val servico = buildServico(id)
-        `when`(service.listarPorId(Id.from(id))).thenReturn(servico)
+        `when`(service.listarPorId(Id.fromString(id))).thenReturn(servico)
         `when`(mapper.toResponse(servico)).thenReturn(
             ServicoDto(
                 id = id,
@@ -84,8 +86,8 @@ class ServicoControllerTest {
                 status = servico.status,
                 funcionarioId = servico.funcionarioId,
                 clienteId = cliente.id.valor,
-                veiculoId = veiculo.id.valor
-            )
+                veiculoId = veiculo.id.valor,
+            ),
         )
 
         mockMvc.perform(get("/servicos/$id")).andExpect(status().isOk)
@@ -95,21 +97,23 @@ class ServicoControllerTest {
     @WithMockUser(roles = ["CLIENTE"])
     fun `cliente pode consultar orcamento do servico`() {
         val id = UUID.randomUUID()
-        val orcamento = Orcamento(
-            servicoId = Id.from(id),
-            itens = listOf(
-                ItemOrcamento(
-                    pecaId = Id.gerar(),
-                    codigo = "PEC001",
-                    nome = "Filtro",
-                    precoUnitario = BigDecimal.TEN,
-                    quantidade = BigDecimal.ONE,
-                    subtotal = BigDecimal.TEN
-                )
-            ),
-            valorTotal = BigDecimal.TEN
-        )
-        `when`(service.obterOrcamento(Id.from(id))).thenReturn(orcamento)
+        val orcamento =
+            Orcamento(
+                servicoId = Id.fromString(id),
+                itens =
+                    listOf(
+                        ItemOrcamento(
+                            pecaId = Id.generate(),
+                            codigo = "PEC001",
+                            nome = "Filtro",
+                            precoUnitario = BigDecimal.TEN,
+                            quantidade = BigDecimal.ONE,
+                            subtotal = BigDecimal.TEN,
+                        ),
+                    ),
+                valorTotal = BigDecimal.TEN,
+            )
+        `when`(service.obterOrcamento(Id.fromString(id))).thenReturn(orcamento)
 
         mockMvc.perform(get("/servicos/$id/orcamento")).andExpect(status().isOk)
     }
@@ -119,7 +123,7 @@ class ServicoControllerTest {
     fun `atendente pode avancar status da OS`() {
         val id = UUID.randomUUID()
         val servicoAvancado = buildServico(id).copy(status = ServicoStatus.EM_DIAGNOSTICO)
-        `when`(service.avancarStatus(Id.from(id))).thenReturn(servicoAvancado)
+        `when`(service.avancarStatus(Id.fromString(id))).thenReturn(servicoAvancado)
         `when`(mapper.toResponse(servicoAvancado)).thenReturn(
             ServicoDto(
                 id = id,
@@ -127,8 +131,8 @@ class ServicoControllerTest {
                 status = servicoAvancado.status,
                 funcionarioId = servicoAvancado.funcionarioId,
                 clienteId = cliente.id.valor,
-                veiculoId = veiculo.id.valor
-            )
+                veiculoId = veiculo.id.valor,
+            ),
         )
 
         mockMvc.perform(patch("/servicos/$id/avancar").with(csrf())).andExpect(status().isOk)
@@ -139,7 +143,7 @@ class ServicoControllerTest {
     fun `cliente pode alterar status para cancelada via endpoint de status`() {
         val id = UUID.randomUUID()
         val servicoCancelado = buildServico(id).copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.from(id), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        `when`(service.alterarStatus(Id.fromString(id), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
         `when`(mapper.toResponse(servicoCancelado)).thenReturn(
             ServicoDto(
                 id = id,
@@ -147,16 +151,16 @@ class ServicoControllerTest {
                 status = servicoCancelado.status,
                 funcionarioId = servicoCancelado.funcionarioId,
                 clienteId = cliente.id.valor,
-                veiculoId = veiculo.id.valor
-            )
+                veiculoId = veiculo.id.valor,
+            ),
         )
 
-        mockMvc.perform(
-            patch("/servicos/$id/status")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"status": "CANCELADA"}""")
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                patch("/servicos/$id/status")
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"status": "CANCELADA"}"""),
+            ).andExpect(status().isOk)
     }
-
 }

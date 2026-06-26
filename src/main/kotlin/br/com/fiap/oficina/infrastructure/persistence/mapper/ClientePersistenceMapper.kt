@@ -13,26 +13,26 @@ import org.springframework.stereotype.Component
 
 @Component
 class ClientePersistenceMapper {
-
     fun toDomain(entity: ClienteJpaEntity): Cliente =
         Cliente(
-            id = Id.from(entity.id),
+            id = Id(entity.id),
             nome = entity.nome,
             documento = toDocumentoDomain(entity.documento),
             email = entity.email,
             endereco = entity.endereco?.let(::toEnderecoDomain),
-            contatos = entity.contatos.map(::toContatoDomain)
+            contatos = entity.contatos.map(::toContatoDomain),
         )
 
     fun toJpa(domain: Cliente): ClienteJpaEntity {
-        val entity = ClienteJpaEntity().apply {
-            id = domain.id.valor
-            nome = domain.nome
-            documento = toDocumentoEmbeddable(domain.documento)
-            email = domain.email
-            endereco = domain.endereco?.let(::toEnderecoJpa)
-            contatos = domain.contatos.map(::toContatoJpa).toMutableList()
-        }
+        val entity =
+            ClienteJpaEntity().apply {
+                id = domain.id.valor
+                nome = domain.nome
+                documento = toDocumentoEmbeddable(domain.documento)
+                email = domain.email
+                endereco = domain.endereco?.let(::toEnderecoJpa)
+                contatos = domain.contatos.map(::toContatoJpa).toMutableList()
+            }
         // Religa o lado "cliente" das associações para manter o mapeamento bidirecional.
         entity.endereco?.cliente = entity
         entity.contatos.forEach { it.cliente = entity }
@@ -41,14 +41,14 @@ class ClientePersistenceMapper {
 
     fun toEnderecoDomain(entity: EnderecoJpaEntity): Endereco =
         Endereco(
-            id = Id.from(entity.id),
+            id = Id(entity.id),
             logradouro = entity.logradouro,
             numero = entity.numero,
             complemento = entity.complemento,
             bairro = entity.bairro,
             cidade = entity.cidade,
             estado = entity.estado,
-            cep = entity.cep
+            cep = entity.cep,
         )
 
     fun toEnderecoJpa(domain: Endereco): EnderecoJpaEntity =
@@ -65,10 +65,10 @@ class ClientePersistenceMapper {
 
     fun toContatoDomain(entity: ContatoJpaEntity): Contato =
         Contato(
-            id = Id.from(entity.id),
+            id = Id(entity.id),
             tipo = entity.tipo,
             nome = entity.nome,
-            telefone = entity.telefone
+            telefone = entity.telefone,
         )
 
     fun toContatoJpa(domain: Contato): ContatoJpaEntity =
@@ -79,8 +79,7 @@ class ClientePersistenceMapper {
             telefone = domain.telefone
         }
 
-    private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento =
-        Documento(embeddable.numero, embeddable.tipoPessoa)
+    private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento = Documento(embeddable.numero, embeddable.tipoPessoa)
 
     private fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable =
         DocumentoEmbeddable().apply {
