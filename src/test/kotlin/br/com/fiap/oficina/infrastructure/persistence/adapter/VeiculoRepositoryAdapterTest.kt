@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
 class VeiculoRepositoryAdapterTest {
-
     @Mock
     lateinit var jpaRepository: VeiculoJpaRepository
 
@@ -33,21 +32,23 @@ class VeiculoRepositoryAdapterTest {
     @BeforeEach
     fun setup() {
         adapter = VeiculoRepositoryAdapter(jpaRepository, mapper)
-        cliente = Cliente(
-            id = Id.gerar(),
-            nome = "Dono",
-            documento = Documento.cpf("39053344705"),
-            email = "dono@example.com"
-        )
-        veiculo = Veiculo(
-            id = Id.gerar(),
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motorista = cliente
-        )
+        cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "Dono",
+                documento = Documento.cpf("39053344705"),
+                email = "dono@example.com",
+            )
+        veiculo =
+            Veiculo(
+                id = Id.generate(),
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABC1D23",
+                motorista = cliente,
+            )
         jpa = mapper.toJpa(veiculo)
     }
 

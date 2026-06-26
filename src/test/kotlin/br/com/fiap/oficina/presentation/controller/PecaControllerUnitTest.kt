@@ -15,24 +15,25 @@ import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 
 class PecaControllerUnitTest {
-
     private val service = mock(PecaService::class.java)
     private val controller = PecaController(service, PecaMapper())
 
-    private val peca = Peca(
-        id = Id.gerar(),
-        codigo = "PEC001",
-        nome = "Filtro de Óleo",
-        precoDeVenda = BigDecimal("45.00"),
-        qtdEstoque = 10
-    )
+    private val peca =
+        Peca(
+            id = Id.generate(),
+            codigo = "PEC001",
+            nome = "Filtro de Óleo",
+            precoDeVenda = BigDecimal("45.00"),
+            qtdEstoque = 10,
+        )
 
-    private fun pecaDto() = PecaDto(
-        codigo = "PEC001",
-        nome = "Filtro de Óleo",
-        precoDeVenda = BigDecimal("45.00"),
-        qtdEstoque = 10
-    )
+    private fun pecaDto() =
+        PecaDto(
+            codigo = "PEC001",
+            nome = "Filtro de Óleo",
+            precoDeVenda = BigDecimal("45.00"),
+            qtdEstoque = 10,
+        )
 
     @Test
     fun `criar deve retornar dto da peca salva`() {
@@ -48,9 +49,10 @@ class PecaControllerUnitTest {
     fun `criar deve traduzir conflito em 409`() {
         `when`(service.salvarPeca(anyObject())).thenThrow(IllegalArgumentException("Peça já cadastrada"))
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            controller.criar(pecaDto())
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                controller.criar(pecaDto())
+            }
 
         assertEquals(HttpStatus.CONFLICT, exception.statusCode)
     }
@@ -59,10 +61,11 @@ class PecaControllerUnitTest {
     fun `atualizar deve retornar dto atualizado`() {
         `when`(service.atualizarPeca(anyObject(), anyObject())).thenReturn(peca)
 
-        val dto = controller.atualizar(
-            "PEC001",
-            PecaAtualizacaoDto(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00"))
-        )
+        val dto =
+            controller.atualizar(
+                "PEC001",
+                PecaAtualizacaoDto(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00")),
+            )
 
         assertEquals("PEC001", dto?.codigo)
     }
@@ -79,9 +82,10 @@ class PecaControllerUnitTest {
         `when`(service.retirarPecas("PEC001", 99))
             .thenThrow(IllegalArgumentException("Quantidade em estoque insuficiente"))
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            controller.retirarPecas("PEC001", 99)
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                controller.retirarPecas("PEC001", 99)
+            }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
@@ -98,9 +102,10 @@ class PecaControllerUnitTest {
         `when`(service.reporPecas("PEC001", -1))
             .thenThrow(IllegalArgumentException("Quantidade para reposição deve ser maior que zero"))
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            controller.reporPecas("PEC001", -1)
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                controller.reporPecas("PEC001", -1)
+            }
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }

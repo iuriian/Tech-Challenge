@@ -7,18 +7,17 @@ import org.springframework.stereotype.Component
 
 @Component
 class VeiculoPersistenceMapper(
-    private val clienteMapper: ClientePersistenceMapper
+    private val clienteMapper: ClientePersistenceMapper,
 ) {
-
     fun toDomain(entity: VeiculoJpaEntity): Veiculo =
         Veiculo(
-            id = Id.from(entity.idVeiculo),
+            id = Id.fromString(entity.idVeiculo),
             marca = entity.marca,
             nome = entity.nome,
             modelo = entity.modelo,
             ano = entity.ano,
             placa = entity.placa,
-            motorista = clienteMapper.toDomain(entity.motorista)
+            motorista = clienteMapper.toDomain(entity.motorista),
         )
 
     fun toJpa(domain: Veiculo): VeiculoJpaEntity =

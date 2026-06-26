@@ -1,5 +1,6 @@
 package br.com.fiap.oficina.application
 
+import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.service.VeiculoComando
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
@@ -12,14 +13,12 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import br.com.fiap.oficina.anyObject
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
 class VeiculoServiceTest {
-
     @Mock
     lateinit var repository: VeiculoRepository
 
@@ -35,29 +34,32 @@ class VeiculoServiceTest {
     @BeforeEach
     fun setup() {
         service = VeiculoService(repository, clienteRepository)
-        motorista = Cliente(
-            id = Id.gerar(),
-            nome = "Dono",
-            documento = Documento.cpf("39053344705"),
-            email = "dono@example.com"
-        )
-        veiculo = Veiculo(
-            id = Id.gerar(),
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motorista = motorista
-        )
-        comando = VeiculoComando(
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motoristaId = motorista.id
-        )
+        motorista =
+            Cliente(
+                id = Id.generate(),
+                nome = "Dono",
+                documento = Documento.cpf("39053344705"),
+                email = "dono@example.com",
+            )
+        veiculo =
+            Veiculo(
+                id = Id.generate(),
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABC1D23",
+                motorista = motorista,
+            )
+        comando =
+            VeiculoComando(
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABC1D23",
+                motoristaId = motorista.id,
+            )
     }
 
     @Test
@@ -76,9 +78,10 @@ class VeiculoServiceTest {
     fun `deve rejeitar veiculo com placa ja cadastrada`() {
         `when`(repository.existePorPlaca("ABC1D23")).thenReturn(true)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.salvarVeiculo(comando)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvarVeiculo(comando)
+            }
 
         assertEquals("Veiculo já cadastrado", exception.message)
         verify(repository, never()).salvar(anyObject())
@@ -89,9 +92,10 @@ class VeiculoServiceTest {
         `when`(repository.existePorPlaca("ABC1D23")).thenReturn(false)
         `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.salvarVeiculo(comando)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvarVeiculo(comando)
+            }
 
         assertTrue(exception.message!!.contains("Cliente não encontrado"))
     }
@@ -162,9 +166,10 @@ class VeiculoServiceTest {
         `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
         `when`(repository.existePorPlaca(novaPlaca)).thenReturn(true)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.atualizarVeiculo(veiculo.id, comando.copy(placa = novaPlaca))
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.atualizarVeiculo(veiculo.id, comando.copy(placa = novaPlaca))
+            }
 
         assertTrue(exception.message!!.contains(novaPlaca))
         verify(repository, never()).salvar(anyObject())
@@ -172,12 +177,13 @@ class VeiculoServiceTest {
 
     @Test
     fun `deve lancar excecao ao atualizar veiculo inexistente`() {
-        val idInexistente = Id.gerar()
+        val idInexistente = Id.generate()
         `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.atualizarVeiculo(idInexistente, comando)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.atualizarVeiculo(idInexistente, comando)
+            }
 
         assertTrue(exception.message!!.contains("não encontrado"))
         verify(repository, never()).salvar(anyObject())
@@ -185,13 +191,14 @@ class VeiculoServiceTest {
 
     @Test
     fun `deve lancar excecao ao atualizar quando novo motorista nao existe`() {
-        val motoristaIdInexistente = Id.gerar()
+        val motoristaIdInexistente = Id.generate()
         `when`(repository.buscarPorId(veiculo.id)).thenReturn(veiculo)
         `when`(clienteRepository.buscarPorId(motoristaIdInexistente)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.atualizarVeiculo(veiculo.id, comando.copy(motoristaId = motoristaIdInexistente))
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.atualizarVeiculo(veiculo.id, comando.copy(motoristaId = motoristaIdInexistente))
+            }
 
         assertTrue(exception.message!!.contains("não encontrado"))
         verify(repository, never()).salvar(anyObject())
@@ -208,12 +215,13 @@ class VeiculoServiceTest {
 
     @Test
     fun `deve lancar excecao ao remover veiculo inexistente`() {
-        val idInexistente = Id.gerar()
+        val idInexistente = Id.generate()
         `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.removerVeiculo(idInexistente)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.removerVeiculo(idInexistente)
+            }
 
         assertTrue(exception.message!!.contains("não encontrado"))
         verify(repository, never()).remover(anyObject())

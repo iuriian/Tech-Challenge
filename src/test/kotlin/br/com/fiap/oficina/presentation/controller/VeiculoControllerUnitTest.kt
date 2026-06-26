@@ -14,34 +14,36 @@ import org.mockito.Mockito.*
 import java.util.UUID
 
 class VeiculoControllerUnitTest {
-
     private val service = mock(VeiculoService::class.java)
     private val controller = VeiculoController(service, VeiculoMapper())
 
-    private val motorista = Cliente(
-        id = Id.gerar(),
-        nome = "Dono",
-        documento = Documento.cpf("39053344705"),
-        email = "dono@example.com"
-    )
+    private val motorista =
+        Cliente(
+            id = Id.generate(),
+            nome = "Dono",
+            documento = Documento.cpf("39053344705"),
+            email = "dono@example.com",
+        )
 
-    private val veiculo = Veiculo(
-        id = Id.gerar(),
-        marca = "Volkswagen",
-        nome = "Gol",
-        modelo = "Gol 1.6",
-        ano = "2020",
-        placa = "ABC1D23",
-        motorista = motorista
-    )
+    private val veiculo =
+        Veiculo(
+            id = Id.generate(),
+            marca = "Volkswagen",
+            nome = "Gol",
+            modelo = "Gol 1.6",
+            ano = "2020",
+            placa = "ABC1D23",
+            motorista = motorista,
+        )
 
     @Test
     fun `criar deve retornar dto do veiculo salvo`() {
         `when`(service.salvarVeiculo(anyObject())).thenReturn(veiculo)
 
-        val dto = controller.criar(
-            VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor)
-        )
+        val dto =
+            controller.criar(
+                VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor),
+            )
 
         assertEquals("ABC1D23", dto.placa)
         assertEquals(motorista.id.valor, dto.motoristaId)
@@ -50,7 +52,7 @@ class VeiculoControllerUnitTest {
     @Test
     fun `buscarVeiculoPorId deve mapear resultado`() {
         val id = UUID.randomUUID()
-        `when`(service.buscarPorId(Id.from(id))).thenReturn(veiculo)
+        `when`(service.buscarPorId(Id.fromString(id))).thenReturn(veiculo)
 
         assertEquals("Gol", controller.buscarVeiculoPorId(id)?.nome)
     }

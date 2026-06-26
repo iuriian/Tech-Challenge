@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
 class ClienteServiceTest {
-
     @Mock
     lateinit var repository: ClienteRepository
 
@@ -28,13 +27,14 @@ class ClienteServiceTest {
 
     @BeforeEach
     fun setup() {
-        clienteId = Id.gerar()
-        cliente = Cliente(
-            id = clienteId,
-            nome = "João Silva",
-            documento = Documento.cpf("12345678909"),
-            email = "joao@email.com"
-        )
+        clienteId = Id.generate()
+        cliente =
+            Cliente(
+                id = clienteId,
+                nome = "João Silva",
+                documento = Documento.cpf("12345678909"),
+                email = "joao@email.com",
+            )
     }
 
     @Test
@@ -64,7 +64,7 @@ class ClienteServiceTest {
 
     @Test
     fun `deve retornar null quando cliente nao encontrado por id`() {
-        val idInexistente = Id.gerar()
+        val idInexistente = Id.generate()
         `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
 
         val resultado = service.buscarPorId(idInexistente)
