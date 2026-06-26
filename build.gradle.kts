@@ -55,6 +55,11 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+
+	// Testes de integração com banco PostgreSQL real via Testcontainers
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
 }
 
 kotlin {
@@ -76,6 +81,14 @@ tasks.bootRun {
 }
 tasks.withType<Test> {
 	useJUnitPlatform()
+
+	// O cliente docker-java empacotado pelo Testcontainers negocia a API 1.32,
+	// rejeitada por daemons recentes (Docker Desktop exige API >= 1.40).
+	// Define um padrão compatível para os testes de integração, sem sobrescrever
+	// um valor já configurado no ambiente.
+	if (System.getenv("DOCKER_API_VERSION") == null) {
+		environment("DOCKER_API_VERSION", "1.43")
+	}
 }
 
 val jacocoTestReport by tasks.getting(JacocoReport::class) {
