@@ -2,13 +2,12 @@ package br.com.fiap.oficina.domain.valueobject
 
 import java.util.UUID
 
-data class Id(val valor: UUID) {
-
+data class Id(
+    val valor: UUID,
+) {
     companion object {
-        fun gerar(): Id = Id(UUID.randomUUID())
+        fun generate(): Id = Id(UUID.randomUUID())
 
-        fun from(valor: UUID): Id = Id(valor)
+        fun fromString(id: String): Id = Id(UUID.fromString(id))
     }
-
-    override fun toString(): String = valor.toString()
 }
