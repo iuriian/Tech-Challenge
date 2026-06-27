@@ -3,8 +3,10 @@ package br.com.fiap.oficina.presentation.controller
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -44,12 +46,19 @@ class ServicoControllerUnitTest {
             motorista = cliente,
         )
 
+    private val funcionario =
+        Funcionario(
+            id = Id.generate(),
+            nome = "Funcionario Teste",
+            cargo = Cargo.MECANICO,
+        )
+
     private val servico =
         Servico(
             id = Id.generate(),
             descricao = "Troca de óleo",
             status = ServicoStatus.RECEBIDA,
-            funcionarioId = 1L,
+            funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
         )
@@ -57,9 +66,9 @@ class ServicoControllerUnitTest {
     private fun servicoDto() =
         ServicoDto(
             descricao = "Troca de óleo",
-            funcionarioId = 1L,
-            clienteId = cliente.id.valor,
-            veiculoId = veiculo.id.valor,
+            funcionarioId = funcionario.id.valor.toString(),
+            clienteId = cliente.id.valor.toString(),
+            veiculoId = veiculo.id.valor.toString(),
         )
 
     @Test
@@ -76,7 +85,7 @@ class ServicoControllerUnitTest {
     fun `atualizar deve retornar dto do servico salvo`() {
         `when`(service.salvar(anyObject())).thenReturn(servico)
 
-        val dto = controller.atualizar(UUID.randomUUID(), servicoDto())
+        val dto = controller.atualizar("00000000-0000-0000-0000-000000000001", servicoDto())
 
         assertEquals(servico.id.valor, dto.id)
     }
@@ -91,32 +100,32 @@ class ServicoControllerUnitTest {
     @Test
     fun `listarPorCliente deve mapear lista de servicos do cliente`() {
         val clienteId = cliente.id.valor
-        `when`(service.listarPorCliente(Id.fromString(clienteId))).thenReturn(listOf(servico))
+        `when`(service.listarPorCliente(Id.fromString(clienteId.toString()))).thenReturn(listOf(servico))
 
-        val resultado = controller.listarPorCliente(clienteId)
+        val resultado = controller.listarPorCliente(clienteId.toString())
 
         assertEquals(1, resultado.size)
-        assertEquals(clienteId, resultado.first().clienteId)
+        assertEquals(clienteId.toString(), resultado.first().clienteId)
     }
 
     @Test
     fun `listarPorCliente deve retornar lista vazia quando cliente nao tem servicos`() {
         val clienteId = UUID.randomUUID()
-        `when`(service.listarPorCliente(Id.fromString(clienteId))).thenReturn(emptyList())
+        `when`(service.listarPorCliente(Id.fromString(clienteId.toString()))).thenReturn(emptyList())
 
-        assertTrue(controller.listarPorCliente(clienteId).isEmpty())
+        assertTrue(controller.listarPorCliente(clienteId.toString()).isEmpty())
     }
 
     @Test
     fun `obterOrcamento deve retornar dto do orcamento`() {
-        val id = UUID.randomUUID()
+        val id = Id.fromString("00000000-0000-0000-0000-000000000001")
         val orcamento =
             Orcamento(
-                servicoId = Id.fromString(id),
+                servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
                     listOf(
                         ItemOrcamento(
-                            pecaId = UUID.randomUUID().let { Id.fromString(it) },
+                            pecaId = UUID.randomUUID().let { Id.fromString("00000000-0000-0000-0000-000000000002") },
                             codigo = "PEC001",
                             nome = "Filtro",
                             precoUnitario = BigDecimal.TEN,
@@ -126,11 +135,11 @@ class ServicoControllerUnitTest {
                     ),
                 valorTotal = BigDecimal("20"),
             )
-        `when`(service.obterOrcamento(Id.fromString(id))).thenReturn(orcamento)
+        `when`(service.obterOrcamento(Id(id.valor))).thenReturn(orcamento)
 
-        val dto = controller.obterOrcamento(id)
+        val dto = controller.obterOrcamento(id.valor.toString())
 
-        assertEquals(id, dto.servicoId)
+        assertEquals(id.valor, dto.servicoId)
         assertEquals(BigDecimal("20"), dto.valorTotal)
         assertEquals(1, dto.itens.size)
     }
@@ -138,12 +147,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `obterOrcamento deve retornar 404 quando servico nao existe`() {
         val id = UUID.randomUUID()
-        `when`(service.obterOrcamento(Id.fromString(id)))
+        `when`(service.obterOrcamento(Id.fromString(id.toString())))
             .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.obterOrcamento(id)
+                controller.obterOrcamento(id.toString())
             }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -152,20 +161,20 @@ class ServicoControllerUnitTest {
     @Test
     fun `deletarPorId deve delegar ao service`() {
         val id = UUID.randomUUID()
-        `when`(service.deletarPorId(Id.fromString(id))).thenReturn("Servico deletado.")
+        `when`(service.deletarPorId(Id.fromString(id.toString()))).thenReturn("Servico deletado.")
 
-        controller.deletarPorId(id)
+        controller.deletarPorId(id.toString())
 
-        verify(service).deletarPorId(Id.fromString(id))
+        verify(service).deletarPorId(Id.fromString(id.toString()))
     }
 
     @Test
     fun `avancarStatus deve retornar dto com novo status`() {
         val id = servico.id.valor
         val servicoAvancado = servico.copy(status = ServicoStatus.EM_DIAGNOSTICO)
-        `when`(service.avancarStatus(Id.fromString(id))).thenReturn(servicoAvancado)
+        `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(servicoAvancado)
 
-        val dto = controller.avancarStatus(id)
+        val dto = controller.avancarStatus(id.toString())
 
         assertEquals(ServicoStatus.EM_DIAGNOSTICO, dto.status)
     }
@@ -173,12 +182,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `avancarStatus deve retornar 404 quando servico nao existe`() {
         val id = UUID.randomUUID()
-        `when`(service.avancarStatus(Id.fromString(id)))
+        `when`(service.avancarStatus(Id.fromString(id.toString())))
             .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.avancarStatus(id)
+                controller.avancarStatus(id.toString())
             }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -187,12 +196,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `avancarStatus deve retornar 422 quando status e final`() {
         val id = UUID.randomUUID()
-        `when`(service.avancarStatus(Id.fromString(id)))
+        `when`(service.avancarStatus(Id.fromString(id.toString())))
             .thenThrow(IllegalStateException("Serviço no status 'ENTREGUE' é um estado final e não pode avançar."))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.avancarStatus(id)
+                controller.avancarStatus(id.toString())
             }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.statusCode)
@@ -202,9 +211,9 @@ class ServicoControllerUnitTest {
     fun `alterarStatus deve retornar dto com status alterado`() {
         val id = servico.id.valor
         val servicoCancelado = servico.copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.fromString(id), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
 
-        val dto = controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.CANCELADA))
+        val dto = controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))
 
         assertEquals(ServicoStatus.CANCELADA, dto.status)
     }
@@ -212,12 +221,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `alterarStatus deve retornar 404 quando servico nao existe`() {
         val id = UUID.randomUUID()
-        `when`(service.alterarStatus(Id.fromString(id), ServicoStatus.CANCELADA))
+        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA))
             .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.CANCELADA))
+                controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))
             }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -226,12 +235,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `alterarStatus deve retornar 422 para transicao invalida`() {
         val id = UUID.randomUUID()
-        `when`(service.alterarStatus(Id.fromString(id), ServicoStatus.ENTREGUE))
+        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.ENTREGUE))
             .thenThrow(IllegalStateException("Transição inválida de 'RECEBIDA' para 'ENTREGUE'."))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.alterarStatus(id, AlterarStatusDto(ServicoStatus.ENTREGUE))
+                controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.ENTREGUE))
             }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.statusCode)

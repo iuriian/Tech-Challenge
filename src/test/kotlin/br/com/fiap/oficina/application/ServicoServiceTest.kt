@@ -5,12 +5,15 @@ import br.com.fiap.oficina.application.service.PecaServicoComando
 import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -29,7 +32,6 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class ServicoServiceTest {
@@ -40,6 +42,8 @@ class ServicoServiceTest {
     @Mock lateinit var veiculoRepository: VeiculoRepository
 
     @Mock lateinit var pecaRepository: PecaRepository
+
+    @Mock lateinit var funcionarioRepository: FuncionarioRepository
 
     @InjectMocks lateinit var service: ServicoService
 
@@ -52,6 +56,8 @@ class ServicoServiceTest {
     private lateinit var peca2: Peca
     private lateinit var pecaId1: Id
     private lateinit var pecaId2: Id
+    private lateinit var funcionarioId: Id
+    private lateinit var funcionario: Funcionario
 
     @BeforeEach
     fun setup() {
@@ -78,8 +84,16 @@ class ServicoServiceTest {
                 motorista = cliente,
             )
 
-        pecaId1 = Id.fromString(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-        pecaId2 = Id.fromString(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+        funcionarioId = Id.generate()
+        funcionario =
+            Funcionario(
+                id = funcionarioId,
+                nome = "Funcionario Teste",
+                cargo = Cargo.MECANICO,
+            )
+
+        pecaId1 = Id.fromString("00000000-0000-0000-0000-000000000001")
+        pecaId2 = Id.fromString("00000000-0000-0000-0000-000000000002")
         peca1 = criarPeca(pecaId1, "PEC001")
         peca2 = criarPeca(pecaId2, "PEC002")
     }
@@ -98,7 +112,7 @@ class ServicoServiceTest {
                 id = servicoId,
                 descricao = "Troca de Óleo",
                 status = ServicoStatus.RECEBIDA,
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas = pecasEsperadas,
@@ -107,6 +121,7 @@ class ServicoServiceTest {
         `when`(repository.buscarPorId(servicoId)).thenReturn(esperado)
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
         `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
         `when`(pecaRepository.buscarPorId(pecaId1)).thenReturn(peca1)
         `when`(pecaRepository.buscarPorId(pecaId2)).thenReturn(peca2)
         `when`(repository.salvar(anyObject())).thenReturn(esperado)
@@ -116,7 +131,7 @@ class ServicoServiceTest {
                 ServicoComando(
                     id = servicoId,
                     descricao = "Troca de Óleo",
-                    funcionarioId = 1L,
+                    funcionarioId = funcionarioId,
                     status = ServicoStatus.RECEBIDA,
                     clienteId = clienteId,
                     veiculoId = veiculoId,
@@ -145,7 +160,7 @@ class ServicoServiceTest {
                     ServicoComando(
                         id = servicoId,
                         descricao = "Troca de Óleo",
-                        funcionarioId = 1L,
+                        funcionarioId = funcionarioId,
                         clienteId = clienteId,
                         veiculoId = veiculoId,
                         pecas =
@@ -167,7 +182,7 @@ class ServicoServiceTest {
             Servico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
@@ -186,7 +201,7 @@ class ServicoServiceTest {
             Servico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
@@ -396,7 +411,7 @@ class ServicoServiceTest {
             id = servicoId,
             descricao = "Troca de Óleo",
             status = status,
-            funcionarioId = 1L,
+            funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
         )

@@ -46,7 +46,7 @@ class ClienteControllerUnitTest {
     fun `alterar deve retornar dto do cliente atualizado`() {
         `when`(service.salvarCliente(anyObject())).thenReturn(cliente)
 
-        val dto = controller.alterar(UUID.randomUUID(), clienteDto())
+        val dto = controller.alterar("00000000-0000-0000-0000-000000000001", clienteDto())
 
         assertEquals("João Silva", dto.nome)
     }
@@ -55,9 +55,9 @@ class ClienteControllerUnitTest {
     fun `remover deve delegar ao service`() {
         val id = UUID.randomUUID()
 
-        controller.remover(id)
+        controller.remover(id.toString())
 
-        verify(service).removerCliente(Id.fromString(id))
+        verify(service).removerCliente(Id.fromString(id.toString()))
     }
 
     @Test
