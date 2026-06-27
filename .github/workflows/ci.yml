@@ -24,7 +24,7 @@ jobs:
 
       - run: ./gradlew test jacocoTestReport
 
-      - run: ./.github/actions/upload-reports
+      - uses: ./.github/actions/upload-reports
 
   build:
     name: Build
