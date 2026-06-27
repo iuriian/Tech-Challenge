@@ -79,6 +79,16 @@ CREATE TABLE pecas (
 );
 
 -- ------------------------------------------------------------
+-- Funcionários (FuncionarioEntity) — criado antes de servicos
+-- pois servicos referencia funcionarios via FK.
+-- ------------------------------------------------------------
+CREATE TABLE funcionarios (
+    id             UUID PRIMARY KEY,
+    nome           VARCHAR(100) NOT NULL,
+    cargo          VARCHAR(50) NOT NULL
+);
+
+-- ------------------------------------------------------------
 -- Serviços (ServicoJpaEntity)
 -- ------------------------------------------------------------
 CREATE TABLE servicos (
@@ -91,15 +101,6 @@ CREATE TABLE servicos (
     CONSTRAINT fk_servicos_cliente FOREIGN KEY (cliente_id) REFERENCES clientes (id),
     CONSTRAINT fk_servicos_veiculo FOREIGN KEY (veiculo_id) REFERENCES veiculos (id_veiculo),
     CONSTRAINT fk_servicos_funcionario FOREIGN KEY (funcionario_id) REFERENCES funcionarios (id)
-);
-
--- ------------------------------------------------------------
--- Funcionários (FuncionarioEntity)
--- ------------------------------------------------------------
-CREATE TABLE funcionarios (
-    id             UUID PRIMARY KEY,
-    nome           VARCHAR(100) NOT NULL,
-    cargo          VARCHAR(50) NOT NULL
 );
 
 -- ------------------------------------------------------------

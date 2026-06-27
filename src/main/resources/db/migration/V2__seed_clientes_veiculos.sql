@@ -39,12 +39,13 @@ INSERT INTO veiculos (id_veiculo, marca, nome, modelo, ano, placa, motorista_id)
     (4, 'Toyota',     'Corolla do Carlos',  'Corolla XEI',    '2020', 'JKL4M56', 3);
 
 -- ------------------------------------------------------------
--- Funcionários
+-- Funcionários — cargo armazenado como ID numérico (Int):
+-- 1 = ATENDENTE, 2 = MECANICO (vide enum Cargo)
 -- ------------------------------------------------------------
 INSERT INTO funcionarios (id, nome, cargo) VALUES
-    ('3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3', 'João Silva', 'Desenvolvedor'),
-    ('8f7d6a4e-9b17-49dd-8f8d-5c1d4d1ab923', 'Maria Souza', 'Analista'),
-    ('d2f9f58d-32f5-48aa-a4f5-b4dc5e4f6a74', 'Carlos Lima', 'Gerente');
+    ('3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3', 'João Silva',   '1'),
+    ('8f7d6a4e-9b17-49dd-8f8d-5c1d4d1ab923', 'Maria Souza',  '2'),
+    ('d2f9f58d-32f5-48aa-a4f5-b4dc5e4f6a74', 'Carlos Lima',  '1');
 
 -- ------------------------------------------------------------
 -- Ajusta as sequências de identidade para o próximo valor após

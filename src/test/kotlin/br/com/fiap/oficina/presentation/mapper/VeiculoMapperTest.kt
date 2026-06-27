@@ -39,6 +39,6 @@ class VeiculoMapperTest {
         assertEquals(veiculo.modelo, dto.modelo)
         assertEquals(veiculo.ano, dto.ano)
         assertEquals(veiculo.placa, dto.placa)
-        assertEquals(motorista.id.valor, dto.motoristaId)
+        assertEquals(motorista.id.valor.toString(), dto.motoristaId)
     }
 }

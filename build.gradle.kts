@@ -82,13 +82,10 @@ tasks.bootRun {
 tasks.withType<Test> {
 	useJUnitPlatform()
 
-	// O cliente docker-java empacotado pelo Testcontainers negocia a API 1.32,
-	// rejeitada por daemons recentes (Docker Desktop exige API >= 1.40).
-	// Define um padrão compatível para os testes de integração, sem sobrescrever
-	// um valor já configurado no ambiente.
-	if (System.getenv("DOCKER_API_VERSION") == null) {
-		environment("DOCKER_API_VERSION", "1.43")
+	if (System.getenv("API_VERSION") == null) {
+		environment("API_VERSION", "1.43")
 	}
+	jvmArgs("-Dapi.version=1.43")
 }
 
 val jacocoTestReport by tasks.getting(JacocoReport::class) {
