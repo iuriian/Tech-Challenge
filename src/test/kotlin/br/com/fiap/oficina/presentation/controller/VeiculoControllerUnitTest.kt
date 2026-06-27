@@ -42,19 +42,19 @@ class VeiculoControllerUnitTest {
 
         val dto =
             controller.criar(
-                VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor),
+                VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor.toString()),
             )
 
         assertEquals("ABC1D23", dto.placa)
-        assertEquals(motorista.id.valor, dto.motoristaId)
+        assertEquals(motorista.id.valor.toString(), dto.motoristaId)
     }
 
     @Test
     fun `buscarVeiculoPorId deve mapear resultado`() {
-        val id = UUID.randomUUID()
-        `when`(service.buscarPorId(Id.fromString(id))).thenReturn(veiculo)
+        val id = veiculo.id.valor
+        `when`(service.buscarPorId(Id.fromString(id.toString()))).thenReturn(veiculo)
 
-        assertEquals("Gol", controller.buscarVeiculoPorId(id)?.nome)
+        assertEquals("Gol", controller.buscarVeiculoPorId(id.toString())?.nome)
     }
 
     @Test
@@ -68,6 +68,6 @@ class VeiculoControllerUnitTest {
     fun `buscarVeiculosPorMotorista deve mapear lista`() {
         `when`(service.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
 
-        assertEquals(1, controller.buscarVeiculosPorMotorista(motorista.id.valor).size)
+        assertEquals(1, controller.buscarVeiculosPorMotorista(motorista.id.valor.toString()).size)
     }
 }

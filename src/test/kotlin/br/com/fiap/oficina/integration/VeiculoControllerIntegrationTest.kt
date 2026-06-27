@@ -27,7 +27,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
 
     private fun novoVeiculoJson(
         placa: String = "TST1A23",
-        motoristaId: UUID = motoristaSeedId(),
+        motoristaId: String = motoristaSeedId().toString(),
         nome: String = "Carro de Teste"
     ) = objectMapper.writeValueAsString(
         VeiculoDTO(
@@ -93,7 +93,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve listar veiculos do motorista de seed`() {
-        mockMvc.get("/veiculos/motorista/{id}", motoristaSeedId())
+        mockMvc.get("/veiculos/motorista/{id}", motoristaSeedId().toString())
             .andExpect {
                 status { isOk() }
                 jsonPath("$") { isArray() }

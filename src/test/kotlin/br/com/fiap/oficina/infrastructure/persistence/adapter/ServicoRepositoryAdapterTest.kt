@@ -58,12 +58,18 @@ class ServicoRepositoryAdapterTest {
                 placa = "ABC1D23",
                 motorista = cliente,
             )
+        val funcionario =
+            br.com.fiap.oficina.domain.entity.Funcionario(
+                id = Id.generate(),
+                nome = "Funcionario Teste",
+                cargo = br.com.fiap.oficina.domain.enum.Cargo.MECANICO,
+            )
         servico =
             Servico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
                 status = ServicoStatus.RECEBIDA,
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )

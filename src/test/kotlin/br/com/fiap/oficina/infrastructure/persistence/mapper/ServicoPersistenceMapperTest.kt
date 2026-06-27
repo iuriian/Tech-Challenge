@@ -7,6 +7,8 @@ import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
+import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -40,6 +42,13 @@ class ServicoPersistenceMapperTest {
             motorista = cliente,
         )
 
+    private val funcionario =
+        Funcionario(
+            id = Id.generate(),
+            nome = "Funcionario Teste",
+            cargo = Cargo.MECANICO,
+        )
+
     @Test
     fun `deve fazer round-trip de servico com pecas`() {
         val servico =
@@ -47,7 +56,7 @@ class ServicoPersistenceMapperTest {
                 id = Id.generate(),
                 descricao = "Troca de óleo",
                 status = ServicoStatus.EM_EXECUCAO,
-                funcionarioId = 7L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
@@ -63,7 +72,7 @@ class ServicoPersistenceMapperTest {
 
         assertEquals(servico.id.valor, jpa.id)
         assertEquals(ServicoStatus.EM_EXECUCAO, jpa.status)
-        assertEquals(7L, jpa.funcionarioId)
+        assertEquals(funcionario.id.valor, jpa.funcionario.id)
         assertEquals(BigDecimal("2"), jpa.pecas.first().quantidade)
         assertEquals(servico, mapper.toDomain(jpa))
     }
@@ -75,19 +84,18 @@ class ServicoPersistenceMapperTest {
                 id = Id.generate(),
                 descricao = "Revisão",
                 status = ServicoStatus.RECEBIDA,
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
         val jpa =
             mapper.toJpa(servico).apply {
                 status = null
-                funcionarioId = null
             }
 
         val resultado = mapper.toDomain(jpa)
 
         assertEquals(ServicoStatus.RECEBIDA, resultado.status)
-        assertEquals(0L, resultado.funcionarioId)
+        assertEquals(funcionario.id.valor, resultado.funcionario.id.valor)
     }
 }

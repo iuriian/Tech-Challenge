@@ -33,13 +33,13 @@ class ClienteControllerTest {
         val id = UUID.randomUUID()
         val cliente =
             Cliente(
-                id = Id.fromString(id),
+                id = Id.fromString(id.toString()),
                 nome = "João Silva",
                 documento = Documento.cpf("39053344705"),
                 email = "joao.silva@example.com",
             )
 
-        `when`(service.buscarPorId(Id.fromString(id))).thenReturn(cliente)
+        `when`(service.buscarPorId(Id.fromString(id.toString()))).thenReturn(cliente)
 
         mockMvc
             .perform(get("/clientes/$id"))

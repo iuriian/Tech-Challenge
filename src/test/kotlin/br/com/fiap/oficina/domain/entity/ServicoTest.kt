@@ -1,5 +1,7 @@
 package br.com.fiap.oficina.domain.entity
 
+import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -28,6 +30,13 @@ class ServicoTest {
             motorista = cliente,
         )
 
+    private val funcionario =
+        Funcionario(
+            id = Id.generate(),
+            nome = "Funcionario Teste",
+            cargo = Cargo.MECANICO,
+        )
+
     private val peca =
         Peca(
             id = Id.generate(),
@@ -41,7 +50,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Troca de óleo",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
@@ -49,7 +58,7 @@ class ServicoTest {
         assertNotNull(servico.id)
         assertEquals("Troca de óleo", servico.descricao)
         assertEquals(ServicoStatus.RECEBIDA, servico.status)
-        assertEquals(1L, servico.funcionarioId)
+        assertEquals(funcionario, servico.funcionario)
         assertEquals(cliente, servico.cliente)
         assertEquals(veiculo, servico.veiculo)
         assertTrue(servico.pecas.isEmpty())
@@ -61,7 +70,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Troca de óleo",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 status = ServicoStatus.EM_EXECUCAO,
@@ -78,7 +87,7 @@ class ServicoTest {
             assertThrows(IllegalArgumentException::class.java) {
                 Servico.criar(
                     descricao = "",
-                    funcionarioId = 1L,
+                    funcionario = funcionario,
                     cliente = cliente,
                     veiculo = veiculo,
                 )
@@ -92,7 +101,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Revisão",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
@@ -108,7 +117,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Revisão",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
@@ -125,7 +134,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Revisão",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
@@ -139,7 +148,7 @@ class ServicoTest {
     @Test
     fun `deve registrar dataInicioExecucao ao transitar para EM_EXECUCAO`() {
         val agora = Instant.now()
-        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
 
         val emExecucao = servico.alterarStatus(ServicoStatus.EM_EXECUCAO, agora)
 
@@ -150,7 +159,7 @@ class ServicoTest {
     @Test
     fun `deve registrar dataFinalizacao ao transitar para FINALIZADA`() {
         val agora = Instant.now()
-        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
 
         val finalizado = servico.alterarStatus(ServicoStatus.FINALIZADA, agora)
 
@@ -163,7 +172,7 @@ class ServicoTest {
         val inicio = Instant.now()
         val servico =
             Servico
-                .criar("Revisão", 1L, cliente, veiculo)
+                .criar("Revisão", funcionario, cliente, veiculo)
                 .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
 
         val entregue = servico.alterarStatus(ServicoStatus.ENTREGUE)
@@ -175,7 +184,7 @@ class ServicoTest {
     @Test
     fun `criar deve registrar dataAbertura`() {
         val antes = Instant.now()
-        val servico = Servico.criar("Revisão", 1L, cliente, veiculo)
+        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
         val depois = Instant.now()
 
         assertFalse(servico.dataAbertura.isBefore(antes))
@@ -196,7 +205,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Revisão",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
@@ -224,7 +233,7 @@ class ServicoTest {
         val servico =
             Servico.criar(
                 descricao = "Diagnóstico",
-                funcionarioId = 1L,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
