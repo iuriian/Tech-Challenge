@@ -19,7 +19,7 @@ class ServicoPersistenceMapper(
             id = Id(entity.id),
             descricao = entity.descricao,
             status = entity.status ?: ServicoStatus.RECEBIDA,
-            funcionarioId = entity.funcionario.id,
+            funcionario = entity.funcionario.toDomain(),
             cliente = clienteMapper.toDomain(entity.cliente),
             veiculo = veiculoMapper.toDomain(entity.veiculo),
             pecas =
@@ -33,17 +33,17 @@ class ServicoPersistenceMapper(
 
     fun toJpa(domain: Servico): ServicoJpaEntity {
         val entity =
-            ServicoJpaEntity().apply {
-                id = domain.id.valor
-                descricao = domain.descricao
-                status = domain.status
-                funcionarioId = domain.funcionarioId
-                cliente = clienteMapper.toJpa(domain.cliente)
-                veiculo = veiculoMapper.toJpa(domain.veiculo)
-                dataAbertura = domain.dataAbertura
-                dataInicioExecucao = domain.dataInicioExecucao
-                dataFinalizacao = domain.dataFinalizacao
-            }
+            ServicoJpaEntity(
+                id = domain.id.valor,
+                descricao = domain.descricao,
+                status = domain.status,
+                funcionario = domain.funcionario.toEntity(),
+                cliente = clienteMapper.toJpa(domain.cliente),
+                veiculo = veiculoMapper.toJpa(domain.veiculo),
+                dataAbertura = domain.dataAbertura,
+                dataInicioExecucao = domain.dataInicioExecucao,
+                dataFinalizacao = domain.dataFinalizacao,
+            )
         entity.pecas =
             domain.pecas
                 .map { pecaServico ->

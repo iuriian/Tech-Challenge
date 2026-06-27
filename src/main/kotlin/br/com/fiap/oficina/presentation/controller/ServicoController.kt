@@ -194,7 +194,7 @@ class ServicoController(
         ServicoComando(
             id = id,
             descricao = dto.descricao,
-            funcionarioId = dto.funcionarioId,
+            funcionarioId = Id.fromString(dto.funcionarioId),
             status = dto.status ?: ServicoStatus.RECEBIDA,
             clienteId = Id.fromString(dto.clienteId),
             veiculoId = Id.fromString(dto.veiculoId),

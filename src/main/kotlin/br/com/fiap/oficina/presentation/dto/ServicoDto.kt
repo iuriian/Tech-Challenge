@@ -11,40 +11,32 @@ import java.util.UUID
 
 data class PecaServicoDto(
     @field:NotNull
-    val pecaId: UUID,
-
+    val pecaId: String,
     @field:NotNull
     @field:Positive
-    val quantidade: BigDecimal
+    val quantidade: BigDecimal,
 )
 
 data class ServicoDto(
     val id: UUID? = null,
-
     @field:NotNull
     @field:NotBlank
     val descricao: String,
-
     val status: ServicoStatus? = null,
-
     @field:NotNull
-    val funcionarioId: Long,
-
+    val funcionarioId: String,
     @field:NotNull
-    val clienteId: UUID,
-
+    val clienteId: String,
     @field:NotNull
-    val veiculoId: UUID,
-
+    val veiculoId: String,
     @field:Valid
     val pecas: List<PecaServicoDto> = emptyList(),
-
     val dataAbertura: Instant? = null,
     val dataInicioExecucao: Instant? = null,
-    val dataFinalizacao: Instant? = null
+    val dataFinalizacao: Instant? = null,
 )
 
 data class TempoMedioExecucaoDto(
     val totalServicosFinalizados: Int,
-    val tempoMedioMinutos: Double?
+    val tempoMedioMinutos: Double?,
 )
