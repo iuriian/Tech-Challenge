@@ -1,11 +1,13 @@
 package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Duration
-import java.util.UUID
 
 data class TempoMedioExecucao(
     val totalServicosFinalizados: Int,
@@ -30,7 +31,7 @@ data class PecaServicoComando(
 data class ServicoComando(
     val id: Id? = null,
     val descricao: String,
-    val funcionarioId: UUID,
+    val funcionarioId: Id,
     val status: ServicoStatus = ServicoStatus.RECEBIDA,
     val clienteId: Id,
     val veiculoId: Id,
@@ -43,12 +44,17 @@ class ServicoService(
     private val clienteRepository: ClienteRepository,
     private val veiculoRepository: VeiculoRepository,
     private val pecaRepository: PecaRepository,
+    private val funcionarioRepository: FuncionarioRepository,
 ) {
     @Transactional
     fun salvar(comando: ServicoComando): Servico {
         val cliente =
             clienteRepository.buscarPorId(comando.clienteId)
                 ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.clienteId}")
+
+        val funcionario =
+            funcionarioRepository.buscarPorId(comando.funcionarioId)
+                ?: throw IllegalArgumentException("Funcionário não encontrado com o ID: ${comando.funcionarioId}")
 
         val veiculo =
             veiculoRepository.buscarPorId(comando.veiculoId)
@@ -63,10 +69,10 @@ class ServicoService(
 
         val servico =
             comando.id
-                ?.let { id -> atualizarExistente(id, comando, cliente, veiculo, pecas) }
+                ?.let { id -> atualizarExistente(id, comando, funcionario, cliente, veiculo, pecas) }
                 ?: Servico.criar(
                     descricao = comando.descricao,
-                    funcionarioId = comando.funcionarioId,
+                    funcionario = funcionario,
                     cliente = cliente,
                     veiculo = veiculo,
                     status = comando.status,
@@ -79,6 +85,7 @@ class ServicoService(
     private fun atualizarExistente(
         id: Id,
         comando: ServicoComando,
+        funcionario: Funcionario,
         cliente: Cliente,
         veiculo: Veiculo,
         pecas: List<PecaServico>,
@@ -88,7 +95,7 @@ class ServicoService(
                 ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
         return existente.copy(
             descricao = comando.descricao,
-            funcionarioId = comando.funcionarioId,
+            funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
             pecas = pecas,

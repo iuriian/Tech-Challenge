@@ -12,7 +12,7 @@ data class Servico(
     val id: Id,
     val descricao: String,
     val status: ServicoStatus = ServicoStatus.RECEBIDA,
-    val funcionarioId: UUID,
+    val funcionario: Funcionario,
     val cliente: Cliente,
     val veiculo: Veiculo,
     val pecas: List<PecaServico> = emptyList(),
@@ -23,7 +23,7 @@ data class Servico(
     companion object {
         fun criar(
             descricao: String,
-            funcionarioId: UUID,
+            funcionario: Funcionario,
             cliente: Cliente,
             veiculo: Veiculo,
             status: ServicoStatus = ServicoStatus.RECEBIDA,
@@ -35,7 +35,7 @@ data class Servico(
                 id = Id.generate(),
                 descricao = descricao,
                 status = status,
-                funcionarioId = funcionarioId,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas = pecas,

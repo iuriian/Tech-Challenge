@@ -11,7 +11,7 @@ class VeiculoPersistenceMapper(
 ) {
     fun toDomain(entity: VeiculoJpaEntity): Veiculo =
         Veiculo(
-            id = Id.fromString(entity.idVeiculo),
+            id = Id(entity.idVeiculo),
             marca = entity.marca,
             nome = entity.nome,
             modelo = entity.modelo,
@@ -21,13 +21,13 @@ class VeiculoPersistenceMapper(
         )
 
     fun toJpa(domain: Veiculo): VeiculoJpaEntity =
-        VeiculoJpaEntity().apply {
-            idVeiculo = domain.id.valor
-            marca = domain.marca
-            nome = domain.nome
-            modelo = domain.modelo
-            ano = domain.ano
-            placa = domain.placa
-            motorista = clienteMapper.toJpa(domain.motorista)
-        }
+        VeiculoJpaEntity(
+            idVeiculo = domain.id.valor,
+            marca = domain.marca,
+            nome = domain.nome,
+            modelo = domain.modelo,
+            ano = domain.ano,
+            placa = domain.placa,
+            motorista = clienteMapper.toJpa(domain.motorista),
+        )
 }
