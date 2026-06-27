@@ -1,0 +1,1655 @@
+{
+  "info": {
+    "_postman_id": "bf614743-532e-48e3-b800-0176dfd40e69",
+    "name": "TechChallenge API - Test Payloads",
+    "description": "Collection com payloads realistas para teste. Ordem sugerida: 1) Criar Funcionário → 2) Criar Cliente → 3) Criar Peça → 4) Criar Veículo → 5) Criar Serviço → 6) Fluxo de status. Os scripts de teste salvam os IDs automaticamente como variáveis de coleção.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "1956193"
+  },
+  "item": [
+    {
+      "name": "01 - funcionarios",
+      "item": [
+        {
+          "name": "Criar funcionário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('funcionarioId', body.id);",
+                  "        console.log('funcionarioId salvo: ' + body.id);",
+                  "    }",
+                  "    pm.test('Funcionário criado com sucesso', () => pm.response.to.have.status([200, 201]));",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Eduardo Mecânico\",\n  \"cargo\": \"MECANICO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os funcionários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar funcionário por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/id/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "id",
+                "{{funcionarioId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar funcionário por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/nome/Carlos Eduardo Mecânico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "nome",
+                "Carlos Eduardo Mecânico"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar funcionário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{funcionarioId}}\",\n  \"nome\": \"Carlos Eduardo Mecânico\",\n  \"cargo\": \"Mecânico Pleno\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "{{funcionarioId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar funcionário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "{{funcionarioId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - clientes",
+      "item": [
+        {
+          "name": "Criar cliente (Pessoa Física)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('clienteId', body.id);",
+                  "        console.log('clienteId salvo: ' + body.id);",
+                  "    }",
+                  "    pm.test('Cliente criado com sucesso', () => pm.response.to.have.status([200, 201]));",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva Santos\",\n  \"email\": \"joao.santos@email.com.br\",\n  \"numeroDocumento\": \"32958990109\",\n  \"tipoPessoa\": \"PESSOA_FISICA\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"123\",\n    \"complemento\": \"Apto 45\",\n    \"bairro\": \"Jardim Primavera\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"João da Silva Santos\",\n      \"telefone\": \"11987654321\",\n      \"tipo\": \"CELULAR\"\n    },\n    {\n      \"nome\": \"Maria Santos (esposa)\",\n      \"telefone\": \"1133221100\",\n      \"tipo\": \"FIXO\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar cliente (Pessoa Jurídica)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Transportadora ABC Ltda\",\n  \"email\": \"contato@transportadoraabc.com.br\",\n  \"numeroDocumento\": \"12345678000195\",\n  \"tipoPessoa\": \"PESSOA_JURIDICA\",\n  \"endereco\": {\n    \"logradouro\": \"Avenida Industrial\",\n    \"numero\": \"500\",\n    \"complemento\": \"Galpão 3\",\n    \"bairro\": \"Distrito Industrial\",\n    \"cidade\": \"Guarulhos\",\n    \"estado\": \"SP\",\n    \"cep\": \"07240000\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"Pedro Gerente\",\n      \"telefone\": \"11912345678\",\n      \"tipo\": \"CELULAR\"\n    },\n    {\n      \"nome\": \"Recepção\",\n      \"telefone\": \"1144556677\",\n      \"tipo\": \"FIXO\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar cliente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar cliente por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/nome/João da Silva Santos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "nome",
+                "João da Silva Santos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar cliente por CPF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/12345678901",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "12345678901"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar cliente por CNPJ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/12345678000195",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "12345678000195"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{clienteId}}\",\n  \"nome\": \"João da Silva Santos\",\n  \"email\": \"joao.santos.novo@email.com.br\",\n  \"numeroDocumento\": \"12345678901\",\n  \"tipoPessoa\": \"FISICA\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Acácias\",\n    \"numero\": \"456\",\n    \"complemento\": \"Casa\",\n    \"bairro\": \"Vila Nova\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"02040010\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"João da Silva Santos\",\n      \"telefone\": \"11987654321\",\n      \"tipo\": \"CELULAR\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remover cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - pecas",
+      "item": [
+        {
+          "name": "Criar peça - Filtro de Óleo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('pecaId', body.id);",
+                  "        console.log('pecaId salvo: ' + body.id);",
+                  "    }",
+                  "    if (body.codigo) {",
+                  "        pm.collectionVariables.set('pecaCodigo', body.codigo);",
+                  "        console.log('pecaCodigo salvo: ' + body.codigo);",
+                  "    }",
+                  "    pm.test('Peça criada com sucesso', () => pm.response.to.have.status([200, 201]));",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"FILTRO\",\n  \"nome\": \"Filtro de Óleo\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0 — compatível com Fiat, VW, GM\",\n  \"fabricante\": \"Mann-Filter\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 15.90,\n  \"precoDeVenda\": 39.90,\n  \"qtdEstoque\": 50,\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar peça - Pastilha de Freio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PASTILHA-FREIO-002\",\n  \"nome\": \"Pastilha de Freio Dianteira\",\n  \"descricao\": \"Pastilha de freio dianteira para veículos de passeio — kit com 4 peças\",\n  \"fabricante\": \"Fras-le\",\n  \"fornecedor\": \"Distribuidora de Freios SP\",\n  \"precoDeCompra\": 45.00,\n  \"precoDeVenda\": 120.00,\n  \"qtdEstoque\": 30,\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar peça - Vela de Ignição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"VELA\",\n  \"nome\": \"Vela de Ignição\",\n  \"descricao\": \"Vela de ignição de iridium — alta durabilidade, pack com 4 unidades\",\n  \"fabricante\": \"NGK\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 22.50,\n  \"precoDeVenda\": 65.00,\n  \"qtdEstoque\": 40,\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar peças",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar peça por código",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/codigo/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "codigo",
+                "{{pecaCodigo}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar peça por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/nome/Filtro de Óleo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "nome",
+                "Filtro de Óleo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar peça",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Filtro de Óleo Premium\",\n  \"descricao\": \"Filtro de óleo premium para motores 1.0 a 2.0 — compatível com Fiat, VW, GM, Renault\",\n  \"fabricante\": \"Mann-Filter\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 18.00,\n  \"precoDeVenda\": 45.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Repor estoque da peça (+10 unidades)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/estoque/repor?qtd=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "estoque",
+                "repor"
+              ],
+              "query": [
+                {
+                  "key": "qtd",
+                  "value": "10",
+                  "description": "Quantidade a repor"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Retirar do estoque da peça (-5 unidades)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/estoque/retirar?qtd=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "estoque",
+                "retirar"
+              ],
+              "query": [
+                {
+                  "key": "qtd",
+                  "value": "5",
+                  "description": "Quantidade a retirar"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Desativar peça (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reativar peça",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/reativar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "reativar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - veiculos",
+      "item": [
+        {
+          "name": "Criar veículo - Onix",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('veiculoId', body.id);",
+                  "        console.log('veiculoId salvo: ' + body.id);",
+                  "    }",
+                  "    pm.test('Veículo criado com sucesso', () => pm.response.to.have.status([200, 201]));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Onix Plus\",\n  \"marca\": \"Chevrolet\",\n  \"modelo\": \"Onix Plus 1.0 Turbo Premier\",\n  \"ano\": \"2022\",\n  \"placa\": \"ABC1D23\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar veículo - HB20",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"HB20 Sedan\",\n  \"marca\": \"Hyundai\",\n  \"modelo\": \"HB20S 1.6 Comfort Plus\",\n  \"ano\": \"2021\",\n  \"placa\": \"XYZ9K87\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar veículos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar veículo por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar veículo por placa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/placa/ABC1D23",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "placa",
+                "ABC1D23"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar veículos por motorista (clienteId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/motorista/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "motorista",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar veículo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{veiculoId}}\",\n  \"nome\": \"Onix Plus (atualizado)\",\n  \"marca\": \"Chevrolet\",\n  \"modelo\": \"Onix Plus 1.0 Turbo Premier\",\n  \"ano\": \"2023\",\n  \"placa\": \"ABC1D23\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remover veículo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - servicos (criação e consulta)",
+      "item": [
+        {
+          "name": "Criar serviço (OS)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const body = pm.response.json();",
+                  "    if (body.id) {",
+                  "        pm.collectionVariables.set('servicoId', body.id);",
+                  "        console.log('servicoId salvo: ' + body.id);",
+                  "    }",
+                  "    pm.test('Serviço criado com sucesso', () => pm.response.to.have.status([200, 201]));",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Revisão geral: troca de óleo, filtros e verificação de freios\",\n  \"clienteId\": \"{{clienteId}}\",\n  \"funcionarioId\": \"{{funcionarioId}}\",\n  \"veiculoId\": \"{{veiculoId}}\",\n  \"pecas\": [\n    {\n      \"pecaId\": \"{{pecaId}}\",\n      \"quantidade\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todos os serviços",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar serviço por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar serviços por cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/cliente/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "cliente",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Obter orçamento do serviço",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "orcamento"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tempo médio de execução (métrica)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/metricas/tempo-medio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "metricas",
+                "tempo-medio"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar serviço",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{servicoId}}\",\n  \"descricao\": \"Revisão geral: troca de óleo, filtros, verificação de freios e alinhamento\",\n  \"clienteId\": \"{{clienteId}}\",\n  \"funcionarioId\": \"{{funcionarioId}}\",\n  \"veiculoId\": \"{{veiculoId}}\",\n  \"pecas\": [\n    {\n      \"pecaId\": \"{{pecaId}}\",\n      \"quantidade\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar serviço",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - servicos (fluxo de status)",
+      "item": [
+        {
+          "name": "1. Avançar status (RECEBIDA → EM_DIAGNOSTICO)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            },
+            "description": "Move do status atual para o próximo na sequência. A partir de RECEBIDA, avança para EM_DIAGNOSTICO."
+          },
+          "response": []
+        },
+        {
+          "name": "2. Avançar status (EM_DIAGNOSTICO → AGUARDANDO_APROVACAO)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3a. Cliente APROVA (→ EM_EXECUCAO)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_EXECUCAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            },
+            "description": "Apenas clientes autenticados podem aprovar. Transição AGUARDANDO_APROVACAO → EM_EXECUCAO."
+          },
+          "response": []
+        },
+        {
+          "name": "3b. Cliente RECUSA (→ CANCELADA)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            },
+            "description": "Apenas clientes autenticados podem recusar. Transição AGUARDANDO_APROVACAO → CANCELADA."
+          },
+          "response": []
+        },
+        {
+          "name": "4. Avançar status (EM_EXECUCAO → FINALIZADA)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            },
+            "description": "Move EM_EXECUCAO → FINALIZADA. Retorna 422 se já estiver em estado final."
+          },
+          "response": []
+        },
+        {
+          "name": "Alterar para status específico - EM_DIAGNOSTICO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_DIAGNOSTICO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alterar para status específico - AGUARDANDO_APROVACAO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"AGUARDANDO_APROVACAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alterar para status específico - FINALIZADA",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"FINALIZADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "Máquina de estados da OS:\nRECEBIDA → EM_DIAGNOSTICO → AGUARDANDO_APROVACAO → EM_EXECUCAO → FINALIZADA\n                                                  ↘ CANCELADA\n\nRegra: clientes só podem aprovar (EM_EXECUCAO) ou recusar (CANCELADA) a partir de AGUARDANDO_APROVACAO."
+    }
+  ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "scope",
+        "value": "openid profile",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "{{keycloakUrl}}/realms/Fiap/protocol/openid-connect/token",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "password_credentials",
+        "type": "string"
+      },
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "{{clientId}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    },
+    {
+      "key": "clientId",
+      "value": "fiap-client"
+    },
+    {
+      "key": "funcionarioId",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": ""
+    },
+    {
+      "key": "pecaCodigo",
+      "value": "FILTRO-OLEO-001"
+    },
+    {
+      "key": "pecaId",
+      "value": ""
+    },
+    {
+      "key": "veiculoId",
+      "value": ""
+    },
+    {
+      "key": "servicoId",
+      "value": ""
+    }
+  ]
+}
