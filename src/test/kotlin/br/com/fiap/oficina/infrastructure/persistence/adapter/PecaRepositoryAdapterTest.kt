@@ -18,7 +18,6 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class PecaRepositoryAdapterTest {
-
     @Mock
     lateinit var jpaRepository: PecaJpaRepository
 
@@ -30,13 +29,14 @@ class PecaRepositoryAdapterTest {
     @BeforeEach
     fun setup() {
         adapter = PecaRepositoryAdapter(jpaRepository, mapper)
-        peca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC001",
-            nome = "Filtro",
-            precoDeVenda = BigDecimal.TEN,
-            qtdEstoque = 5
-        )
+        peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC001",
+                nome = "Filtro",
+                precoDeVenda = BigDecimal.TEN,
+                qtdEstoque = 5,
+            )
         jpa = mapper.toJpa(peca)
     }
 
@@ -98,7 +98,7 @@ class PecaRepositoryAdapterTest {
 
     @Test
     fun `buscarPorId deve retornar null quando ausente`() {
-        val id = Id.gerar()
+        val id = Id.generate()
         `when`(jpaRepository.findById(id.valor)).thenReturn(Optional.empty())
 
         assertNull(adapter.buscarPorId(id))

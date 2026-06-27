@@ -7,23 +7,23 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class PecaPersistenceMapperTest {
-
     private val mapper = PecaPersistenceMapper()
 
     @Test
     fun `deve fazer round-trip de peca completa`() {
-        val peca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            descricao = "Filtro padrão",
-            fabricante = "Bosch",
-            fornecedor = "AutoParts",
-            precoDeCompra = BigDecimal("25.00"),
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 50,
-            ativo = true
-        )
+        val peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC001",
+                nome = "Filtro de Óleo",
+                descricao = "Filtro padrão",
+                fabricante = "Bosch",
+                fornecedor = "AutoParts",
+                precoDeCompra = BigDecimal("25.00"),
+                precoDeVenda = BigDecimal("45.00"),
+                qtdEstoque = 50,
+                ativo = true,
+            )
 
         val jpa = mapper.toJpa(peca)
 
@@ -36,14 +36,15 @@ class PecaPersistenceMapperTest {
 
     @Test
     fun `deve fazer round-trip de peca com campos opcionais nulos`() {
-        val peca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC002",
-            nome = "Vela",
-            precoDeVenda = BigDecimal("32.00"),
-            qtdEstoque = 10,
-            ativo = false
-        )
+        val peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC002",
+                nome = "Vela",
+                precoDeVenda = BigDecimal("32.00"),
+                qtdEstoque = 10,
+                ativo = false,
+            )
 
         assertEquals(peca, mapper.toDomain(mapper.toJpa(peca)))
     }

@@ -6,50 +6,55 @@ import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 
 data class Servico(
     val id: Id,
     val descricao: String,
     val status: ServicoStatus = ServicoStatus.RECEBIDA,
-    val funcionarioId: Long,
+    val funcionario: Funcionario,
     val cliente: Cliente,
     val veiculo: Veiculo,
     val pecas: List<PecaServico> = emptyList(),
     val dataAbertura: Instant = Instant.now(),
     val dataInicioExecucao: Instant? = null,
-    val dataFinalizacao: Instant? = null
+    val dataFinalizacao: Instant? = null,
 ) {
-
     companion object {
         fun criar(
             descricao: String,
-            funcionarioId: Long,
+            funcionario: Funcionario,
             cliente: Cliente,
             veiculo: Veiculo,
             status: ServicoStatus = ServicoStatus.RECEBIDA,
-            pecas: List<PecaServico> = emptyList()
+            pecas: List<PecaServico> = emptyList(),
         ): Servico {
             require(descricao.isNotBlank()) { "Descrição do serviço é obrigatória" }
 
             return Servico(
-                id = Id.gerar(),
+                id = Id.generate(),
                 descricao = descricao,
                 status = status,
-                funcionarioId = funcionarioId,
+                funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas = pecas,
-                dataAbertura = Instant.now()
+                dataAbertura = Instant.now(),
             )
         }
     }
 
     fun adicionarPeca(pecaServico: PecaServico): Servico = copy(pecas = pecas + pecaServico)
 
-    fun adicionarPeca(peca: Peca, quantidade: BigDecimal): Servico =
-        adicionarPeca(PecaServico.criar(peca, quantidade))
+    fun adicionarPeca(
+        peca: Peca,
+        quantidade: BigDecimal,
+    ): Servico = adicionarPeca(PecaServico.criar(peca, quantidade))
 
-    fun alterarStatus(novoStatus: ServicoStatus, agora: Instant = Instant.now()): Servico =
+    fun alterarStatus(
+        novoStatus: ServicoStatus,
+        agora: Instant = Instant.now(),
+    ): Servico =
         when (novoStatus) {
             ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
             ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
@@ -61,16 +66,17 @@ data class Servico(
      * totalizando o valor das peças (preço de venda × quantidade).
      */
     fun gerarOrcamento(): Orcamento {
-        val itens = pecas.map { item ->
-            ItemOrcamento(
-                pecaId = item.peca.id,
-                codigo = item.peca.codigo,
-                nome = item.peca.nome,
-                precoUnitario = item.peca.precoDeVenda,
-                quantidade = item.quantidade,
-                subtotal = item.subtotal()
-            )
-        }
+        val itens =
+            pecas.map { item ->
+                ItemOrcamento(
+                    pecaId = item.peca.id,
+                    codigo = item.peca.codigo,
+                    nome = item.peca.nome,
+                    precoUnitario = item.peca.precoDeVenda,
+                    quantidade = item.quantidade,
+                    subtotal = item.subtotal(),
+                )
+            }
         val valorTotal = itens.fold(BigDecimal.ZERO) { acc, item -> acc + item.subtotal }
 
         return Orcamento(servicoId = id, itens = itens, valorTotal = valorTotal)

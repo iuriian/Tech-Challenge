@@ -1,34 +1,31 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import jakarta.validation.constraints.Size
 import java.util.UUID
 
 @Entity
 @Table(name = "veiculos")
-class VeiculoJpaEntity {
-
+class VeiculoJpaEntity(
     @Id
-    var idVeiculo: UUID = UUID.randomUUID()
-
+    var idVeiculo: UUID,
     @Column(nullable = false)
-    lateinit var marca: String
-
+    var marca: String,
     @Column(nullable = false)
-    lateinit var nome: String
-
+    var nome: String,
     @Column(nullable = false)
-    lateinit var modelo: String
-
+    var modelo: String,
     @Column(nullable = false)
-    lateinit var ano: String
-
+    var ano: String,
     @Column(nullable = false, unique = true)
     @Size(min = 7, max = 7, message = "Input must be exactly 7 characters long")
-    lateinit var placa: String
-
+    var placa: String,
     @ManyToOne
     @JoinColumn(name = "motorista_id")
-    lateinit var motorista: ClienteJpaEntity
-
-}
+    var motorista: ClienteJpaEntity,
+)

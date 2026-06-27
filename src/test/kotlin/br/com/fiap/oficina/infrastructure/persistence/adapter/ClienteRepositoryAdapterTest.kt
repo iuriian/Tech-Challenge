@@ -18,7 +18,6 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ClienteRepositoryAdapterTest {
-
     @Mock
     lateinit var jpaRepository: ClienteJpaRepository
 
@@ -30,12 +29,13 @@ class ClienteRepositoryAdapterTest {
     @BeforeEach
     fun setup() {
         adapter = ClienteRepositoryAdapter(jpaRepository, mapper)
-        cliente = Cliente(
-            id = Id.gerar(),
-            nome = "João",
-            documento = Documento.cpf("39053344705"),
-            email = "joao@example.com"
-        )
+        cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "João",
+                documento = Documento.cpf("39053344705"),
+                email = "joao@example.com",
+            )
         jpa = mapper.toJpa(cliente)
     }
 
@@ -55,7 +55,7 @@ class ClienteRepositoryAdapterTest {
 
     @Test
     fun `buscarPorId deve retornar null quando ausente`() {
-        val id = Id.gerar()
+        val id = Id.generate()
         `when`(jpaRepository.findById(id.valor)).thenReturn(Optional.empty())
 
         assertNull(adapter.buscarPorId(id))

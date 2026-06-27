@@ -7,39 +7,29 @@ import java.util.UUID
 
 @Entity
 @Table(name = "servicos")
-class ServicoJpaEntity {
-
+class ServicoJpaEntity(
     @Id
-    var id: UUID = UUID.randomUUID()
-
+    var id: UUID,
     @Column(nullable = false)
-    lateinit var descricao: String
-
+    var descricao: String,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: ServicoStatus? = null
-
+    var status: ServicoStatus? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "funcionario_id", referencedColumnName = "id", nullable = false)
-    lateinit var funcionario: FuncionarioEntity
-
+    var funcionario: FuncionarioEntity,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", referencedColumnName = "id")
-    lateinit var cliente: ClienteJpaEntity
-
+    var cliente: ClienteJpaEntity,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veiculo_id", referencedColumnName = "idVeiculo", nullable = false)
-    lateinit var veiculo: VeiculoJpaEntity
-
+    var veiculo: VeiculoJpaEntity,
     @OneToMany(mappedBy = "servico", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var pecas: MutableList<PecaServicoJpaEntity> = mutableListOf()
-
+    var pecas: MutableList<PecaServicoJpaEntity> = mutableListOf(),
     @Column(name = "data_abertura", nullable = false)
-    lateinit var dataAbertura: Instant
-
+    var dataAbertura: Instant,
     @Column(name = "data_inicio_execucao")
-    var dataInicioExecucao: Instant? = null
-
+    var dataInicioExecucao: Instant? = null,
     @Column(name = "data_finalizacao")
-    var dataFinalizacao: Instant? = null
-}
+    var dataFinalizacao: Instant? = null,
+)

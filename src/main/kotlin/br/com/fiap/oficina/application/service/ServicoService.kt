@@ -1,11 +1,13 @@
 package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -18,22 +20,22 @@ import java.time.Duration
 
 data class TempoMedioExecucao(
     val totalServicosFinalizados: Int,
-    val tempoMedioMinutos: Double?
+    val tempoMedioMinutos: Double?,
 )
 
 data class PecaServicoComando(
     val pecaId: Id,
-    val quantidade: BigDecimal
+    val quantidade: BigDecimal,
 )
 
 data class ServicoComando(
     val id: Id? = null,
     val descricao: String,
-    val funcionarioId: Long,
+    val funcionarioId: Id,
     val status: ServicoStatus = ServicoStatus.RECEBIDA,
     val clienteId: Id,
     val veiculoId: Id,
-    val pecas: List<PecaServicoComando> = emptyList()
+    val pecas: List<PecaServicoComando> = emptyList(),
 )
 
 @Service
@@ -41,33 +43,41 @@ class ServicoService(
     private val repository: ServicoRepository,
     private val clienteRepository: ClienteRepository,
     private val veiculoRepository: VeiculoRepository,
-    private val pecaRepository: PecaRepository
+    private val pecaRepository: PecaRepository,
+    private val funcionarioRepository: FuncionarioRepository,
 ) {
-
     @Transactional
     fun salvar(comando: ServicoComando): Servico {
-        val cliente = clienteRepository.buscarPorId(comando.clienteId)
-            ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.clienteId}")
+        val cliente =
+            clienteRepository.buscarPorId(comando.clienteId)
+                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.clienteId}")
 
-        val veiculo = veiculoRepository.buscarPorId(comando.veiculoId)
-            ?: throw IllegalArgumentException("Veículo não encontrado com o ID: ${comando.veiculoId}")
+        val funcionario =
+            funcionarioRepository.buscarPorId(comando.funcionarioId)
+                ?: throw IllegalArgumentException("Funcionário não encontrado com o ID: ${comando.funcionarioId}")
 
-        val pecas = comando.pecas.mapNotNull { item ->
-            pecaRepository.buscarPorId(item.pecaId)?.let { peca ->
-                PecaServico.criar(peca, item.quantidade)
+        val veiculo =
+            veiculoRepository.buscarPorId(comando.veiculoId)
+                ?: throw IllegalArgumentException("Veículo não encontrado com o ID: ${comando.veiculoId}")
+
+        val pecas =
+            comando.pecas.mapNotNull { item ->
+                pecaRepository.buscarPorId(item.pecaId)?.let { peca ->
+                    PecaServico.criar(peca, item.quantidade)
+                }
             }
-        }
 
-        val servico = comando.id
-            ?.let { id -> atualizarExistente(id, comando, cliente, veiculo, pecas) }
-            ?: Servico.criar(
-                descricao = comando.descricao,
-                funcionarioId = comando.funcionarioId,
-                cliente = cliente,
-                veiculo = veiculo,
-                status = comando.status,
-                pecas = pecas
-            )
+        val servico =
+            comando.id
+                ?.let { id -> atualizarExistente(id, comando, funcionario, cliente, veiculo, pecas) }
+                ?: Servico.criar(
+                    descricao = comando.descricao,
+                    funcionario = funcionario,
+                    cliente = cliente,
+                    veiculo = veiculo,
+                    status = comando.status,
+                    pecas = pecas,
+                )
 
         return repository.salvar(servico)
     }
@@ -75,18 +85,20 @@ class ServicoService(
     private fun atualizarExistente(
         id: Id,
         comando: ServicoComando,
+        funcionario: Funcionario,
         cliente: Cliente,
         veiculo: Veiculo,
-        pecas: List<PecaServico>
+        pecas: List<PecaServico>,
     ): Servico {
-        val existente = repository.buscarPorId(id)
-            ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
+        val existente =
+            repository.buscarPorId(id)
+                ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
         return existente.copy(
             descricao = comando.descricao,
-            funcionarioId = comando.funcionarioId,
+            funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
-            pecas = pecas
+            pecas = pecas,
         )
     }
 
@@ -119,8 +131,9 @@ class ServicoService(
     @Transactional
     fun avancarStatus(id: Id): Servico {
         val servico = buscarObrigatorio(id)
-        val proximo = proximoNaOrdem(servico.status)
-            ?: error("Serviço no status '${servico.status}' é um estado final e não pode avançar.")
+        val proximo =
+            proximoNaOrdem(servico.status)
+                ?: error("Serviço no status '${servico.status}' é um estado final e não pode avançar.")
 
         return repository.salvar(servico.alterarStatus(proximo))
     }
@@ -130,7 +143,10 @@ class ServicoService(
      * para um status alcançável a partir do atual (ver [transicoesPermitidas]).
      */
     @Transactional
-    fun alterarStatus(id: Id, novoStatus: ServicoStatus): Servico {
+    fun alterarStatus(
+        id: Id,
+        novoStatus: ServicoStatus,
+    ): Servico {
         val servico = buscarObrigatorio(id)
         val permitidas = transicoesPermitidas(servico.status)
         check(novoStatus in permitidas) {
@@ -142,13 +158,16 @@ class ServicoService(
     }
 
     fun calcularTempoMedioExecucao(): TempoMedioExecucao {
-        val finalizados = repository.listarTodos()
-            .filter { it.dataInicioExecucao != null && it.dataFinalizacao != null }
+        val finalizados =
+            repository
+                .listarTodos()
+                .filter { it.dataInicioExecucao != null && it.dataFinalizacao != null }
 
-        val tempoMedio = finalizados
-            .takeIf { it.isNotEmpty() }
-            ?.map { Duration.between(it.dataInicioExecucao, it.dataFinalizacao).toMinutes().toDouble() }
-            ?.average()
+        val tempoMedio =
+            finalizados
+                .takeIf { it.isNotEmpty() }
+                ?.map { Duration.between(it.dataInicioExecucao, it.dataFinalizacao).toMinutes().toDouble() }
+                ?.average()
 
         return TempoMedioExecucao(finalizados.size, tempoMedio)
     }
@@ -165,9 +184,13 @@ class ServicoService(
      */
     private fun transicoesPermitidas(atual: ServicoStatus): Set<ServicoStatus> =
         when (atual) {
-            ServicoStatus.AGUARDANDO_APROVACAO ->
+            ServicoStatus.AGUARDANDO_APROVACAO -> {
                 setOf(ServicoStatus.EM_EXECUCAO, ServicoStatus.CANCELADA)
-            else -> setOfNotNull(proximoNaOrdem(atual))
+            }
+
+            else -> {
+                setOfNotNull(proximoNaOrdem(atual))
+            }
         }
 
     /**
@@ -177,7 +200,7 @@ class ServicoService(
      * fluxo linear, sendo alcançável apenas a partir de AGUARDANDO_APROVACAO.
      */
     private fun proximoNaOrdem(atual: ServicoStatus): ServicoStatus? =
-        ServicoStatus.entries.getOrNull(atual.ordinal + 1)
+        ServicoStatus.entries
+            .getOrNull(atual.ordinal + 1)
             ?.takeIf { it != ServicoStatus.CANCELADA }
-
 }

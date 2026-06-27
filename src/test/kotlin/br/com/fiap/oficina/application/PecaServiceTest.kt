@@ -17,7 +17,6 @@ import java.math.BigDecimal
 
 @ExtendWith(MockitoExtension::class)
 class PecaServiceTest {
-
     @Mock
     lateinit var repository: PecaRepository
 
@@ -28,13 +27,14 @@ class PecaServiceTest {
 
     @BeforeEach
     fun setup() {
-        peca = Peca(
-            id = Id.gerar(),
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 10
-        )
+        peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC001",
+                nome = "Filtro de Óleo",
+                precoDeVenda = BigDecimal("45.00"),
+                qtdEstoque = 10,
+            )
     }
 
     @Test
@@ -50,9 +50,10 @@ class PecaServiceTest {
     fun `deve rejeitar peca com codigo ja cadastrado`() {
         `when`(repository.existePorCodigo("PEC001")).thenReturn(true)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.salvarPeca(peca)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvarPeca(peca)
+            }
 
         assertEquals("Peça já cadastrada", exception.message)
         verify(repository, never()).salvar(peca)
@@ -122,16 +123,17 @@ class PecaServiceTest {
     fun `deve lancar excecao ao buscar peca inexistente por codigo`() {
         `when`(repository.buscarAtivoPorCodigo("XPTO")).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.buscarPorCodigo("XPTO")
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.buscarPorCodigo("XPTO")
+            }
 
         assertEquals("Peça não encontrada", exception.message)
     }
 
     @Test
     fun `deve delegar buscas e listagens ao repositorio`() {
-        val id = Id.gerar()
+        val id = Id.generate()
         `when`(repository.buscarAtivoPorNome("Filtro de Óleo")).thenReturn(peca)
         `when`(repository.existeAtivoPorCodigo("PEC001")).thenReturn(true)
         `when`(repository.buscarPorId(id)).thenReturn(peca)

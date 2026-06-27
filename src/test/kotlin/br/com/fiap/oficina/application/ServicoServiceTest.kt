@@ -5,12 +5,15 @@ import br.com.fiap.oficina.application.service.PecaServicoComando
 import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -29,11 +32,9 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class ServicoServiceTest {
-
     @Mock lateinit var repository: ServicoRepository
 
     @Mock lateinit var clienteRepository: ClienteRepository
@@ -41,6 +42,8 @@ class ServicoServiceTest {
     @Mock lateinit var veiculoRepository: VeiculoRepository
 
     @Mock lateinit var pecaRepository: PecaRepository
+
+    @Mock lateinit var funcionarioRepository: FuncionarioRepository
 
     @InjectMocks lateinit var service: ServicoService
 
@@ -53,32 +56,44 @@ class ServicoServiceTest {
     private lateinit var peca2: Peca
     private lateinit var pecaId1: Id
     private lateinit var pecaId2: Id
+    private lateinit var funcionarioId: Id
+    private lateinit var funcionario: Funcionario
 
     @BeforeEach
     fun setup() {
-        servicoId = Id.gerar()
-        clienteId = Id.gerar()
-        veiculoId = Id.gerar()
+        servicoId = Id.generate()
+        clienteId = Id.generate()
+        veiculoId = Id.generate()
 
-        cliente = Cliente(
-            id = clienteId,
-            nome = "Cliente Teste",
-            documento = Documento.cpf("39053344705"),
-            email = "cliente@teste.com"
-        )
+        cliente =
+            Cliente(
+                id = clienteId,
+                nome = "Cliente Teste",
+                documento = Documento.cpf("39053344705"),
+                email = "cliente@teste.com",
+            )
 
-        veiculo = Veiculo(
-            id = veiculoId,
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motorista = cliente
-        )
+        veiculo =
+            Veiculo(
+                id = veiculoId,
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABC1D23",
+                motorista = cliente,
+            )
 
-        pecaId1 = Id.from(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-        pecaId2 = Id.from(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+        funcionarioId = Id.generate()
+        funcionario =
+            Funcionario(
+                id = funcionarioId,
+                nome = "Funcionario Teste",
+                cargo = Cargo.MECANICO,
+            )
+
+        pecaId1 = Id.fromString("00000000-0000-0000-0000-000000000001")
+        pecaId2 = Id.fromString("00000000-0000-0000-0000-000000000002")
         peca1 = criarPeca(pecaId1, "PEC001")
         peca2 = criarPeca(pecaId2, "PEC002")
     }
@@ -87,41 +102,46 @@ class ServicoServiceTest {
     fun `deve salvar servico com sucesso`() {
         val quantidade1 = BigDecimal("2")
         val quantidade2 = BigDecimal("3")
-        val pecasEsperadas = listOf(
-            PecaServico.criar(peca1, quantidade1),
-            PecaServico.criar(peca2, quantidade2)
-        )
-        val esperado = Servico(
-            id = servicoId,
-            descricao = "Troca de Óleo",
-            status = ServicoStatus.RECEBIDA,
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo,
-            pecas = pecasEsperadas
-        )
+        val pecasEsperadas =
+            listOf(
+                PecaServico.criar(peca1, quantidade1),
+                PecaServico.criar(peca2, quantidade2),
+            )
+        val esperado =
+            Servico(
+                id = servicoId,
+                descricao = "Troca de Óleo",
+                status = ServicoStatus.RECEBIDA,
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                pecas = pecasEsperadas,
+            )
 
         `when`(repository.buscarPorId(servicoId)).thenReturn(esperado)
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
         `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
         `when`(pecaRepository.buscarPorId(pecaId1)).thenReturn(peca1)
         `when`(pecaRepository.buscarPorId(pecaId2)).thenReturn(peca2)
         `when`(repository.salvar(anyObject())).thenReturn(esperado)
 
-        val resultado = service.salvar(
-            ServicoComando(
-                id = servicoId,
-                descricao = "Troca de Óleo",
-                funcionarioId = 1L,
-                status = ServicoStatus.RECEBIDA,
-                clienteId = clienteId,
-                veiculoId = veiculoId,
-                pecas = listOf(
-                    PecaServicoComando(pecaId1, quantidade1),
-                    PecaServicoComando(pecaId2, quantidade2)
-                )
+        val resultado =
+            service.salvar(
+                ServicoComando(
+                    id = servicoId,
+                    descricao = "Troca de Óleo",
+                    funcionarioId = funcionarioId,
+                    status = ServicoStatus.RECEBIDA,
+                    clienteId = clienteId,
+                    veiculoId = veiculoId,
+                    pecas =
+                        listOf(
+                            PecaServicoComando(pecaId1, quantidade1),
+                            PecaServicoComando(pecaId2, quantidade2),
+                        ),
+                ),
             )
-        )
 
         assertNotNull(resultado)
         assertEquals(servicoId, resultado.id)
@@ -140,14 +160,15 @@ class ServicoServiceTest {
                     ServicoComando(
                         id = servicoId,
                         descricao = "Troca de Óleo",
-                        funcionarioId = 1L,
+                        funcionarioId = funcionarioId,
                         clienteId = clienteId,
                         veiculoId = veiculoId,
-                        pecas = listOf(
-                            PecaServicoComando(pecaId1, BigDecimal("2")),
-                            PecaServicoComando(pecaId2, BigDecimal("3"))
-                        )
-                    )
+                        pecas =
+                            listOf(
+                                PecaServicoComando(pecaId1, BigDecimal("2")),
+                                PecaServicoComando(pecaId2, BigDecimal("3")),
+                            ),
+                    ),
                 )
             }
 
@@ -157,13 +178,14 @@ class ServicoServiceTest {
 
     @Test
     fun `deve buscar servico por id com sucesso`() {
-        val servico = Servico(
-            id = servicoId,
-            descricao = "Troca de Óleo",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val servico =
+            Servico(
+                id = servicoId,
+                descricao = "Troca de Óleo",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
         `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
         val resultado = service.listarPorId(servicoId)
@@ -175,17 +197,19 @@ class ServicoServiceTest {
 
     @Test
     fun `deve obter orcamento totalizando valor das pecas`() {
-        val servico = Servico(
-            id = servicoId,
-            descricao = "Troca de Óleo",
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo,
-            pecas = listOf(
-                PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
-                PecaServico.criar(peca2, BigDecimal("3"))  // 10 * 3 = 30
+        val servico =
+            Servico(
+                id = servicoId,
+                descricao = "Troca de Óleo",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                pecas =
+                    listOf(
+                        PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
+                        PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
+                    ),
             )
-        )
         `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
         val orcamento = service.obterOrcamento(servicoId)
@@ -200,9 +224,10 @@ class ServicoServiceTest {
     fun `deve lancar excecao ao obter orcamento de servico inexistente`() {
         `when`(repository.buscarPorId(servicoId)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.obterOrcamento(servicoId)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.obterOrcamento(servicoId)
+            }
 
         assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
     }
@@ -218,7 +243,7 @@ class ServicoServiceTest {
 
     @Test
     fun `deve lancar excecao ao tentar remover servico inexistente`() {
-        val idInexistente = Id.gerar()
+        val idInexistente = Id.generate()
         `when`(repository.existePorId(idInexistente)).thenReturn(false)
 
         val exception =
@@ -234,11 +259,11 @@ class ServicoServiceTest {
         "EM_DIAGNOSTICO, AGUARDANDO_APROVACAO",
         "AGUARDANDO_APROVACAO, EM_EXECUCAO",
         "EM_EXECUCAO, FINALIZADA",
-        "FINALIZADA, ENTREGUE"
+        "FINALIZADA, ENTREGUE",
     )
     fun `avancarStatus deve seguir a ordem de declaracao do enum`(
         de: ServicoStatus,
-        esperado: ServicoStatus
+        esperado: ServicoStatus,
     ) {
         val atual = servicoComStatus(de)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
@@ -263,9 +288,10 @@ class ServicoServiceTest {
     fun `avancarStatus deve lancar excecao quando servico nao existe`() {
         `when`(repository.buscarPorId(servicoId)).thenReturn(null)
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            service.avancarStatus(servicoId)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.avancarStatus(servicoId)
+            }
 
         assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
         verify(repository, never()).salvar(anyObject())
@@ -289,11 +315,11 @@ class ServicoServiceTest {
         "RECEBIDA, CANCELADA",
         "AGUARDANDO_APROVACAO, FINALIZADA",
         "EM_EXECUCAO, CANCELADA",
-        "ENTREGUE, CANCELADA"
+        "ENTREGUE, CANCELADA",
     )
     fun `alterarStatus deve rejeitar transicoes invalidas`(
         de: ServicoStatus,
-        alvo: ServicoStatus
+        alvo: ServicoStatus,
     ) {
         `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
 
@@ -346,12 +372,14 @@ class ServicoServiceTest {
     @Test
     fun `calcularTempoMedioExecucao deve calcular media em minutos`() {
         val inicio = Instant.parse("2025-01-01T08:00:00Z")
-        val fim1   = Instant.parse("2025-01-01T10:00:00Z") // 120 min
-        val fim2   = Instant.parse("2025-01-01T11:00:00Z") // 180 min (inicio até fim2)
-        val s1 = servicoComStatus(ServicoStatus.FINALIZADA)
-            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim1)
-        val s2 = servicoComStatus(ServicoStatus.FINALIZADA)
-            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim2)
+        val fim1 = Instant.parse("2025-01-01T10:00:00Z") // 120 min
+        val fim2 = Instant.parse("2025-01-01T11:00:00Z") // 180 min (inicio até fim2)
+        val s1 =
+            servicoComStatus(ServicoStatus.FINALIZADA)
+                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim1)
+        val s2 =
+            servicoComStatus(ServicoStatus.FINALIZADA)
+                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim2)
         `when`(repository.listarTodos()).thenReturn(listOf(s1, s2))
 
         val resultado = service.calcularTempoMedioExecucao()
@@ -363,11 +391,13 @@ class ServicoServiceTest {
     @Test
     fun `calcularTempoMedioExecucao deve ignorar servicos sem dataInicioExecucao`() {
         val inicio = Instant.parse("2025-01-01T08:00:00Z")
-        val fim    = Instant.parse("2025-01-01T09:00:00Z") // 60 min
-        val completo    = servicoComStatus(ServicoStatus.FINALIZADA)
-            .copy(dataInicioExecucao = inicio, dataFinalizacao = fim)
-        val semInicio   = servicoComStatus(ServicoStatus.FINALIZADA)
-            .copy(dataInicioExecucao = null, dataFinalizacao = fim)
+        val fim = Instant.parse("2025-01-01T09:00:00Z") // 60 min
+        val completo =
+            servicoComStatus(ServicoStatus.FINALIZADA)
+                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim)
+        val semInicio =
+            servicoComStatus(ServicoStatus.FINALIZADA)
+                .copy(dataInicioExecucao = null, dataFinalizacao = fim)
         `when`(repository.listarTodos()).thenReturn(listOf(completo, semInicio))
 
         val resultado = service.calcularTempoMedioExecucao()
@@ -381,16 +411,19 @@ class ServicoServiceTest {
             id = servicoId,
             descricao = "Troca de Óleo",
             status = status,
-            funcionarioId = 1L,
+            funcionario = funcionario,
             cliente = cliente,
-            veiculo = veiculo
+            veiculo = veiculo,
         )
 
-    private fun criarPeca(id: Id, codigo: String): Peca =
+    private fun criarPeca(
+        id: Id,
+        codigo: String,
+    ): Peca =
         Peca(
             id = id,
             codigo = codigo,
             nome = "Peça Teste",
-            precoDeVenda = BigDecimal.TEN
+            precoDeVenda = BigDecimal.TEN,
         )
 }

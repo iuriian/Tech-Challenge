@@ -10,9 +10,8 @@ data class Endereco(
     val bairro: String,
     val cidade: String,
     val estado: String,
-    val cep: String
+    val cep: String,
 ) {
-
     companion object {
         fun criar(
             logradouro: String,
@@ -21,7 +20,7 @@ data class Endereco(
             bairro: String,
             cidade: String,
             estado: String,
-            cep: String
+            cep: String,
         ): Endereco {
             require(logradouro.isNotBlank()) { "Logradouro é obrigatório" }
             require(numero.isNotBlank()) { "Número é obrigatório" }
@@ -31,14 +30,14 @@ data class Endereco(
             require(cep.isNotBlank()) { "CEP é obrigatório" }
 
             return Endereco(
-                id = Id.gerar(),
+                id = Id.generate(),
                 logradouro = logradouro,
                 numero = numero,
                 complemento = complemento,
                 bairro = bairro,
                 cidade = cidade,
                 estado = estado,
-                cep = cep
+                cep = cep,
             )
         }
     }

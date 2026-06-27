@@ -18,7 +18,6 @@ import java.util.UUID
 
 @WebMvcTest(ClienteController::class)
 class ClienteControllerTest {
-
     @Autowired
     lateinit var mockMvc: MockMvc
 
@@ -32,16 +31,18 @@ class ClienteControllerTest {
     @WithMockUser
     fun `deve buscar cliente por id`() {
         val id = UUID.randomUUID()
-        val cliente = Cliente(
-            id = Id.from(id),
-            nome = "João Silva",
-            documento = Documento.cpf("39053344705"),
-            email = "joao.silva@example.com"
-        )
+        val cliente =
+            Cliente(
+                id = Id.fromString(id.toString()),
+                nome = "João Silva",
+                documento = Documento.cpf("39053344705"),
+                email = "joao.silva@example.com",
+            )
 
-        `when`(service.buscarPorId(Id.from(id))).thenReturn(cliente)
+        `when`(service.buscarPorId(Id.fromString(id.toString()))).thenReturn(cliente)
 
-        mockMvc.perform(get("/clientes/$id"))
+        mockMvc
+            .perform(get("/clientes/$id"))
             .andExpect(status().isOk)
     }
 }

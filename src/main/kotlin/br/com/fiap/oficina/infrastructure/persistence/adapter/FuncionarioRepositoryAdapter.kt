@@ -42,21 +42,17 @@ class FuncionarioRepositoryAdapter(
             throw EntityNotFoundException("Funcionário não encontrado!")
         }
 
-    override fun editar(funcionario: Funcionario): Funcionario =
-        try {
-            val resultado = repository.findById(funcionario.id.valor).orElse(null)
+    override fun editar(funcionario: Funcionario): Funcionario {
+        val resultado = repository.findById(funcionario.id.valor).orElse(null)
+            ?: throw EntityNotFoundException("Funcionário não encontrado!")
 
-            if (resultado == null) {
-                throw EntityNotFoundException("Funcionário não encontrado!")
-            } else {
-                resultado.nome = funcionario.nome
-                resultado.cargo = funcionario.cargo.id
+        resultado.nome = funcionario.nome
+            resultado.cargo = funcionario.cargo.id
 
-                repository.save(resultado).toDomain()
-            }
-        } catch (e: Exception) {
-            throw e
-        }
+        return repository.save(resultado).toDomain()
+
+    }
+
 
     override fun deletar(id: Id) =
         try {

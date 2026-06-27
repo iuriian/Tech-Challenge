@@ -24,16 +24,16 @@ import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 class ServicoRepositoryAdapterTest {
-
     @Mock
     lateinit var jpaRepository: ServicoJpaRepository
 
     private val clienteMapper = ClientePersistenceMapper()
-    private val mapper = ServicoPersistenceMapper(
-        clienteMapper,
-        VeiculoPersistenceMapper(clienteMapper),
-        PecaPersistenceMapper()
-    )
+    private val mapper =
+        ServicoPersistenceMapper(
+            clienteMapper,
+            VeiculoPersistenceMapper(clienteMapper),
+            PecaPersistenceMapper(),
+        )
     private lateinit var adapter: ServicoRepositoryAdapter
     private lateinit var servico: Servico
     private lateinit var jpa: ServicoJpaEntity
@@ -41,29 +41,38 @@ class ServicoRepositoryAdapterTest {
     @BeforeEach
     fun setup() {
         adapter = ServicoRepositoryAdapter(jpaRepository, mapper)
-        val cliente = Cliente(
-            id = Id.gerar(),
-            nome = "Cliente",
-            documento = Documento.cpf("39053344705"),
-            email = "cliente@example.com"
-        )
-        val veiculo = Veiculo(
-            id = Id.gerar(),
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motorista = cliente
-        )
-        servico = Servico(
-            id = Id.gerar(),
-            descricao = "Troca de óleo",
-            status = ServicoStatus.RECEBIDA,
-            funcionarioId = 1L,
-            cliente = cliente,
-            veiculo = veiculo
-        )
+        val cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "Cliente",
+                documento = Documento.cpf("39053344705"),
+                email = "cliente@example.com",
+            )
+        val veiculo =
+            Veiculo(
+                id = Id.generate(),
+                marca = "Volkswagen",
+                nome = "Gol",
+                modelo = "Gol 1.6",
+                ano = "2020",
+                placa = "ABC1D23",
+                motorista = cliente,
+            )
+        val funcionario =
+            br.com.fiap.oficina.domain.entity.Funcionario(
+                id = Id.generate(),
+                nome = "Funcionario Teste",
+                cargo = br.com.fiap.oficina.domain.enum.Cargo.MECANICO,
+            )
+        servico =
+            Servico(
+                id = Id.generate(),
+                descricao = "Troca de óleo",
+                status = ServicoStatus.RECEBIDA,
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+            )
         jpa = mapper.toJpa(servico)
     }
 

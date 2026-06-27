@@ -45,10 +45,10 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     ) = objectMapper.writeValueAsString(
         ServicoDto(
             descricao = descricao,
-            funcionarioId = 1L,
-            clienteId = clienteId(),
-            veiculoId = veiculoId(),
-            pecas = listOf(PecaServicoDto(pecaId = pecaId(), quantidade = quantidadePeca))
+            funcionarioId = "3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3",
+            clienteId = clienteId().toString(),
+            veiculoId = veiculoId().toString(),
+            pecas = listOf(PecaServicoDto(pecaId = pecaId().toString(), quantidade = quantidadePeca))
         )
     )
 

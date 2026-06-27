@@ -13,22 +13,22 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
-import java.util.UUID
 
 @RestController
 @RequestMapping("/veiculos")
 @Tag(name = "Veículos", description = "Operações relacionadas ao gerenciamento de veículos")
 class VeiculoController(
     private val service: VeiculoService,
-    private val mapper: VeiculoMapper
+    private val mapper: VeiculoMapper,
 ) {
-
     @PostMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo veículo", description = "Cadastra um novo veículo no sistema")
-    fun criar(@Valid @RequestBody dto: VeiculoDTO): VeiculoDTO {
-        return try {
+    fun criar(
+        @Valid @RequestBody dto: VeiculoDTO,
+    ): VeiculoDTO =
+        try {
             mapper.toResponse(
                 service.salvarVeiculo(
                     VeiculoComando(
@@ -37,78 +37,68 @@ class VeiculoController(
                         modelo = dto.modelo,
                         ano = dto.ano,
                         placa = dto.placa,
-                        motoristaId = Id.from(dto.motoristaId)
-                    )
-                )
+                        motoristaId = Id.fromString(dto.motoristaId),
+                    ),
+                ),
             )
         } catch (e: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
         }
-    }
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Buscar veículo por ID", description = "Busca um veículo pelo seu ID único")
     fun buscarVeiculoPorId(
         @Parameter(description = "ID do veículo", required = true)
-        @PathVariable id: UUID
-    ): VeiculoDTO? {
-        return service.buscarPorId(Id.from(id))?.let { mapper.toResponse(it) }
-    }
+        @PathVariable id: String,
+    ): VeiculoDTO? = service.buscarPorId(Id.fromString(id))?.let { mapper.toResponse(it) }
 
     @GetMapping("/placa/{placa}")
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Buscar veículo pela placa", description = "Busca um veículo pela sua placa")
     fun buscarVeiculoPorPlaca(
         @Parameter(description = "Placa do veículo", required = true, example = "abc1234")
-        @PathVariable placa: String
-    ): VeiculoDTO? {
-        return service.buscarPorPlaca(placa)?.let { mapper.toResponse(it) }
-    }
+        @PathVariable placa: String,
+    ): VeiculoDTO? = service.buscarPorPlaca(placa)?.let { mapper.toResponse(it) }
 
     @GetMapping("/motorista/{motoristaId}")
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Buscar veículos por motorista", description = "Busca veículos cadastrados para um cliente")
     fun buscarVeiculosPorMotorista(
         @Parameter(description = "ID do cliente (motorista)", required = true)
-        @PathVariable motoristaId: UUID
-    ): List<VeiculoDTO> {
-        return service.buscarPorMotorista(Id.from(motoristaId)).map { mapper.toResponse(it) }
-    }
+        @PathVariable motoristaId: String,
+    ): List<VeiculoDTO> = service.buscarPorMotorista(Id.fromString(motoristaId)).map { mapper.toResponse(it) }
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Listar veículos", description = "Lista todos os veículos cadastrados no sistema")
-    fun listarTodos(): List<VeiculoDTO> {
-        return service.listarTodos().map { mapper.toResponse(it) }
-    }
+    fun listarTodos(): List<VeiculoDTO> = service.listarTodos().map { mapper.toResponse(it) }
 
     @PutMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Atualizar um veículo", description = "Atualiza os dados de um veículo existente")
     fun atualizar(
         @Parameter(description = "ID do veículo a ser atualizado", required = true)
-        @PathVariable id: UUID,
-        @Valid @RequestBody dto: VeiculoDTO
-    ): VeiculoDTO {
-        return try {
+        @PathVariable id: String,
+        @Valid @RequestBody dto: VeiculoDTO,
+    ): VeiculoDTO =
+        try {
             mapper.toResponse(
                 service.atualizarVeiculo(
-                    Id.from(id),
+                    Id.fromString(id),
                     VeiculoComando(
                         marca = dto.marca,
                         nome = dto.nome,
                         modelo = dto.modelo,
                         ano = dto.ano,
                         placa = dto.placa,
-                        motoristaId = Id.from(dto.motoristaId)
-                    )
-                )
+                        motoristaId = Id.fromString(dto.motoristaId),
+                    ),
+                ),
             )
         } catch (e: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
         }
-    }
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
@@ -116,10 +106,10 @@ class VeiculoController(
     @Operation(summary = "Remover um veículo", description = "Exclui um veículo do sistema pelo seu ID")
     fun remover(
         @Parameter(description = "ID do veículo a ser removido", required = true)
-        @PathVariable id: UUID
+        @PathVariable id: String,
     ) {
         try {
-            service.removerVeiculo(Id.from(id))
+            service.removerVeiculo(Id.fromString(id))
         } catch (e: IllegalArgumentException) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message, e)
         }

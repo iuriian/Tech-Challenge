@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
 class PecaServicoTest {
-
-    private val peca = Peca(
-        id = Id.gerar(),
-        codigo = "PEC001",
-        nome = "Filtro",
-        precoDeVenda = BigDecimal.TEN
-    )
+    private val peca =
+        Peca(
+            id = Id.generate(),
+            codigo = "PEC001",
+            nome = "Filtro",
+            precoDeVenda = BigDecimal.TEN,
+        )
 
     @Test
     fun `deve criar peca-servico com quantidade valida`() {
@@ -24,9 +24,10 @@ class PecaServicoTest {
 
     @Test
     fun `deve rejeitar quantidade zero`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            PecaServico.criar(peca, BigDecimal.ZERO)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                PecaServico.criar(peca, BigDecimal.ZERO)
+            }
 
         assertEquals("Quantidade consumida da peça deve ser maior que zero", exception.message)
     }

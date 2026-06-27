@@ -13,23 +13,24 @@ import org.mockito.Mockito.*
 import java.util.UUID
 
 class ClienteControllerUnitTest {
-
     private val service = mock(ClienteService::class.java)
     private val controller = ClienteController(service, ClienteMapper())
 
-    private val cliente = Cliente(
-        id = Id.gerar(),
-        nome = "João Silva",
-        documento = Documento.cpf("39053344705"),
-        email = "joao@example.com"
-    )
+    private val cliente =
+        Cliente(
+            id = Id.generate(),
+            nome = "João Silva",
+            documento = Documento.cpf("39053344705"),
+            email = "joao@example.com",
+        )
 
-    private fun clienteDto() = ClienteDto(
-        nome = "João Silva",
-        numeroDocumento = "39053344705",
-        tipoPessoa = "PESSOA_FISICA",
-        email = "joao@example.com"
-    )
+    private fun clienteDto() =
+        ClienteDto(
+            nome = "João Silva",
+            numeroDocumento = "39053344705",
+            tipoPessoa = "PESSOA_FISICA",
+            email = "joao@example.com",
+        )
 
     @Test
     fun `criar deve retornar dto do cliente salvo`() {
@@ -45,7 +46,7 @@ class ClienteControllerUnitTest {
     fun `alterar deve retornar dto do cliente atualizado`() {
         `when`(service.salvarCliente(anyObject())).thenReturn(cliente)
 
-        val dto = controller.alterar(UUID.randomUUID(), clienteDto())
+        val dto = controller.alterar("00000000-0000-0000-0000-000000000001", clienteDto())
 
         assertEquals("João Silva", dto.nome)
     }
@@ -54,9 +55,9 @@ class ClienteControllerUnitTest {
     fun `remover deve delegar ao service`() {
         val id = UUID.randomUUID()
 
-        controller.remover(id)
+        controller.remover(id.toString())
 
-        verify(service).removerCliente(Id.from(id))
+        verify(service).removerCliente(Id.fromString(id.toString()))
     }
 
     @Test
