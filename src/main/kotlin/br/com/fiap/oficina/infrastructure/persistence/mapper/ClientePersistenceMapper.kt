@@ -79,7 +79,8 @@ class ClientePersistenceMapper {
             telefone = domain.telefone
         }
 
-    private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento = Documento(embeddable.numero, embeddable.tipoPessoa)
+    private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento =
+        Documento(embeddable.numero, embeddable.tipoPessoa)
 
     private fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable =
         DocumentoEmbeddable().apply {

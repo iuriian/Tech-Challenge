@@ -28,11 +28,13 @@ class FuncionarioController(
     ): FuncionarioDto = service.cadastrar(funcionarioDto)
 
     @GetMapping
-    @Operation(summary = "ListarListar todos os funcionários", description = "Retorna uma lista com todos os funcionários cadastrados")
+    @Operation(summary = "ListarListar todos os funcionários",
+               description = "Retorna uma lista com todos os funcionários cadastrados")
     fun listarTodos(): List<FuncionarioDto> = service.listarTodos()
 
     @GetMapping("/id/{id}")
-    @Operation(summary = "Buscar funcionário por ID", description = "Busca um funcionário através do seu identificador único")
+    @Operation(summary = "Buscar funcionário por ID",
+               description = "Busca um funcionário através do seu identificador único")
     fun buscarPorId(
         @PathVariable id: String,
     ): FuncionarioDto? = service.buscarPorId(id)
@@ -45,14 +47,16 @@ class FuncionarioController(
     ): FuncionarioDto? = service.buscarPorNome(nome)
 
     @PutMapping("/{id}")
-    @Operation(summary = "Alterar dados de um funcionário", description = "Atualiza as informações de um funcionário existente")
+    @Operation(summary = "Alterar dados de um funcionário",
+               description = "Atualiza as informações de um funcionário existente")
     fun alterar(
         @PathVariable id: String,
         @Valid @RequestBody funcionarioDto: FuncionarioDto,
     ): FuncionarioDto = service.editar(id, funcionarioDto)
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar um funcionário", description = "Remove um funcionário do sistema através do seu identificador único")
+    @Operation(summary = "Deletar um funcionário",
+               description = "Remove um funcionário do sistema através do seu identificador único")
     fun deletar(
         @PathVariable id: String,
     ) = service.deletar(id)
