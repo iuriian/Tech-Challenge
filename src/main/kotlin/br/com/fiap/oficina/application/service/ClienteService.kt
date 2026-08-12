@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.application.port.out.ClienteRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
