@@ -2,6 +2,7 @@ package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.service.ClienteService
+import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -14,7 +15,8 @@ import java.util.UUID
 
 class ClienteControllerUnitTest {
     private val service = mock(ClienteService::class.java)
-    private val controller = ClienteController(service, ClienteMapper())
+    private val criarClienteUseCase = mock(CriarClienteUseCase::class.java)
+    private val controller = ClienteController(service, ClienteMapper(), criarClienteUseCase)
 
     private val cliente =
         Cliente(
@@ -34,7 +36,7 @@ class ClienteControllerUnitTest {
 
     @Test
     fun `criar deve retornar dto do cliente salvo`() {
-        `when`(service.salvarCliente(anyObject())).thenReturn(cliente)
+        `when`(criarClienteUseCase.executar(anyObject())).thenReturn(cliente)
 
         val dto = controller.criar(clienteDto())
 
