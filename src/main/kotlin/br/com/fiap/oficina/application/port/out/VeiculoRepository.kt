@@ -1,10 +1,9 @@
-package br.com.fiap.oficina.domain.repository
+package br.com.fiap.oficina.application.port.out
 
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface VeiculoRepository {
-
     fun salvar(veiculo: Veiculo): Veiculo
 
     fun buscarPorId(id: Id): Veiculo?
