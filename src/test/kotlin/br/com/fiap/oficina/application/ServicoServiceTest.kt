@@ -214,7 +214,7 @@ class ServicoServiceTest {
 
         val orcamento = service.obterOrcamento(servicoId)
 
-        assertEquals(servicoId, orcamento.servicoId)
+        assertEquals(servicoId, orcamento.ordemServicoId)
         assertEquals(2, orcamento.itens.size)
         assertEquals(0, BigDecimal("50").compareTo(orcamento.valorTotal))
         verify(repository, times(1)).buscarPorId(servicoId)

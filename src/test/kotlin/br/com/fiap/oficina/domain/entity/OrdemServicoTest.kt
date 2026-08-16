@@ -216,13 +216,13 @@ class OrdemServicoTest {
 
         val orcamento = ordemServico.gerarOrcamento()
 
-        assertEquals(ordemServico.id, orcamento.servicoId)
+        assertEquals(ordemServico.id, orcamento.ordemServicoId)
         assertEquals(2, orcamento.itens.size)
         assertEquals(0, BigDecimal("65.0").compareTo(orcamento.valorTotal))
 
-        val itemFiltro = orcamento.itens.first { it.codigo == "PEC001" }
-        assertEquals("Filtro", itemFiltro.nome)
-        assertEquals(BigDecimal.TEN, itemFiltro.precoUnitario)
+        val itemFiltro = orcamento.itens.first { it.codigoReferencia == "PEC001" }
+        assertEquals("Filtro", itemFiltro.descricao)
+        assertEquals(BigDecimal.TEN, itemFiltro.valorUnitario)
         assertEquals(BigDecimal("2"), itemFiltro.quantidade)
         assertEquals(0, BigDecimal("20").compareTo(itemFiltro.subtotal))
     }

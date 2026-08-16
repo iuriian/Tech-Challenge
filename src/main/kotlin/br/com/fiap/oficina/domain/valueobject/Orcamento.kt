@@ -1,23 +1,156 @@
 package br.com.fiap.oficina.domain.valueobject
 
+import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import java.math.BigDecimal
 
-/** Linha do orçamento referente a uma peça consumida no serviço. */
+/**
+ * Snapshot de uma peça ou serviço
+ * incluído no orçamento de uma ordem de serviço
+ */
 data class ItemOrcamento(
-    val pecaId: Id,
-    val codigo: String,
-    val nome: String,
-    val precoUnitario: BigDecimal,
+    val tipo: TipoItemOrcamento,
+    val referenciaId: Id,
+    val descricao: String,
+    val valorUnitario: BigDecimal,
     val quantidade: BigDecimal,
+    val codigoReferencia: String? = null,
+) {
+    init {
+        require(descricao.isNotBlank()) {
+            "Descrição do item do orçamento é obrigatória"
+        }
+        require(valorUnitario >= BigDecimal.ZERO) {
+            "Valor unitário do item não pode ser negativo"
+        }
+        require(quantidade > BigDecimal.ZERO) {
+            "Quantidade do item deve ser maior que zero"
+        }
+        require(tipo != TipoItemOrcamento.PECA
+                || !codigoReferencia.isNullOrBlank()) {
+            "Código da peça é obrigatório"
+        }
+    }
+
     val subtotal: BigDecimal
-)
+        get() = valorUnitario.multiply(quantidade)
+
+    companion object {
+        fun dePeca(
+            peca: Peca,
+            quantidade: BigDecimal,
+        ): ItemOrcamento = ItemOrcamento(
+            tipo = TipoItemOrcamento.PECA,
+            referenciaId = peca.id,
+            descricao = peca.nome,
+            valorUnitario = peca.precoDeVenda,
+            quantidade = quantidade,
+            codigoReferencia = peca.codigo,
+        )
+
+        fun deServico(
+            servico: Servico,
+            quantidade: BigDecimal = BigDecimal.ONE,
+        ): ItemOrcamento =
+            ItemOrcamento(
+                tipo = TipoItemOrcamento.SERVICO,
+                referenciaId = servico.id,
+                descricao = servico.descricao,
+                valorUnitario = servico.valor,
+                quantidade = quantidade,
+            )
+    }
+
+    @Deprecated(
+        "Use o construtor genérico ou ItemOrcamento.dePeca",
+        replaceWith = ReplaceWith(
+            "ItemOrcamento(TipoItemOrcamento.PECA, pecaId, nome, precoUnitario, quantidade, codigo)",
+            "br.com.fiap.oficina.domain.enum.TipoItemOrcamento",),
+        )
+    constructor(
+        pecaId: Id,
+        codigo: String,
+        nome: String,
+        precoUnitario: BigDecimal,
+        quantidade: BigDecimal,
+        subtotal: BigDecimal,
+    ) : this(
+        tipo = TipoItemOrcamento.PECA,
+        referenciaId = pecaId,
+        descricao = nome,
+        valorUnitario = precoUnitario,
+        quantidade = quantidade,
+        codigoReferencia = codigo,
+    ) {
+        require(subtotal.compareTo(this.subtotal) == 0) {
+            "Subtotal informado é incompatível com valor unitário e quantidade"
+        }
+    }
+
+    @Deprecated(
+        "Use referenciaId",
+        replaceWith = ReplaceWith("referenciaId"),
+    )
+    val pecaId: Id
+        get() = referenciaId
+
+    @Deprecated(
+        "Use codigoReferencia",
+        replaceWith = ReplaceWith("codigoReferencia"),
+    )
+    val codigo: String
+        get() = codigoReferencia.orEmpty()
+
+    @Deprecated(
+        "Use descricao",
+        replaceWith = ReplaceWith("descricao"),
+    )
+    val nome: String
+        get() = descricao
+
+    @Deprecated(
+        "Use valorUnitario",
+        replaceWith = ReplaceWith("valorUnitario")
+    )
+    val precoUnitario: BigDecimal get() = valorUnitario
+
+}
 
 /**
- * Orçamento de um serviço: discrimina cada peça consumida e totaliza o valor
- * das peças (preço de venda × quantidade).
+ * Orçamento pertence a uma ordem de serviço,
+ * cujo total é calculado a partir do snapshot de seus itens
  */
 data class Orcamento(
-    val servicoId: Id,
+    val ordemServicoId: Id,
     val itens: List<ItemOrcamento>,
+) {
     val valorTotal: BigDecimal
-)
+        get() =
+            itens.fold(BigDecimal.ZERO) { total, item ->
+                total + item.subtotal
+            }
+
+
+    @Deprecated(
+        "Use ordemServicoId",
+        replaceWith = ReplaceWith("ordemServicoId"),)
+    val servicoId: Id
+        get() = ordemServicoId
+
+    @Deprecated(
+        "O valor total agora é calculado a partir dos itens",
+        replaceWith = ReplaceWith("Orcamento(ordemServicoId = servicoId, itens = itens)"),)
+    constructor(
+        servicoId: Id,
+        itens: List<ItemOrcamento>,
+        valorTotal: BigDecimal,
+    ) : this(
+        ordemServicoId = servicoId,
+        itens = itens,
+    ) {
+        require(valorTotal.compareTo(this.valorTotal) == 0) {
+            "Valor total informado é incompatível com os itens do orçamento"
+        }
+    }
+}

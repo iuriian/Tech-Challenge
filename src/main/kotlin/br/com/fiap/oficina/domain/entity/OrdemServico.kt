@@ -61,23 +61,22 @@ data class OrdemServico(
         }
 
     /**
-     * Gera o orçamento do serviço, discriminando cada peça consumida e
-     * totalizando o valor das peças (preço de venda × quantidade).
+     * Gera o orçamento da ordem de serviço
+     * a partir das pesças consumidas.
+     *
+     * Os serviços de catálogo serão incorporados
+     * quando a ordem de serviço passar a manter a
+     * sua própria lista de serviços solicitados.
      */
-    fun gerarOrcamento(): Orcamento {
-        val itens =
-            pecas.map { item ->
-                ItemOrcamento(
-                    pecaId = item.peca.id,
-                    codigo = item.peca.codigo,
-                    nome = item.peca.nome,
-                    precoUnitario = item.peca.precoDeVenda,
-                    quantidade = item.quantidade,
-                    subtotal = item.subtotal(),
-                )
-            }
-        val valorTotal = itens.fold(BigDecimal.ZERO) { acc, item -> acc + item.subtotal }
-
-        return Orcamento(servicoId = id, itens = itens, valorTotal = valorTotal)
-    }
+    fun gerarOrcamento(): Orcamento =
+        Orcamento(
+            ordemServicoId = id,
+            itens =
+                pecas.map { pecaServico ->
+                    ItemOrcamento.dePeca(
+                        pecaServico.peca,
+                        pecaServico.quantidade
+                    )
+                },
+        )
 }

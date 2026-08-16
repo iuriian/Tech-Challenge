@@ -8,6 +8,7 @@ import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
@@ -51,30 +52,32 @@ class ServicoMapperTest {
 
     @Test
     fun `deve mapear Orcamento para OrcamentoDto`() {
-        val servicoId = Id.generate()
+        val ordemServicoId = Id.generate()
         val pecaId = Id.generate()
+
         val orcamento =
             Orcamento(
-                servicoId = servicoId,
+                ordemServicoId = ordemServicoId,
                 itens =
                     listOf(
                         ItemOrcamento(
-                            pecaId = pecaId,
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
+                            tipo = TipoItemOrcamento.PECA,
+                            referenciaId = pecaId,
+                            descricao = "Filtro",
+                            valorUnitario = BigDecimal.TEN,
                             quantidade = BigDecimal("2"),
-                            subtotal = BigDecimal("20"),
+                            codigoReferencia = "PEC001",
                         ),
                     ),
-                valorTotal = BigDecimal("20"),
             )
 
         val dto = mapper.toResponse(orcamento)
 
-        assertEquals(servicoId.valor, dto.servicoId)
+        // O domínio usa ordemServicoId, mas o DTO ainda usa servicoId.
+        assertEquals(ordemServicoId.valor, dto.servicoId)
         assertEquals(BigDecimal("20"), dto.valorTotal)
         assertEquals(1, dto.itens.size)
+
         val item = dto.itens.first()
         assertEquals(pecaId.valor, item.pecaId)
         assertEquals("PEC001", item.codigo)

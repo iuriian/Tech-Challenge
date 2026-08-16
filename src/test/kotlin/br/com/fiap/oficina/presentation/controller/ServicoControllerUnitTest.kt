@@ -8,6 +8,7 @@ import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
@@ -118,28 +119,33 @@ class ServicoControllerUnitTest {
 
     @Test
     fun `obterOrcamento deve retornar dto do orcamento`() {
-        val id = Id.fromString("00000000-0000-0000-0000-000000000001")
+        val ordemServicoId =
+            Id.fromString("00000000-0000-0000-0000-000000000001")
+        val pecaId =
+            Id.fromString("00000000-0000-0000-0000-000000000002")
+
         val orcamento =
             Orcamento(
-                servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
+                ordemServicoId = ordemServicoId,
                 itens =
                     listOf(
                         ItemOrcamento(
-                            pecaId = UUID.randomUUID().let { Id.fromString("00000000-0000-0000-0000-000000000002") },
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
+                            tipo = TipoItemOrcamento.PECA,
+                            referenciaId = pecaId,
+                            descricao = "Filtro",
+                            valorUnitario = BigDecimal.TEN,
                             quantidade = BigDecimal("2"),
-                            subtotal = BigDecimal("20"),
+                            codigoReferencia = "PEC001",
                         ),
                     ),
-                valorTotal = BigDecimal("20"),
             )
-        `when`(service.obterOrcamento(Id(id.valor))).thenReturn(orcamento)
 
-        val dto = controller.obterOrcamento(id.valor.toString())
+        `when`(service.obterOrcamento(ordemServicoId)).thenReturn(orcamento)
 
-        assertEquals(id.valor, dto.servicoId)
+        val dto = controller.obterOrcamento(ordemServicoId.valor.toString())
+
+        // O DTO ainda mantém o nome legado servicoId.
+        assertEquals(ordemServicoId.valor, dto.servicoId)
         assertEquals(BigDecimal("20"), dto.valorTotal)
         assertEquals(1, dto.itens.size)
     }

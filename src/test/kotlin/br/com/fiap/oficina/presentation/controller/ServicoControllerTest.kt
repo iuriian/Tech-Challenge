@@ -7,6 +7,7 @@ import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
@@ -110,19 +111,18 @@ class ServicoControllerTest {
         val id = UUID.randomUUID()
         val orcamento =
             Orcamento(
-                servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
+                ordemServicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
                     listOf(
                         ItemOrcamento(
-                            pecaId = Id.generate(),
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
+                            tipo = TipoItemOrcamento.PECA,
+                            referenciaId = Id.generate(),
+                            descricao = "Filtro",
+                            valorUnitario = BigDecimal.TEN,
                             quantidade = BigDecimal.ONE,
-                            subtotal = BigDecimal.TEN,
+                            codigoReferencia = "PEC001",
                         ),
                     ),
-                valorTotal = BigDecimal.TEN,
             )
         `when`(service.obterOrcamento(Id.fromString(id.toString()))).thenReturn(orcamento)
 

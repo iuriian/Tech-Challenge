@@ -47,14 +47,14 @@ class ServicoMapper {
 
     fun toResponse(orcamento: Orcamento): OrcamentoDto =
         OrcamentoDto(
-            servicoId = orcamento.servicoId.valor,
+            servicoId = orcamento.ordemServicoId.valor,
             itens =
                 orcamento.itens.map { item ->
                     ItemOrcamentoDto(
-                        pecaId = item.pecaId.valor,
-                        codigo = item.codigo,
-                        nome = item.nome,
-                        precoUnitario = item.precoUnitario,
+                        pecaId = item.referenciaId.valor,
+                        codigo = item.codigoReferencia.orEmpty(),
+                        nome = item.descricao,
+                        precoUnitario = item.valorUnitario,
                         quantidade = item.quantidade,
                         subtotal = item.subtotal,
                     )
