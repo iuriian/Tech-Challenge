@@ -4,7 +4,7 @@ import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
@@ -68,7 +68,7 @@ class ServicoRepositoryAdapterTest {
             OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,

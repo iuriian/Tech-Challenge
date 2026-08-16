@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.*
@@ -56,7 +56,7 @@ class OrdemServicoTest {
 
         assertNotNull(ordemServico.id)
         assertEquals("Troca de óleo", ordemServico.descricao)
-        assertEquals(ServicoStatus.RECEBIDA, ordemServico.status)
+        assertEquals(OrdemServicoStatus.RECEBIDA, ordemServico.status)
         assertEquals(funcionario, ordemServico.funcionario)
         assertEquals(cliente, ordemServico.cliente)
         assertEquals(veiculo, ordemServico.veiculo)
@@ -72,11 +72,11 @@ class OrdemServicoTest {
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
-                status = ServicoStatus.EM_EXECUCAO,
+                status = OrdemServicoStatus.EM_EXECUCAO,
                 pecas = listOf(pecaServico),
             )
 
-        assertEquals(ServicoStatus.EM_EXECUCAO, ordemServico.status)
+        assertEquals(OrdemServicoStatus.EM_EXECUCAO, ordemServico.status)
         assertEquals(listOf(pecaServico), ordemServico.pecas)
     }
 
@@ -138,10 +138,10 @@ class OrdemServicoTest {
                 veiculo = veiculo,
             )
 
-        val finalizado = ordemServico.alterarStatus(ServicoStatus.FINALIZADA)
+        val finalizado = ordemServico.alterarStatus(OrdemServicoStatus.FINALIZADA)
 
-        assertEquals(ServicoStatus.RECEBIDA, ordemServico.status)
-        assertEquals(ServicoStatus.FINALIZADA, finalizado.status)
+        assertEquals(OrdemServicoStatus.RECEBIDA, ordemServico.status)
+        assertEquals(OrdemServicoStatus.FINALIZADA, finalizado.status)
     }
 
     @Test
@@ -149,7 +149,7 @@ class OrdemServicoTest {
         val agora = Instant.now()
         val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val emExecucao = ordemServico.alterarStatus(ServicoStatus.EM_EXECUCAO, agora)
+        val emExecucao = ordemServico.alterarStatus(OrdemServicoStatus.EM_EXECUCAO, agora)
 
         assertEquals(agora, emExecucao.dataInicioExecucao)
         assertNull(emExecucao.dataFinalizacao)
@@ -160,7 +160,7 @@ class OrdemServicoTest {
         val agora = Instant.now()
         val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val finalizado = ordemServico.alterarStatus(ServicoStatus.FINALIZADA, agora)
+        val finalizado = ordemServico.alterarStatus(OrdemServicoStatus.FINALIZADA, agora)
 
         assertEquals(agora, finalizado.dataFinalizacao)
         assertNull(finalizado.dataInicioExecucao)
@@ -172,9 +172,9 @@ class OrdemServicoTest {
         val ordemServico =
             OrdemServico
                 .criar("Revisão", funcionario, cliente, veiculo)
-                .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
+                .alterarStatus(OrdemServicoStatus.EM_EXECUCAO, inicio)
 
-        val entregue = ordemServico.alterarStatus(ServicoStatus.ENTREGUE)
+        val entregue = ordemServico.alterarStatus(OrdemServicoStatus.ENTREGUE)
 
         assertEquals(inicio, entregue.dataInicioExecucao)
         assertNull(entregue.dataFinalizacao)

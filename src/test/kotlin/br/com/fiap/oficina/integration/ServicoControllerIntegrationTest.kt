@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.integration
 
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -123,7 +123,7 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     fun `deve retornar 422 em transicao de status nao permitida`() {
         val criado = criarServico()
 
-        val dto = objectMapper.writeValueAsString(AlterarStatusDto(ServicoStatus.FINALIZADA))
+        val dto = objectMapper.writeValueAsString(AlterarStatusDto(OrdemServicoStatus.FINALIZADA))
 
         // De RECEBIDA só é permitido avançar para EM_DIAGNOSTICO.
         mockMvc.patch("/servicos/${criado.id}/status") {

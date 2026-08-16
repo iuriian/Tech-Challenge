@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.domain.entity
 
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
@@ -10,7 +10,7 @@ import java.time.Instant
 data class OrdemServico(
     val id: Id,
     val descricao: String,
-    val status: ServicoStatus = ServicoStatus.RECEBIDA,
+    val status: OrdemServicoStatus = OrdemServicoStatus.RECEBIDA,
     val funcionario: Funcionario,
     val cliente: Cliente,
     val veiculo: Veiculo,
@@ -25,7 +25,7 @@ data class OrdemServico(
             funcionario: Funcionario,
             cliente: Cliente,
             veiculo: Veiculo,
-            status: ServicoStatus = ServicoStatus.RECEBIDA,
+            status: OrdemServicoStatus = OrdemServicoStatus.RECEBIDA,
             pecas: List<PecaServico> = emptyList(),
         ): OrdemServico {
             require(descricao.isNotBlank()) { "Descrição do serviço é obrigatória" }
@@ -51,12 +51,12 @@ data class OrdemServico(
     ): OrdemServico = adicionarPeca(PecaServico.criar(peca, quantidade))
 
     fun alterarStatus(
-        novoStatus: ServicoStatus,
+        novoStatus: OrdemServicoStatus,
         agora: Instant = Instant.now(),
     ): OrdemServico =
         when (novoStatus) {
-            ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
-            ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
+            OrdemServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
+            OrdemServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
             else -> copy(status = novoStatus)
         }
 

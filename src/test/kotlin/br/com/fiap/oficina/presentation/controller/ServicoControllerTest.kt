@@ -6,7 +6,7 @@ import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -67,7 +67,7 @@ class ServicoControllerTest {
         OrdemServico(
             id = Id.fromString(id.toString()),
             descricao = "Revisao Geral",
-            status = ServicoStatus.RECEBIDA,
+            status = OrdemServicoStatus.RECEBIDA,
             funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
@@ -133,7 +133,7 @@ class ServicoControllerTest {
     @WithMockUser(roles = ["ATENDENTE"])
     fun `atendente pode avancar status da OS`() {
         val id = UUID.randomUUID()
-        val servicoAvancado = buildServico(id).copy(status = ServicoStatus.EM_DIAGNOSTICO)
+        val servicoAvancado = buildServico(id).copy(status = OrdemServicoStatus.EM_DIAGNOSTICO)
         `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(servicoAvancado)
         `when`(mapper.toResponse(servicoAvancado)).thenReturn(
             ServicoDto(
@@ -155,8 +155,8 @@ class ServicoControllerTest {
     @WithMockUser(roles = ["CLIENTE"])
     fun `cliente pode alterar status para cancelada via endpoint de status`() {
         val id = UUID.randomUUID()
-        val servicoCancelado = buildServico(id).copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        val servicoCancelado = buildServico(id).copy(status = OrdemServicoStatus.CANCELADA)
+        `when`(service.alterarStatus(Id.fromString(id.toString()), OrdemServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
         `when`(mapper.toResponse(servicoCancelado)).thenReturn(
             ServicoDto(
                 id = id,

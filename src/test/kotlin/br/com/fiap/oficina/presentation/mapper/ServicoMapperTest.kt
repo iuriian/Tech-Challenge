@@ -7,7 +7,7 @@ import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -32,7 +32,7 @@ class ServicoMapperTest {
             OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
-                status = ServicoStatus.EM_EXECUCAO,
+                status = OrdemServicoStatus.EM_EXECUCAO,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
@@ -43,7 +43,7 @@ class ServicoMapperTest {
 
         assertEquals(ordemServico.id.valor, dto.id)
         assertEquals("Troca de óleo", dto.descricao)
-        assertEquals(ServicoStatus.EM_EXECUCAO, dto.status)
+        assertEquals(OrdemServicoStatus.EM_EXECUCAO, dto.status)
         assertEquals(funcionario.id.valor.toString(), dto.funcionarioId)
         assertEquals(cliente.id.valor.toString(), dto.clienteId)
         assertEquals(veiculo.id.valor.toString(), dto.veiculoId)

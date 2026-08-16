@@ -5,7 +5,7 @@ import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.enum.Cargo
@@ -55,7 +55,7 @@ class ServicoPersistenceMapperTest {
             OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
-                status = ServicoStatus.EM_EXECUCAO,
+                status = OrdemServicoStatus.EM_EXECUCAO,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
@@ -71,7 +71,7 @@ class ServicoPersistenceMapperTest {
         val jpa = mapper.toJpa(ordemServico)
 
         assertEquals(ordemServico.id.valor, jpa.id)
-        assertEquals(ServicoStatus.EM_EXECUCAO, jpa.status)
+        assertEquals(OrdemServicoStatus.EM_EXECUCAO, jpa.status)
         assertEquals(funcionario.id.valor, jpa.funcionario.id)
         assertEquals(BigDecimal("2"), jpa.pecas.first().quantidade)
         assertEquals(ordemServico, mapper.toDomain(jpa))
@@ -83,7 +83,7 @@ class ServicoPersistenceMapperTest {
             OrdemServico(
                 id = Id.generate(),
                 descricao = "Revisão",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
@@ -95,7 +95,7 @@ class ServicoPersistenceMapperTest {
 
         val resultado = mapper.toDomain(jpa)
 
-        assertEquals(ServicoStatus.RECEBIDA, resultado.status)
+        assertEquals(OrdemServicoStatus.RECEBIDA, resultado.status)
         assertEquals(funcionario.id.valor, resultado.funcionario.id.valor)
     }
 }

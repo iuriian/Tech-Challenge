@@ -11,7 +11,7 @@ import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
@@ -111,7 +111,7 @@ class ServicoServiceTest {
             OrdemServico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
@@ -132,7 +132,7 @@ class ServicoServiceTest {
                     id = servicoId,
                     descricao = "Troca de Óleo",
                     funcionarioId = funcionarioId,
-                    status = ServicoStatus.RECEBIDA,
+                    status = OrdemServicoStatus.RECEBIDA,
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
@@ -262,8 +262,8 @@ class ServicoServiceTest {
         "FINALIZADA, ENTREGUE",
     )
     fun `avancarStatus deve seguir a ordem de declaracao do enum`(
-        de: ServicoStatus,
-        esperado: ServicoStatus,
+        de: OrdemServicoStatus,
+        esperado: OrdemServicoStatus,
     ) {
         val atual = servicoComStatus(de)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
@@ -276,8 +276,8 @@ class ServicoServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ServicoStatus::class, names = ["ENTREGUE", "CANCELADA"])
-    fun `avancarStatus deve falhar em estado final`(status: ServicoStatus) {
+    @EnumSource(value = OrdemServicoStatus::class, names = ["ENTREGUE", "CANCELADA"])
+    fun `avancarStatus deve falhar em estado final`(status: OrdemServicoStatus) {
         `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(status))
 
         assertThrows(IllegalStateException::class.java) { service.avancarStatus(servicoId) }
@@ -298,9 +298,9 @@ class ServicoServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = ServicoStatus::class, names = ["EM_EXECUCAO", "CANCELADA"])
-    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: ServicoStatus) {
-        val atual = servicoComStatus(ServicoStatus.AGUARDANDO_APROVACAO)
+    @EnumSource(value = OrdemServicoStatus::class, names = ["EM_EXECUCAO", "CANCELADA"])
+    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: OrdemServicoStatus) {
+        val atual = servicoComStatus(OrdemServicoStatus.AGUARDANDO_APROVACAO)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
         `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<OrdemServico>(0) }
 
@@ -318,8 +318,8 @@ class ServicoServiceTest {
         "ENTREGUE, CANCELADA",
     )
     fun `alterarStatus deve rejeitar transicoes invalidas`(
-        de: ServicoStatus,
-        alvo: ServicoStatus,
+        de: OrdemServicoStatus,
+        alvo: OrdemServicoStatus,
     ) {
         `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
 
@@ -334,14 +334,14 @@ class ServicoServiceTest {
         `when`(repository.buscarPorId(servicoId)).thenReturn(null)
 
         assertThrows(IllegalArgumentException::class.java) {
-            service.alterarStatus(servicoId, ServicoStatus.EM_DIAGNOSTICO)
+            service.alterarStatus(servicoId, OrdemServicoStatus.EM_DIAGNOSTICO)
         }
         verify(repository, never()).salvar(anyObject())
     }
 
     @Test
     fun `listarPorCliente deve retornar servicos do cliente`() {
-        `when`(repository.listarPorCliente(clienteId)).thenReturn(listOf(servicoComStatus(ServicoStatus.RECEBIDA)))
+        `when`(repository.listarPorCliente(clienteId)).thenReturn(listOf(servicoComStatus(OrdemServicoStatus.RECEBIDA)))
 
         val resultado = service.listarPorCliente(clienteId)
 
@@ -361,7 +361,7 @@ class ServicoServiceTest {
 
     @Test
     fun `calcularTempoMedioExecucao deve retornar null quando nao ha servicos finalizados`() {
-        `when`(repository.listarTodos()).thenReturn(listOf(servicoComStatus(ServicoStatus.EM_EXECUCAO)))
+        `when`(repository.listarTodos()).thenReturn(listOf(servicoComStatus(OrdemServicoStatus.EM_EXECUCAO)))
 
         val resultado = service.calcularTempoMedioExecucao()
 
@@ -375,10 +375,10 @@ class ServicoServiceTest {
         val fim1 = Instant.parse("2025-01-01T10:00:00Z") // 120 min
         val fim2 = Instant.parse("2025-01-01T11:00:00Z") // 180 min (inicio até fim2)
         val s1 =
-            servicoComStatus(ServicoStatus.FINALIZADA)
+            servicoComStatus(OrdemServicoStatus.FINALIZADA)
                 .copy(dataInicioExecucao = inicio, dataFinalizacao = fim1)
         val s2 =
-            servicoComStatus(ServicoStatus.FINALIZADA)
+            servicoComStatus(OrdemServicoStatus.FINALIZADA)
                 .copy(dataInicioExecucao = inicio, dataFinalizacao = fim2)
         `when`(repository.listarTodos()).thenReturn(listOf(s1, s2))
 
@@ -393,10 +393,10 @@ class ServicoServiceTest {
         val inicio = Instant.parse("2025-01-01T08:00:00Z")
         val fim = Instant.parse("2025-01-01T09:00:00Z") // 60 min
         val completo =
-            servicoComStatus(ServicoStatus.FINALIZADA)
+            servicoComStatus(OrdemServicoStatus.FINALIZADA)
                 .copy(dataInicioExecucao = inicio, dataFinalizacao = fim)
         val semInicio =
-            servicoComStatus(ServicoStatus.FINALIZADA)
+            servicoComStatus(OrdemServicoStatus.FINALIZADA)
                 .copy(dataInicioExecucao = null, dataFinalizacao = fim)
         `when`(repository.listarTodos()).thenReturn(listOf(completo, semInicio))
 
@@ -406,7 +406,7 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun servicoComStatus(status: ServicoStatus): OrdemServico =
+    private fun servicoComStatus(status: OrdemServicoStatus): OrdemServico =
         OrdemServico(
             id = servicoId,
             descricao = "Troca de Óleo",

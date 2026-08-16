@@ -124,35 +124,44 @@ Definidos no Keycloak e aplicados via `@RolesAllowed` (ver `KeycloakJwtRoleConve
 | **Desativar peça**             | Torna a peça indisponível (exclusão lógica).                  | `Peca.desativar()` / `deletarPeca` |
 | **Reativar peça**              | Volta a disponibilizar uma peça inativa.                      | `Peca.reativar()`                  |
 
-## Serviço (Ordem de Serviço)
+## Serviço e Ordem de Serviço
 
-`domain/entity/Servico.kt`, `ServicoService`, `ServicoController`, `ServicoDto`, `ServicoStatus`.
+`domain/entity/Servico.kt`, `domain/entity/OrdemServico.kt`,
+`domain/valueobject/Orcamento.kt` e `domain/enum/OrdemServicoStatus.kt`.
 
-> **Nota:** No código, **Serviço** representa o trabalho aberto para um cliente/veículo —
-> conceitualmente é a **Ordem de Serviço (OS)**. Ver observações de consistência ao final.
+> **Nota de transição:** no domínio, **Serviço** representa uma operação disponível
+> no catálogo da oficina, enquanto **Ordem de Serviço** representa o atendimento
+> aberto para um cliente e seu veículo. Alguns nomes das camadas de aplicação,
+> persistência e apresentação ainda mantêm `Servico` por compatibilidade e serão
+> refatorados gradualmente.
 
-| Termo                       | Definição                                                         | Atributo                |
-|-----------------------------|-------------------------------------------------------------------|-------------------------|
-| **Serviço**                 | Trabalho registrado para atender um cliente e seu veículo (a OS). | `Servico`               |
-| **Descrição (do serviço)**  | Relato do que será/foi feito.                                     | `Servico.descricao`     |
-| **Status (do serviço)**     | Etapa atual do serviço no fluxo de atendimento.                   | `Servico.status`        |
-| **Funcionário responsável** | Identificador de quem executa o serviço (mecânico).               | `Servico.funcionarioId` |
-| **Peças do serviço**        | Peças associadas/consumidas no serviço.                           | `Servico.pecasIds`      |
-| **Veículo do serviço**      | Veículo atendido pela OS.                                         | `Servico.veiculoId`     |
+| Termo                       | Definição                                                                  | Representação no domínio        |
+|-----------------------------|----------------------------------------------------------------------------|---------------------------------|
+| **Serviço**                 | Operação oferecida pela oficina, com descrição e valor.                    | `Servico`                       |
+| **Descrição do serviço**    | Identificação da operação disponível no catálogo.                          | `Servico.descricao`             |
+| **Valor do serviço**        | Valor cobrado pela operação ou mão de obra.                                | `Servico.valor`                 |
+| **Ordem de Serviço (OS)**   | Atendimento aberto para um cliente e seu veículo.                          | `OrdemServico`                  |
+| **Descrição da OS**         | Relato do atendimento ou trabalho solicitado.                             | `OrdemServico.descricao`        |
+| **Status da OS**            | Etapa atual da ordem no fluxo de atendimento.                              | `OrdemServico.status`           |
+| **Funcionário responsável** | Funcionário responsável pela execução da ordem.                            | `OrdemServico.funcionario`      |
+| **Cliente da OS**           | Cliente atendido pela ordem de serviço.                                    | `OrdemServico.cliente`          |
+| **Veículo da OS**           | Veículo atendido pela ordem de serviço.                                    | `OrdemServico.veiculo`          |
+| **Peças da OS**             | Peças associadas ou consumidas durante o atendimento.                      | `OrdemServico.pecas`            |
+| **Orçamento**               | Snapshot dos itens e valores calculados para uma ordem de serviço.         | `Orcamento` / `ItemOrcamento`   |
 
-### Status do Serviço (ciclo de vida)
+### Status da Ordem de Serviço (ciclo de vida)
 
-`domain/enum/ServicoStatus.kt`.
+`domain/enum/OrdemServicoStatus.kt`.
 
-| Status                   | Descrição (no código)  | Significado de negócio                             |
-|--------------------------|------------------------|----------------------------------------------------|
-| **RECEBIDA**             | "Recebida"             | OS aberta; veículo deu entrada na oficina.         |
-| **EM_DIAGNOSTICO**       | "Em Diagnostico"       | Mecânico avalia o veículo e identifica o problema. |
-| **AGUARDANDO_APROVACAO** | "Aguardando aprovação" | Orçamento enviado; aguardando o cliente aprovar.   |
-| **EM_EXECUCAO**          | "Em Execução"          | Reparos e serviços sendo realizados.               |
-| **FINALIZADA**           | "Finalizada"           | Serviço concluído; veículo pronto.                 |
-| **ENTREGUE**             | "Entregue"             | Veículo devolvido ao cliente; OS encerrada.        |
-
+| Status                   | Descrição no código     | Significado de negócio                             |
+|--------------------------|-------------------------|----------------------------------------------------|
+| **RECEBIDA**             | "Recebida"              | OS aberta; veículo deu entrada na oficina.         |
+| **EM_DIAGNOSTICO**       | "Em Diagnostico"        | Mecânico avalia o veículo e identifica o problema. |
+| **AGUARDANDO_APROVACAO** | "Aguardando aprovação"  | Orçamento enviado; aguardando decisão do cliente.  |
+| **EM_EXECUCAO**          | "Em Execução"           | Reparos e serviços sendo realizados.               |
+| **FINALIZADA**           | "Finalizada"            | Trabalho concluído; veículo pronto.                |
+| **ENTREGUE**             | "Entregue"              | Veículo devolvido ao cliente; OS encerrada.        |
+| **CANCELADA**            | "Cancelada pelo cliente"| Orçamento recusado e atendimento cancelado.        |
 ## Operações / Ações do domínio (verbos)
 
 Vocabulário de comandos usado em services e controllers — padronizá-lo evita sinônimos divergentes.
@@ -168,24 +177,23 @@ Vocabulário de comandos usado em services e controllers — padronizá-lo evita
 
 ---
 
-# Parte 2 — Termos complementares sugeridos
+# Parte 2 — Evoluções complementares do domínio
 
-> Vocabulário comum a um sistema de **Ordem de Serviço de oficina mecânica** que **ainda não está
-> modelado** no código. São sugestões para evoluir o domínio e tornar a linguagem mais completa e
-> aderente ao negócio. Não representam código existente.
+> Os conceitos abaixo fazem parte do domínio da oficina. Alguns já começaram a
+> ser modelados, enquanto outros ainda exigem persistência, casos de uso ou
+> integração com a Ordem de Serviço.
 
 ## Conceitos centrais da OS
 
-| Termo sugerido                  | Definição                                                                                  | Relação com o que já existe                                             |
-|---------------------------------|--------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| **Ordem de Serviço (OS)**       | Documento que formaliza a abertura, o acompanhamento e o encerramento de um atendimento.   | Hoje é representado por `Servico`; vale renomear/explicitar o conceito. |
-| **Orçamento**                   | Estimativa de custos (peças + mão de obra) submetida ao cliente para aprovação.            | Justifica o status `AGUARDANDO_APROVACAO`; hoje não há entidade.        |
-| **Diagnóstico / Laudo técnico** | Avaliação do mecânico que descreve o problema e o reparo necessário.                       | Dá sentido ao status `EM_DIAGNOSTICO`.                                  |
-| **Aprovação / Reprovação**      | Decisão do cliente sobre o orçamento (aprovar/recusar).                                    | Transição entre `AGUARDANDO_APROVACAO` e `EM_EXECUCAO`/cancelamento.    |
-| **Item da Ordem de Serviço**    | Linha da OS que vincula uma **peça** ou um **serviço/mão de obra** com quantidade e preço. | Detalharia `Servico.pecasIds` e o custo total.                          |
-| **Mão de obra**                 | Trabalho cobrado (distinto de peça), por hora ou por tarefa.                               | Complementa **Peça** na composição do valor da OS.                      |
-| **Serviço (catálogo)**          | Tipo de serviço oferecido (troca de óleo, alinhamento, revisão).                           | Atenção: hoje "Serviço" significa OS — há **ambiguidade** a resolver.   |
-
+| Conceito                       | Definição                                                                                | Situação atual                                                                      |
+|--------------------------------|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| **Ordem de Serviço (OS)**      | Agregado que formaliza a abertura, o acompanhamento e o encerramento do atendimento.     | Representada por `OrdemServico`; contratos externos ainda possuem nomes legados.    |
+| **Orçamento**                  | Estimativa de custos composta por peças e serviços, submetida ao cliente.                | `Orcamento` e `ItemOrcamento` modelados; aprovação, validade e persistência pendentes. |
+| **Diagnóstico / Laudo técnico**| Avaliação do mecânico que identifica o problema e o reparo necessário.                   | O estado `EM_DIAGNOSTICO` existe; o laudo ainda não foi modelado.                    |
+| **Aprovação / Reprovação**     | Decisão do cliente sobre o orçamento.                                                    | Transições existem parcialmente; decisão explícita do orçamento ainda está pendente. |
+| **Item da Ordem de Serviço**   | Linha que vincula peça ou serviço com quantidade e preço registrado.                    | `ItemOrcamento` aceita `PECA` e `SERVICO`; associação de serviços à OS está pendente. |
+| **Mão de obra**                | Trabalho cobrado por tarefa ou período.                                                  | Representada pelo `Servico` de catálogo; ainda precisa ser incorporada à OS.         |
+| **Serviço de catálogo**        | Operação oferecida pela oficina, como troca de óleo, alinhamento ou revisão.              | Representada por `Servico`; CRUD e persistência específicos ainda estão pendentes.   |
 ## Pessoas e papéis
 
 | Termo sugerido              | Definição                                       | Relação com o que já existe                                                        |

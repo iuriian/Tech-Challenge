@@ -5,7 +5,7 @@ import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
@@ -32,7 +32,7 @@ data class ServicoComando(
     val id: Id? = null,
     val descricao: String,
     val funcionarioId: Id,
-    val status: ServicoStatus = ServicoStatus.RECEBIDA,
+    val status: OrdemServicoStatus = OrdemServicoStatus.RECEBIDA,
     val clienteId: Id,
     val veiculoId: Id,
     val pecas: List<PecaServicoComando> = emptyList(),
@@ -124,9 +124,9 @@ class ServicoService(
 
     /**
      * Dá andamento à ordem de serviço, movendo-a para o próximo status na
-     * ordem de declaração do enum [ServicoStatus]. A partir de
-     * [ServicoStatus.AGUARDANDO_APROVACAO] o andamento segue para
-     * [ServicoStatus.EM_EXECUCAO]; para cancelar, use [alterarStatus].
+     * ordem de declaração do enum [OrdemServicoStatus]. A partir de
+     * [OrdemServicoStatus.AGUARDANDO_APROVACAO] o andamento segue para
+     * [OrdemServicoStatus.EM_EXECUCAO]; para cancelar, use [alterarStatus].
      */
     @Transactional
     fun avancarStatus(id: Id): OrdemServico {
@@ -145,7 +145,7 @@ class ServicoService(
     @Transactional
     fun alterarStatus(
         id: Id,
-        novoStatus: ServicoStatus,
+        novoStatus: OrdemServicoStatus,
     ): OrdemServico {
         val servico = buscarObrigatorio(id)
         val permitidas = transicoesPermitidas(servico.status)
@@ -179,13 +179,13 @@ class ServicoService(
     /**
      * Define a máquina de estados: a partir de cada status, o fluxo segue para
      * o próximo na ordem de declaração do enum. A única ramificação ocorre em
-     * [ServicoStatus.AGUARDANDO_APROVACAO], de onde pode ir para
-     * [ServicoStatus.EM_EXECUCAO] ou [ServicoStatus.CANCELADA].
+     * [OrdemServicoStatus.AGUARDANDO_APROVACAO], de onde pode ir para
+     * [OrdemServicoStatus.EM_EXECUCAO] ou [OrdemServicoStatus.CANCELADA].
      */
-    private fun transicoesPermitidas(atual: ServicoStatus): Set<ServicoStatus> =
+    private fun transicoesPermitidas(atual: OrdemServicoStatus): Set<OrdemServicoStatus> =
         when (atual) {
-            ServicoStatus.AGUARDANDO_APROVACAO -> {
-                setOf(ServicoStatus.EM_EXECUCAO, ServicoStatus.CANCELADA)
+            OrdemServicoStatus.AGUARDANDO_APROVACAO -> {
+                setOf(OrdemServicoStatus.EM_EXECUCAO, OrdemServicoStatus.CANCELADA)
             }
 
             else -> {
@@ -195,12 +195,12 @@ class ServicoService(
 
     /**
      * Próximo status no fluxo linear (ordem de declaração do enum). Retorna
-     * null para os estados finais ([ServicoStatus.ENTREGUE] e
-     * [ServicoStatus.CANCELADA]); CANCELADA é ignorada por não fazer parte do
+     * null para os estados finais ([OrdemServicoStatus.ENTREGUE] e
+     * [OrdemServicoStatus.CANCELADA]); CANCELADA é ignorada por não fazer parte do
      * fluxo linear, sendo alcançável apenas a partir de AGUARDANDO_APROVACAO.
      */
-    private fun proximoNaOrdem(atual: ServicoStatus): ServicoStatus? =
-        ServicoStatus.entries
+    private fun proximoNaOrdem(atual: OrdemServicoStatus): OrdemServicoStatus? =
+        OrdemServicoStatus.entries
             .getOrNull(atual.ordinal + 1)
-            ?.takeIf { it != ServicoStatus.CANCELADA }
+            ?.takeIf { it != OrdemServicoStatus.CANCELADA }
 }

@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.dto
 
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
@@ -22,7 +22,7 @@ data class ServicoDto(
     @field:NotNull
     @field:NotBlank
     val descricao: String,
-    val status: ServicoStatus? = null,
+    val status: OrdemServicoStatus? = null,
     @field:NotNull
     val funcionarioId: String,
     @field:NotNull

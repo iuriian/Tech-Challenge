@@ -7,7 +7,7 @@ import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -58,7 +58,7 @@ class ServicoControllerUnitTest {
         OrdemServico(
             id = Id.generate(),
             descricao = "Troca de óleo",
-            status = ServicoStatus.RECEBIDA,
+            status = OrdemServicoStatus.RECEBIDA,
             funcionario = funcionario,
             cliente = cliente,
             veiculo = veiculo,
@@ -177,12 +177,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `avancarStatus deve retornar dto com novo status`() {
         val id = ordemServico.id.valor
-        val servicoAvancado = ordemServico.copy(status = ServicoStatus.EM_DIAGNOSTICO)
+        val servicoAvancado = ordemServico.copy(status = OrdemServicoStatus.EM_DIAGNOSTICO)
         `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(servicoAvancado)
 
         val dto = controller.avancarStatus(id.toString())
 
-        assertEquals(ServicoStatus.EM_DIAGNOSTICO, dto.status)
+        assertEquals(OrdemServicoStatus.EM_DIAGNOSTICO, dto.status)
     }
 
     @Test
@@ -216,23 +216,23 @@ class ServicoControllerUnitTest {
     @Test
     fun `alterarStatus deve retornar dto com status alterado`() {
         val id = ordemServico.id.valor
-        val servicoCancelado = ordemServico.copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        val servicoCancelado = ordemServico.copy(status = OrdemServicoStatus.CANCELADA)
+        `when`(service.alterarStatus(Id.fromString(id.toString()), OrdemServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
 
-        val dto = controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))
+        val dto = controller.alterarStatus(id.toString(), AlterarStatusDto(OrdemServicoStatus.CANCELADA))
 
-        assertEquals(ServicoStatus.CANCELADA, dto.status)
+        assertEquals(OrdemServicoStatus.CANCELADA, dto.status)
     }
 
     @Test
     fun `alterarStatus deve retornar 404 quando servico nao existe`() {
         val id = UUID.randomUUID()
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA))
+        `when`(service.alterarStatus(Id.fromString(id.toString()), OrdemServicoStatus.CANCELADA))
             .thenThrow(IllegalArgumentException("Serviço não encontrado com o ID: $id"))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))
+                controller.alterarStatus(id.toString(), AlterarStatusDto(OrdemServicoStatus.CANCELADA))
             }
 
         assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
@@ -241,12 +241,12 @@ class ServicoControllerUnitTest {
     @Test
     fun `alterarStatus deve retornar 422 para transicao invalida`() {
         val id = UUID.randomUUID()
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.ENTREGUE))
+        `when`(service.alterarStatus(Id.fromString(id.toString()), OrdemServicoStatus.ENTREGUE))
             .thenThrow(IllegalStateException("Transição inválida de 'RECEBIDA' para 'ENTREGUE'."))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
-                controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.ENTREGUE))
+                controller.alterarStatus(id.toString(), AlterarStatusDto(OrdemServicoStatus.ENTREGUE))
             }
 
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.statusCode)

@@ -2,7 +2,7 @@ package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.OrdemServico
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.PecaServicoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
@@ -18,7 +18,7 @@ class ServicoPersistenceMapper(
         OrdemServico(
             id = Id(entity.id),
             descricao = entity.descricao,
-            status = entity.status ?: ServicoStatus.RECEBIDA,
+            status = entity.status ?: OrdemServicoStatus.RECEBIDA,
             funcionario = entity.funcionario.toDomain(),
             cliente = clienteMapper.toDomain(entity.cliente),
             veiculo = veiculoMapper.toDomain(entity.veiculo),
