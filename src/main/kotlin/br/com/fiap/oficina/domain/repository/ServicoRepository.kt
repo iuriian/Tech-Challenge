@@ -1,17 +1,17 @@
 package br.com.fiap.oficina.domain.repository
 
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface ServicoRepository {
 
-    fun salvar(servico: Servico): Servico
+    fun salvar(ordemServico: OrdemServico): OrdemServico
 
-    fun buscarPorId(id: Id): Servico?
+    fun buscarPorId(id: Id): OrdemServico?
 
-    fun listarTodos(): List<Servico>
+    fun listarTodos(): List<OrdemServico>
 
-    fun listarPorCliente(clienteId: Id): List<Servico>
+    fun listarPorCliente(clienteId: Id): List<OrdemServico>
 
     fun existePorId(id: Id): Boolean
 

@@ -6,9 +6,8 @@ import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
-data class Servico(
+data class OrdemServico(
     val id: Id,
     val descricao: String,
     val status: ServicoStatus = ServicoStatus.RECEBIDA,
@@ -28,10 +27,10 @@ data class Servico(
             veiculo: Veiculo,
             status: ServicoStatus = ServicoStatus.RECEBIDA,
             pecas: List<PecaServico> = emptyList(),
-        ): Servico {
+        ): OrdemServico {
             require(descricao.isNotBlank()) { "Descrição do serviço é obrigatória" }
 
-            return Servico(
+            return OrdemServico(
                 id = Id.generate(),
                 descricao = descricao,
                 status = status,
@@ -44,17 +43,17 @@ data class Servico(
         }
     }
 
-    fun adicionarPeca(pecaServico: PecaServico): Servico = copy(pecas = pecas + pecaServico)
+    fun adicionarPeca(pecaServico: PecaServico): OrdemServico = copy(pecas = pecas + pecaServico)
 
     fun adicionarPeca(
         peca: Peca,
         quantidade: BigDecimal,
-    ): Servico = adicionarPeca(PecaServico.criar(peca, quantidade))
+    ): OrdemServico = adicionarPeca(PecaServico.criar(peca, quantidade))
 
     fun alterarStatus(
         novoStatus: ServicoStatus,
         agora: Instant = Instant.now(),
-    ): Servico =
+    ): OrdemServico =
         when (novoStatus) {
             ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
             ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)

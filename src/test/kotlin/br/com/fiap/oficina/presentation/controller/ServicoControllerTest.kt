@@ -3,7 +3,7 @@ package br.com.fiap.oficina.presentation.controller
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -63,7 +63,7 @@ class ServicoControllerTest {
         )
 
     private fun buildServico(id: UUID) =
-        Servico(
+        OrdemServico(
             id = Id.fromString(id.toString()),
             descricao = "Revisao Geral",
             status = ServicoStatus.RECEBIDA,

@@ -4,7 +4,7 @@ import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -53,8 +53,8 @@ class ServicoControllerUnitTest {
             cargo = Cargo.MECANICO,
         )
 
-    private val servico =
-        Servico(
+    private val ordemServico =
+        OrdemServico(
             id = Id.generate(),
             descricao = "Troca de óleo",
             status = ServicoStatus.RECEBIDA,
@@ -73,26 +73,26 @@ class ServicoControllerUnitTest {
 
     @Test
     fun `criar deve retornar dto do servico salvo`() {
-        `when`(service.salvar(anyObject())).thenReturn(servico)
+        `when`(service.salvar(anyObject())).thenReturn(ordemServico)
 
         val dto = controller.criar(servicoDto())
 
-        assertEquals(servico.id.valor, dto.id)
+        assertEquals(ordemServico.id.valor, dto.id)
         assertEquals("Troca de óleo", dto.descricao)
     }
 
     @Test
     fun `atualizar deve retornar dto do servico salvo`() {
-        `when`(service.salvar(anyObject())).thenReturn(servico)
+        `when`(service.salvar(anyObject())).thenReturn(ordemServico)
 
         val dto = controller.atualizar("00000000-0000-0000-0000-000000000001", servicoDto())
 
-        assertEquals(servico.id.valor, dto.id)
+        assertEquals(ordemServico.id.valor, dto.id)
     }
 
     @Test
     fun `listarTodos deve mapear lista`() {
-        `when`(service.listarTodos()).thenReturn(listOf(servico))
+        `when`(service.listarTodos()).thenReturn(listOf(ordemServico))
 
         assertEquals(1, controller.listarTodos().size)
     }
@@ -100,7 +100,7 @@ class ServicoControllerUnitTest {
     @Test
     fun `listarPorCliente deve mapear lista de servicos do cliente`() {
         val clienteId = cliente.id.valor
-        `when`(service.listarPorCliente(Id.fromString(clienteId.toString()))).thenReturn(listOf(servico))
+        `when`(service.listarPorCliente(Id.fromString(clienteId.toString()))).thenReturn(listOf(ordemServico))
 
         val resultado = controller.listarPorCliente(clienteId.toString())
 
@@ -170,8 +170,8 @@ class ServicoControllerUnitTest {
 
     @Test
     fun `avancarStatus deve retornar dto com novo status`() {
-        val id = servico.id.valor
-        val servicoAvancado = servico.copy(status = ServicoStatus.EM_DIAGNOSTICO)
+        val id = ordemServico.id.valor
+        val servicoAvancado = ordemServico.copy(status = ServicoStatus.EM_DIAGNOSTICO)
         `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(servicoAvancado)
 
         val dto = controller.avancarStatus(id.toString())
@@ -209,8 +209,8 @@ class ServicoControllerUnitTest {
 
     @Test
     fun `alterarStatus deve retornar dto com status alterado`() {
-        val id = servico.id.valor
-        val servicoCancelado = servico.copy(status = ServicoStatus.CANCELADA)
+        val id = ordemServico.id.valor
+        val servicoCancelado = ordemServico.copy(status = ServicoStatus.CANCELADA)
         `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
 
         val dto = controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))

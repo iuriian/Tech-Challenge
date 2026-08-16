@@ -3,7 +3,7 @@ package br.com.fiap.oficina.application.service
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
@@ -47,7 +47,7 @@ class ServicoService(
     private val funcionarioRepository: FuncionarioRepository,
 ) {
     @Transactional
-    fun salvar(comando: ServicoComando): Servico {
+    fun salvar(comando: ServicoComando): OrdemServico {
         val cliente =
             clienteRepository.buscarPorId(comando.clienteId)
                 ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.clienteId}")
@@ -67,10 +67,10 @@ class ServicoService(
                 }
             }
 
-        val servico =
+        val ordemServico =
             comando.id
                 ?.let { id -> atualizarExistente(id, comando, funcionario, cliente, veiculo, pecas) }
-                ?: Servico.criar(
+                ?: OrdemServico.criar(
                     descricao = comando.descricao,
                     funcionario = funcionario,
                     cliente = cliente,
@@ -79,7 +79,7 @@ class ServicoService(
                     pecas = pecas,
                 )
 
-        return repository.salvar(servico)
+        return repository.salvar(ordemServico)
     }
 
     private fun atualizarExistente(
@@ -89,7 +89,7 @@ class ServicoService(
         cliente: Cliente,
         veiculo: Veiculo,
         pecas: List<PecaServico>,
-    ): Servico {
+    ): OrdemServico {
         val existente =
             repository.buscarPorId(id)
                 ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
@@ -102,11 +102,11 @@ class ServicoService(
         )
     }
 
-    fun listarPorId(id: Id): Servico? = repository.buscarPorId(id)
+    fun listarPorId(id: Id): OrdemServico? = repository.buscarPorId(id)
 
-    fun listarTodos(): List<Servico> = repository.listarTodos()
+    fun listarTodos(): List<OrdemServico> = repository.listarTodos()
 
-    fun listarPorCliente(clienteId: Id): List<Servico> = repository.listarPorCliente(clienteId)
+    fun listarPorCliente(clienteId: Id): List<OrdemServico> = repository.listarPorCliente(clienteId)
 
     /**
      * Retorna o orçamento do serviço, totalizando o valor das peças
@@ -129,7 +129,7 @@ class ServicoService(
      * [ServicoStatus.EM_EXECUCAO]; para cancelar, use [alterarStatus].
      */
     @Transactional
-    fun avancarStatus(id: Id): Servico {
+    fun avancarStatus(id: Id): OrdemServico {
         val servico = buscarObrigatorio(id)
         val proximo =
             proximoNaOrdem(servico.status)
@@ -146,7 +146,7 @@ class ServicoService(
     fun alterarStatus(
         id: Id,
         novoStatus: ServicoStatus,
-    ): Servico {
+    ): OrdemServico {
         val servico = buscarObrigatorio(id)
         val permitidas = transicoesPermitidas(servico.status)
         check(novoStatus in permitidas) {
@@ -172,7 +172,7 @@ class ServicoService(
         return TempoMedioExecucao(finalizados.size, tempoMedio)
     }
 
-    private fun buscarObrigatorio(id: Id): Servico =
+    private fun buscarObrigatorio(id: Id): OrdemServico =
         repository.buscarPorId(id)
             ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
 

@@ -1,6 +1,5 @@
 package br.com.fiap.oficina.domain.entity
 
-import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
@@ -10,7 +9,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
 
-class ServicoTest {
+class OrdemServicoTest {
     private val cliente =
         Cliente(
             id = Id.generate(),
@@ -47,28 +46,28 @@ class ServicoTest {
 
     @Test
     fun `deve criar servico valido com status padrao`() {
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Troca de óleo",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
 
-        assertNotNull(servico.id)
-        assertEquals("Troca de óleo", servico.descricao)
-        assertEquals(ServicoStatus.RECEBIDA, servico.status)
-        assertEquals(funcionario, servico.funcionario)
-        assertEquals(cliente, servico.cliente)
-        assertEquals(veiculo, servico.veiculo)
-        assertTrue(servico.pecas.isEmpty())
+        assertNotNull(ordemServico.id)
+        assertEquals("Troca de óleo", ordemServico.descricao)
+        assertEquals(ServicoStatus.RECEBIDA, ordemServico.status)
+        assertEquals(funcionario, ordemServico.funcionario)
+        assertEquals(cliente, ordemServico.cliente)
+        assertEquals(veiculo, ordemServico.veiculo)
+        assertTrue(ordemServico.pecas.isEmpty())
     }
 
     @Test
     fun `deve criar servico com status e pecas informados`() {
         val pecaServico = PecaServico.criar(peca, BigDecimal("2"))
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Troca de óleo",
                 funcionario = funcionario,
                 cliente = cliente,
@@ -77,15 +76,15 @@ class ServicoTest {
                 pecas = listOf(pecaServico),
             )
 
-        assertEquals(ServicoStatus.EM_EXECUCAO, servico.status)
-        assertEquals(listOf(pecaServico), servico.pecas)
+        assertEquals(ServicoStatus.EM_EXECUCAO, ordemServico.status)
+        assertEquals(listOf(pecaServico), ordemServico.pecas)
     }
 
     @Test
     fun `deve rejeitar descricao em branco`() {
         val exception =
             assertThrows(IllegalArgumentException::class.java) {
-                Servico.criar(
+                OrdemServico.criar(
                     descricao = "",
                     funcionario = funcionario,
                     cliente = cliente,
@@ -98,24 +97,24 @@ class ServicoTest {
 
     @Test
     fun `deve adicionar peca preservando imutabilidade`() {
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Revisão",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
 
-        val comPeca = servico.adicionarPeca(peca, BigDecimal("3"))
+        val comPeca = ordemServico.adicionarPeca(peca, BigDecimal("3"))
 
-        assertTrue(servico.pecas.isEmpty())
+        assertTrue(ordemServico.pecas.isEmpty())
         assertEquals(listOf(PecaServico.criar(peca, BigDecimal("3"))), comPeca.pecas)
     }
 
     @Test
     fun `deve adicionar peca-servico diretamente preservando imutabilidade`() {
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Revisão",
                 funcionario = funcionario,
                 cliente = cliente,
@@ -123,34 +122,34 @@ class ServicoTest {
             )
         val pecaServico = PecaServico.criar(peca, BigDecimal("1.5"))
 
-        val comPeca = servico.adicionarPeca(pecaServico)
+        val comPeca = ordemServico.adicionarPeca(pecaServico)
 
-        assertTrue(servico.pecas.isEmpty())
+        assertTrue(ordemServico.pecas.isEmpty())
         assertEquals(listOf(pecaServico), comPeca.pecas)
     }
 
     @Test
     fun `deve alterar status preservando imutabilidade`() {
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Revisão",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
 
-        val finalizado = servico.alterarStatus(ServicoStatus.FINALIZADA)
+        val finalizado = ordemServico.alterarStatus(ServicoStatus.FINALIZADA)
 
-        assertEquals(ServicoStatus.RECEBIDA, servico.status)
+        assertEquals(ServicoStatus.RECEBIDA, ordemServico.status)
         assertEquals(ServicoStatus.FINALIZADA, finalizado.status)
     }
 
     @Test
     fun `deve registrar dataInicioExecucao ao transitar para EM_EXECUCAO`() {
         val agora = Instant.now()
-        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
+        val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val emExecucao = servico.alterarStatus(ServicoStatus.EM_EXECUCAO, agora)
+        val emExecucao = ordemServico.alterarStatus(ServicoStatus.EM_EXECUCAO, agora)
 
         assertEquals(agora, emExecucao.dataInicioExecucao)
         assertNull(emExecucao.dataFinalizacao)
@@ -159,9 +158,9 @@ class ServicoTest {
     @Test
     fun `deve registrar dataFinalizacao ao transitar para FINALIZADA`() {
         val agora = Instant.now()
-        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
+        val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val finalizado = servico.alterarStatus(ServicoStatus.FINALIZADA, agora)
+        val finalizado = ordemServico.alterarStatus(ServicoStatus.FINALIZADA, agora)
 
         assertEquals(agora, finalizado.dataFinalizacao)
         assertNull(finalizado.dataInicioExecucao)
@@ -170,12 +169,12 @@ class ServicoTest {
     @Test
     fun `deve preservar timestamps ao transitar para outros status`() {
         val inicio = Instant.now()
-        val servico =
-            Servico
+        val ordemServico =
+            OrdemServico
                 .criar("Revisão", funcionario, cliente, veiculo)
                 .alterarStatus(ServicoStatus.EM_EXECUCAO, inicio)
 
-        val entregue = servico.alterarStatus(ServicoStatus.ENTREGUE)
+        val entregue = ordemServico.alterarStatus(ServicoStatus.ENTREGUE)
 
         assertEquals(inicio, entregue.dataInicioExecucao)
         assertNull(entregue.dataFinalizacao)
@@ -184,13 +183,13 @@ class ServicoTest {
     @Test
     fun `criar deve registrar dataAbertura`() {
         val antes = Instant.now()
-        val servico = Servico.criar("Revisão", funcionario, cliente, veiculo)
+        val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
         val depois = Instant.now()
 
-        assertFalse(servico.dataAbertura.isBefore(antes))
-        assertFalse(servico.dataAbertura.isAfter(depois))
-        assertNull(servico.dataInicioExecucao)
-        assertNull(servico.dataFinalizacao)
+        assertFalse(ordemServico.dataAbertura.isBefore(antes))
+        assertFalse(ordemServico.dataAbertura.isAfter(depois))
+        assertNull(ordemServico.dataInicioExecucao)
+        assertNull(ordemServico.dataFinalizacao)
     }
 
     @Test
@@ -202,8 +201,8 @@ class ServicoTest {
                 nome = "Óleo",
                 precoDeVenda = BigDecimal("30.00"),
             )
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Revisão",
                 funcionario = funcionario,
                 cliente = cliente,
@@ -215,9 +214,9 @@ class ServicoTest {
                     ),
             )
 
-        val orcamento = servico.gerarOrcamento()
+        val orcamento = ordemServico.gerarOrcamento()
 
-        assertEquals(servico.id, orcamento.servicoId)
+        assertEquals(ordemServico.id, orcamento.servicoId)
         assertEquals(2, orcamento.itens.size)
         assertEquals(0, BigDecimal("65.0").compareTo(orcamento.valorTotal))
 
@@ -230,15 +229,15 @@ class ServicoTest {
 
     @Test
     fun `deve gerar orcamento zerado para servico sem pecas`() {
-        val servico =
-            Servico.criar(
+        val ordemServico =
+            OrdemServico.criar(
                 descricao = "Diagnóstico",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
 
-        val orcamento = servico.gerarOrcamento()
+        val orcamento = ordemServico.gerarOrcamento()
 
         assertTrue(orcamento.itens.isEmpty())
         assertEquals(0, BigDecimal.ZERO.compareTo(orcamento.valorTotal))

@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.presentation.mapper
 
 import br.com.fiap.oficina.application.service.TempoMedioExecucao
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import br.com.fiap.oficina.presentation.dto.ItemOrcamentoDto
 import br.com.fiap.oficina.presentation.dto.OrcamentoDto
@@ -12,31 +12,31 @@ import org.springframework.stereotype.Component
 
 @Component
 class ServicoMapper {
-    fun toResponse(servico: Servico): ServicoDto =
+    fun toResponse(ordemServico: OrdemServico): ServicoDto =
         ServicoDto(
-            id = servico.id.valor,
-            descricao = servico.descricao,
-            status = servico.status,
+            id = ordemServico.id.valor,
+            descricao = ordemServico.descricao,
+            status = ordemServico.status,
             funcionarioId =
-                servico.funcionario.id.valor
+                ordemServico.funcionario.id.valor
                     .toString(),
             clienteId =
-                servico.cliente.id.valor
+                ordemServico.cliente.id.valor
                     .toString(),
             veiculoId =
-                servico.veiculo.id.valor
+                ordemServico.veiculo.id.valor
                     .toString(),
             pecas =
-                servico.pecas.map {
+                ordemServico.pecas.map {
                     PecaServicoDto(
                         it.peca.id.valor
                             .toString(),
                         it.quantidade,
                     )
                 },
-            dataAbertura = servico.dataAbertura,
-            dataInicioExecucao = servico.dataInicioExecucao,
-            dataFinalizacao = servico.dataFinalizacao,
+            dataAbertura = ordemServico.dataAbertura,
+            dataInicioExecucao = ordemServico.dataInicioExecucao,
+            dataFinalizacao = ordemServico.dataFinalizacao,
         )
 
     fun toResponse(tempo: TempoMedioExecucao): TempoMedioExecucaoDto =

@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.PecaServicoJpaEntity
@@ -14,8 +14,8 @@ class ServicoPersistenceMapper(
     private val veiculoMapper: VeiculoPersistenceMapper,
     private val pecaMapper: PecaPersistenceMapper,
 ) {
-    fun toDomain(entity: ServicoJpaEntity): Servico =
-        Servico(
+    fun toDomain(entity: ServicoJpaEntity): OrdemServico =
+        OrdemServico(
             id = Id(entity.id),
             descricao = entity.descricao,
             status = entity.status ?: ServicoStatus.RECEBIDA,
@@ -31,7 +31,7 @@ class ServicoPersistenceMapper(
             dataFinalizacao = entity.dataFinalizacao,
         )
 
-    fun toJpa(domain: Servico): ServicoJpaEntity {
+    fun toJpa(domain: OrdemServico): ServicoJpaEntity {
         val entity =
             ServicoJpaEntity(
                 id = domain.id.valor,

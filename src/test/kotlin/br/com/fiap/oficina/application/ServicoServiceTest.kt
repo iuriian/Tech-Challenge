@@ -8,7 +8,7 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -108,7 +108,7 @@ class ServicoServiceTest {
                 PecaServico.criar(peca2, quantidade2),
             )
         val esperado =
-            Servico(
+            OrdemServico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
                 status = ServicoStatus.RECEBIDA,
@@ -178,27 +178,27 @@ class ServicoServiceTest {
 
     @Test
     fun `deve buscar servico por id com sucesso`() {
-        val servico =
-            Servico(
+        val ordemServico =
+            OrdemServico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
+        `when`(repository.buscarPorId(servicoId)).thenReturn(ordemServico)
 
         val resultado = service.listarPorId(servicoId)
 
         assertNotNull(resultado)
-        assertEquals(servico.id, resultado?.id)
+        assertEquals(ordemServico.id, resultado?.id)
         verify(repository, times(1)).buscarPorId(servicoId)
     }
 
     @Test
     fun `deve obter orcamento totalizando valor das pecas`() {
-        val servico =
-            Servico(
+        val ordemServico =
+            OrdemServico(
                 id = servicoId,
                 descricao = "Troca de Óleo",
                 funcionario = funcionario,
@@ -210,7 +210,7 @@ class ServicoServiceTest {
                         PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
                     ),
             )
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
+        `when`(repository.buscarPorId(servicoId)).thenReturn(ordemServico)
 
         val orcamento = service.obterOrcamento(servicoId)
 
@@ -267,7 +267,7 @@ class ServicoServiceTest {
     ) {
         val atual = servicoComStatus(de)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
+        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<OrdemServico>(0) }
 
         val resultado = service.avancarStatus(servicoId)
 
@@ -302,7 +302,7 @@ class ServicoServiceTest {
     fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: ServicoStatus) {
         val atual = servicoComStatus(ServicoStatus.AGUARDANDO_APROVACAO)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
+        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<OrdemServico>(0) }
 
         val resultado = service.alterarStatus(servicoId, alvo)
 
@@ -406,8 +406,8 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun servicoComStatus(status: ServicoStatus): Servico =
-        Servico(
+    private fun servicoComStatus(status: ServicoStatus): OrdemServico =
+        OrdemServico(
             id = servicoId,
             descricao = "Troca de Óleo",
             status = status,

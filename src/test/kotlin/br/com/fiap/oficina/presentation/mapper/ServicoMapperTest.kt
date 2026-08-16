@@ -4,7 +4,7 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
@@ -27,8 +27,8 @@ class ServicoMapperTest {
         val funcionario = Funcionario(Id.generate(), "Funcionario", Cargo.MECANICO)
         val peca = Peca(Id.generate(), "PEC001", "Filtro", precoDeVenda = BigDecimal.TEN)
         val pecaServico = PecaServico.criar(peca, BigDecimal("2"))
-        val servico =
-            Servico(
+        val ordemServico =
+            OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
                 status = ServicoStatus.EM_EXECUCAO,
@@ -38,9 +38,9 @@ class ServicoMapperTest {
                 pecas = listOf(pecaServico),
             )
 
-        val dto = mapper.toResponse(servico)
+        val dto = mapper.toResponse(ordemServico)
 
-        assertEquals(servico.id.valor, dto.id)
+        assertEquals(ordemServico.id.valor, dto.id)
         assertEquals("Troca de óleo", dto.descricao)
         assertEquals(ServicoStatus.EM_EXECUCAO, dto.status)
         assertEquals(funcionario.id.valor.toString(), dto.funcionarioId)
