@@ -50,15 +50,55 @@ data class OrdemServico(
         quantidade: BigDecimal,
     ): OrdemServico = adicionarPeca(PecaServico.criar(peca, quantidade))
 
+
+    /**
+     * Avança a ordem de serviço pelo fluxo principal.
+     *
+     * O cancelamento não faz parte do avanço automático e
+     * deve ser realizado explicitamente por
+     * alterarStatus(CANCELADA).
+     */
+    fun avancarStatus(
+        agora: Instant = Instant.now(),
+    ): OrdemServico {
+        val proximoStatus =
+            status.proximoStatus() ?: error(
+                "Ordem de serviço no status `$status` é " +
+                        "um estado final e não pode ser alterada."
+            )
+
+        return alterarStatus(proximoStatus, agora)
+    }
+
+    /**
+     * Altera o status garantindo que
+     * a transição seja permitida pelo domínio.
+     */
     fun alterarStatus(
         novoStatus: OrdemServicoStatus,
         agora: Instant = Instant.now(),
-    ): OrdemServico =
-        when (novoStatus) {
-            OrdemServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
-            OrdemServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
+    ): OrdemServico {
+        val permitidas = status.transicoesPermitidas()
+
+        check(novoStatus in permitidas) {
+            "Transição inválida de '$status' para '$novoStatus'. " +
+                    "Transições permitidas a partir de '$status': $permitidas."
+        }
+
+        return when (novoStatus) {
+            OrdemServicoStatus.EM_EXECUCAO -> copy(
+                status = novoStatus,
+                dataInicioExecucao = agora,
+            )
+
+            OrdemServicoStatus.FINALIZADA -> copy(
+                status = novoStatus,
+                dataFinalizacao = agora,
+            )
+
             else -> copy(status = novoStatus)
         }
+    }
 
     /**
      * Gera o orçamento da ordem de serviço

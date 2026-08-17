@@ -123,24 +123,18 @@ class ServicoService(
     }
 
     /**
-     * Dá andamento à ordem de serviço, movendo-a para o próximo status na
-     * ordem de declaração do enum [OrdemServicoStatus]. A partir de
-     * [OrdemServicoStatus.AGUARDANDO_APROVACAO] o andamento segue para
-     * [OrdemServicoStatus.EM_EXECUCAO]; para cancelar, use [alterarStatus].
+     * Avança a ordem de serviço pelo fluxo definido no domínio
      */
     @Transactional
     fun avancarStatus(id: Id): OrdemServico {
         val servico = buscarObrigatorio(id)
-        val proximo =
-            proximoNaOrdem(servico.status)
-                ?: error("Serviço no status '${servico.status}' é um estado final e não pode avançar.")
 
-        return repository.salvar(servico.alterarStatus(proximo))
+        return repository.salvar(servico.avancarStatus())
     }
 
     /**
      * Transição de status guardada pela máquina de estados. Só permite mudar
-     * para um status alcançável a partir do atual (ver [transicoesPermitidas]).
+     * para um status alcançável a partir do atual.
      */
     @Transactional
     fun alterarStatus(
@@ -148,13 +142,10 @@ class ServicoService(
         novoStatus: OrdemServicoStatus,
     ): OrdemServico {
         val servico = buscarObrigatorio(id)
-        val permitidas = transicoesPermitidas(servico.status)
-        check(novoStatus in permitidas) {
-            "Transição inválida de '${servico.status}' para '$novoStatus'. " +
-                "Transições permitidas a partir de '${servico.status}': $permitidas."
-        }
 
-        return repository.salvar(servico.alterarStatus(novoStatus))
+        return repository.salvar(
+            servico.alterarStatus(novoStatus)
+        )
     }
 
     fun calcularTempoMedioExecucao(): TempoMedioExecucao {
@@ -176,31 +167,4 @@ class ServicoService(
         repository.buscarPorId(id)
             ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
 
-    /**
-     * Define a máquina de estados: a partir de cada status, o fluxo segue para
-     * o próximo na ordem de declaração do enum. A única ramificação ocorre em
-     * [OrdemServicoStatus.AGUARDANDO_APROVACAO], de onde pode ir para
-     * [OrdemServicoStatus.EM_EXECUCAO] ou [OrdemServicoStatus.CANCELADA].
-     */
-    private fun transicoesPermitidas(atual: OrdemServicoStatus): Set<OrdemServicoStatus> =
-        when (atual) {
-            OrdemServicoStatus.AGUARDANDO_APROVACAO -> {
-                setOf(OrdemServicoStatus.EM_EXECUCAO, OrdemServicoStatus.CANCELADA)
-            }
-
-            else -> {
-                setOfNotNull(proximoNaOrdem(atual))
-            }
-        }
-
-    /**
-     * Próximo status no fluxo linear (ordem de declaração do enum). Retorna
-     * null para os estados finais ([OrdemServicoStatus.ENTREGUE] e
-     * [OrdemServicoStatus.CANCELADA]); CANCELADA é ignorada por não fazer parte do
-     * fluxo linear, sendo alcançável apenas a partir de AGUARDANDO_APROVACAO.
-     */
-    private fun proximoNaOrdem(atual: OrdemServicoStatus): OrdemServicoStatus? =
-        OrdemServicoStatus.entries
-            .getOrNull(atual.ordinal + 1)
-            ?.takeIf { it != OrdemServicoStatus.CANCELADA }
 }

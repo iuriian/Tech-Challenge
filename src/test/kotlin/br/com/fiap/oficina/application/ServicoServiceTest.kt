@@ -261,7 +261,7 @@ class ServicoServiceTest {
         "EM_EXECUCAO, FINALIZADA",
         "FINALIZADA, ENTREGUE",
     )
-    fun `avancarStatus deve seguir a ordem de declaracao do enum`(
+    fun `avancarStatus deve seguir o fluxo principal definido pelo dominio`(
         de: OrdemServicoStatus,
         esperado: OrdemServicoStatus,
     ) {
