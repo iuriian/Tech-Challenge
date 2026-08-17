@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.repository.VeiculoRepository
+import br.com.fiap.oficina.application.port.out.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.VeiculoJpaRepository
