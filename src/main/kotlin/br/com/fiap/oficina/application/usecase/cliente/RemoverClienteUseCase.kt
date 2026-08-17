@@ -1,11 +1,11 @@
 package br.com.fiap.oficina.application.usecase.cliente
 import br.com.fiap.oficina.application.port.out.ClienteRepository
-import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class CriarClienteUseCase(
+class RemoverClienteUseCase(
     private val clienteRepository: ClienteRepository
 ) {
-    fun executar(cliente: Cliente): Cliente = clienteRepository.salvar(cliente)
+    fun executar(id: Id) = clienteRepository.remover(id)
 }

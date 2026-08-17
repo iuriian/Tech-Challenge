@@ -4,8 +4,8 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import org.springframework.stereotype.Service
 
 @Service
-class CriarClienteUseCase(
+class BuscarClientePorNomeUseCase(
     private val clienteRepository: ClienteRepository
 ) {
-    fun executar(cliente: Cliente): Cliente = clienteRepository.salvar(cliente)
+    fun executar(nome: String): Cliente? = clienteRepository.buscarPorNome(nome)
 }
