@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.repository.FuncionarioRepository
+import br.com.fiap.oficina.application.port.out.FuncionarioRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toDomain
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toEntity
