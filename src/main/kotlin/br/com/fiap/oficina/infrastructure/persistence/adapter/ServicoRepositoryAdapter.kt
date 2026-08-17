@@ -1,11 +1,13 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.OrdemServico
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoJpaRepository
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 @Component
 class ServicoRepositoryAdapter(
@@ -22,8 +24,22 @@ class ServicoRepositoryAdapter(
     override fun listarTodos(): List<OrdemServico> =
         jpaRepository.findAll().map(mapper::toDomain)
 
+    override fun listarPorStatus(status: OrdemServicoStatus): List<OrdemServico> =
+        jpaRepository.findByStatus(status).map(mapper::toDomain)
+
     override fun listarPorCliente(clienteId: Id): List<OrdemServico> =
         jpaRepository.findByClienteId(clienteId.valor).map(mapper::toDomain)
+
+    override fun listarPorVeiculo(veiculoId: Id): List<OrdemServico> =
+        jpaRepository.findByVeiculo_IdVeiculo(veiculoId.valor).map(mapper::toDomain)
+
+    override fun listarPorDataAberturaEntre(
+        inicio: Instant,
+        fim: Instant
+    ): List<OrdemServico> =
+        jpaRepository
+            .findByDataAberturaBetween(inicio, fim)
+            .map(mapper::toDomain)
 
     override fun existePorId(id: Id): Boolean =
         jpaRepository.existsById(id.valor)

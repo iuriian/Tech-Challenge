@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import java.time.Instant
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -95,6 +96,66 @@ class ServicoRepositoryAdapterTest {
         `when`(jpaRepository.findAll()).thenReturn(listOf(jpa))
 
         assertEquals(listOf(ordemServico), adapter.listarTodos())
+    }
+
+    @Test
+    fun `listarPorStatus deve filtrar e mapear lista`() {
+        val status = OrdemServicoStatus.RECEBIDA
+        `when`(jpaRepository.findByStatus(status)).thenReturn(listOf(jpa))
+
+        val resultado = adapter.listarPorStatus(status)
+
+        assertEquals(listOf(ordemServico), resultado)
+        verify(jpaRepository).findByStatus(status)
+    }
+
+    @Test
+    fun `listarPorCliente deve filtrar e mapear lista`() {
+        val clienteId = ordemServico.cliente.id
+        `when`(
+            jpaRepository
+                .findByClienteId(clienteId.valor)
+        )
+            .thenReturn(listOf(jpa))
+
+        val resultado = adapter.listarPorCliente(clienteId)
+
+        assertEquals(listOf(ordemServico), resultado)
+        verify(jpaRepository).findByClienteId(clienteId.valor)
+    }
+
+
+    @Test
+    fun `listarPorVeiculo deve filtrar e mapear lista`() {
+        val veiculoId = ordemServico.veiculo.id
+        `when`(
+            jpaRepository
+                .findByVeiculo_IdVeiculo(veiculoId.valor)
+        )
+            .thenReturn(listOf(jpa))
+
+        val resultado = adapter.listarPorVeiculo(veiculoId)
+
+        assertEquals(listOf(ordemServico), resultado)
+        verify(jpaRepository).findByVeiculo_IdVeiculo(veiculoId.valor)
+    }
+
+    @Test
+    fun `listarPorDataAberturaEntre deve filtrar e mapear lista`() {
+        val inicio = Instant.parse("2026-08-16T20:00:00Z")
+        val fim = Instant.parse("2026-08-16T23:59:59Z")
+        `when`(
+            jpaRepository
+                .findByDataAberturaBetween(inicio, fim)
+        )
+            .thenReturn(
+                listOf(jpa)
+            )
+
+        val resultado = adapter.listarPorDataAberturaEntre(inicio, fim)
+
+        assertEquals(listOf(ordemServico), resultado)
+        verify(jpaRepository).findByDataAberturaBetween(inicio, fim)
     }
 
     @Test
