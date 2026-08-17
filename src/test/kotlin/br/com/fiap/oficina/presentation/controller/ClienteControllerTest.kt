@@ -1,7 +1,12 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.service.ClienteService
+import br.com.fiap.oficina.application.usecase.cliente.AtualizarClienteUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorDocumentoUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorIdUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorNomeUseCase
 import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
+import br.com.fiap.oficina.application.usecase.cliente.ListarClientesUseCase
+import br.com.fiap.oficina.application.usecase.cliente.RemoverClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -23,13 +28,28 @@ class ClienteControllerTest {
     lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    lateinit var service: ClienteService
-
-    @MockitoBean
     lateinit var mapper: ClienteMapper
 
     @MockitoBean
     lateinit var criarClienteUseCase: CriarClienteUseCase
+
+    @MockitoBean
+    lateinit var buscarClientePorIdUseCase: BuscarClientePorIdUseCase
+
+    @MockitoBean
+    lateinit var buscarClientePorNomeUseCase: BuscarClientePorNomeUseCase
+
+    @MockitoBean
+    lateinit var buscarClientePorDocumentoUseCase: BuscarClientePorDocumentoUseCase
+
+    @MockitoBean
+    lateinit var listarClientesUseCase: ListarClientesUseCase
+
+    @MockitoBean
+    lateinit var atualizarClienteUseCase: AtualizarClienteUseCase
+
+    @MockitoBean
+    lateinit var removerClienteUseCase: RemoverClienteUseCase
 
     @Test
     @WithMockUser
@@ -43,7 +63,7 @@ class ClienteControllerTest {
                 email = "joao.silva@example.com",
             )
 
-        `when`(service.buscarPorId(Id.fromString(id.toString()))).thenReturn(cliente)
+        `when`(buscarClientePorIdUseCase.executar(Id.fromString(id.toString()))).thenReturn(cliente)
 
         mockMvc
             .perform(get("/clientes/$id"))

@@ -1,8 +1,13 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.service.ClienteService
+import br.com.fiap.oficina.application.usecase.cliente.AtualizarClienteUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorDocumentoUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorIdUseCase
+import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorNomeUseCase
 import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
+import br.com.fiap.oficina.application.usecase.cliente.ListarClientesUseCase
+import br.com.fiap.oficina.application.usecase.cliente.RemoverClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -14,9 +19,24 @@ import org.mockito.Mockito.*
 import java.util.UUID
 
 class ClienteControllerUnitTest {
-    private val service = mock(ClienteService::class.java)
     private val criarClienteUseCase = mock(CriarClienteUseCase::class.java)
-    private val controller = ClienteController(service, ClienteMapper(), criarClienteUseCase)
+    private val buscarClientePorIdUseCase = mock(BuscarClientePorIdUseCase::class.java)
+    private val buscarClientePorNomeUseCase = mock(BuscarClientePorNomeUseCase::class.java)
+    private val buscarClientePorDocumentoUseCase = mock(BuscarClientePorDocumentoUseCase::class.java)
+    private val listarClientesUseCase = mock(ListarClientesUseCase::class.java)
+    private val atualizarClienteUseCase = mock(AtualizarClienteUseCase::class.java)
+    private val removerClienteUseCase = mock(RemoverClienteUseCase::class.java)
+    private val controller =
+        ClienteController(
+            criarClienteUseCase,
+            buscarClientePorIdUseCase,
+            buscarClientePorNomeUseCase,
+            buscarClientePorDocumentoUseCase,
+            listarClientesUseCase,
+            atualizarClienteUseCase,
+            removerClienteUseCase,
+            ClienteMapper(),
+        )
 
     private val cliente =
         Cliente(
@@ -46,7 +66,7 @@ class ClienteControllerUnitTest {
 
     @Test
     fun `alterar deve retornar dto do cliente atualizado`() {
-        `when`(service.salvarCliente(anyObject())).thenReturn(cliente)
+        `when`(atualizarClienteUseCase.executar(anyObject())).thenReturn(cliente)
 
         val dto = controller.alterar("00000000-0000-0000-0000-000000000001", clienteDto())
 
@@ -54,24 +74,24 @@ class ClienteControllerUnitTest {
     }
 
     @Test
-    fun `remover deve delegar ao service`() {
+    fun `remover deve delegar ao use case`() {
         val id = UUID.randomUUID()
 
         controller.remover(id.toString())
 
-        verify(service).removerCliente(Id.fromString(id.toString()))
+        verify(removerClienteUseCase).executar(Id.fromString(id.toString()))
     }
 
     @Test
     fun `buscarPorNome deve mapear resultado`() {
-        `when`(service.buscarPorNome("João Silva")).thenReturn(cliente)
+        `when`(buscarClientePorNomeUseCase.executar("João Silva")).thenReturn(cliente)
 
         assertEquals("João Silva", controller.buscarPorNome("João Silva")?.nome)
     }
 
     @Test
     fun `buscarPorCpf deve mapear resultado`() {
-        `when`(service.buscarPorDocumento("39053344705")).thenReturn(cliente)
+        `when`(buscarClientePorDocumentoUseCase.executar("39053344705")).thenReturn(cliente)
 
         assertEquals("João Silva", controller.buscarPorCpf("39053344705")?.nome)
     }
