@@ -1,7 +1,15 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.service.PecaService
+import br.com.fiap.oficina.application.usecase.peca.AtualizarPecaUseCase
+import br.com.fiap.oficina.application.usecase.peca.BuscarPecaPorCodigoUseCase
+import br.com.fiap.oficina.application.usecase.peca.BuscarPecaPorNomeUseCase
+import br.com.fiap.oficina.application.usecase.peca.CriarPecaUseCase
+import br.com.fiap.oficina.application.usecase.peca.DeletarPecaUseCase
+import br.com.fiap.oficina.application.usecase.peca.ListarPecasUseCase
+import br.com.fiap.oficina.application.usecase.peca.ReativarPecaUseCase
+import br.com.fiap.oficina.application.usecase.peca.ReporPecasUseCase
+import br.com.fiap.oficina.application.usecase.peca.RetirarPecasUseCase
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
@@ -15,8 +23,28 @@ import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 
 class PecaControllerUnitTest {
-    private val service = mock(PecaService::class.java)
-    private val controller = PecaController(service, PecaMapper())
+    private val criarPecaUseCase = mock(CriarPecaUseCase::class.java)
+    private val atualizarPecaUseCase = mock(AtualizarPecaUseCase::class.java)
+    private val retirarPecasUseCase = mock(RetirarPecasUseCase::class.java)
+    private val reporPecasUseCase = mock(ReporPecasUseCase::class.java)
+    private val reativarPecaUseCase = mock(ReativarPecaUseCase::class.java)
+    private val deletarPecaUseCase = mock(DeletarPecaUseCase::class.java)
+    private val listarPecasUseCase = mock(ListarPecasUseCase::class.java)
+    private val buscarPecaPorCodigoUseCase = mock(BuscarPecaPorCodigoUseCase::class.java)
+    private val buscarPecaPorNomeUseCase = mock(BuscarPecaPorNomeUseCase::class.java)
+    private val controller =
+        PecaController(
+            criarPecaUseCase,
+            atualizarPecaUseCase,
+            retirarPecasUseCase,
+            reporPecasUseCase,
+            reativarPecaUseCase,
+            deletarPecaUseCase,
+            listarPecasUseCase,
+            buscarPecaPorCodigoUseCase,
+            buscarPecaPorNomeUseCase,
+            PecaMapper(),
+        )
 
     private val peca =
         Peca(
@@ -37,7 +65,7 @@ class PecaControllerUnitTest {
 
     @Test
     fun `criar deve retornar dto da peca salva`() {
-        `when`(service.salvarPeca(anyObject())).thenReturn(peca)
+        `when`(criarPecaUseCase.executar(anyObject())).thenReturn(peca)
 
         val dto = controller.criar(pecaDto())
 
@@ -47,7 +75,7 @@ class PecaControllerUnitTest {
 
     @Test
     fun `criar deve traduzir conflito em 409`() {
-        `when`(service.salvarPeca(anyObject())).thenThrow(IllegalArgumentException("Peça já cadastrada"))
+        `when`(criarPecaUseCase.executar(anyObject())).thenThrow(IllegalArgumentException("Peça já cadastrada"))
 
         val exception =
             assertThrows(ResponseStatusException::class.java) {
@@ -59,7 +87,7 @@ class PecaControllerUnitTest {
 
     @Test
     fun `atualizar deve retornar dto atualizado`() {
-        `when`(service.atualizarPeca(anyObject(), anyObject())).thenReturn(peca)
+        `when`(atualizarPecaUseCase.executar(anyObject(), anyObject())).thenReturn(peca)
 
         val dto =
             controller.atualizar(
@@ -72,14 +100,14 @@ class PecaControllerUnitTest {
 
     @Test
     fun `retirarPecas deve retornar dto`() {
-        `when`(service.retirarPecas("PEC001", 3)).thenReturn(peca)
+        `when`(retirarPecasUseCase.executar("PEC001", 3)).thenReturn(peca)
 
         assertNotNull(controller.retirarPecas("PEC001", 3))
     }
 
     @Test
     fun `retirarPecas deve traduzir erro em 400`() {
-        `when`(service.retirarPecas("PEC001", 99))
+        `when`(retirarPecasUseCase.executar("PEC001", 99))
             .thenThrow(IllegalArgumentException("Quantidade em estoque insuficiente"))
 
         val exception =
@@ -92,14 +120,14 @@ class PecaControllerUnitTest {
 
     @Test
     fun `reporPecas deve retornar dto`() {
-        `when`(service.reporPecas("PEC001", 5)).thenReturn(peca)
+        `when`(reporPecasUseCase.executar("PEC001", 5)).thenReturn(peca)
 
         assertNotNull(controller.reporPecas("PEC001", 5))
     }
 
     @Test
     fun `reporPecas deve traduzir erro em 400`() {
-        `when`(service.reporPecas("PEC001", -1))
+        `when`(reporPecasUseCase.executar("PEC001", -1))
             .thenThrow(IllegalArgumentException("Quantidade para reposição deve ser maior que zero"))
 
         val exception =
@@ -111,36 +139,36 @@ class PecaControllerUnitTest {
     }
 
     @Test
-    fun `reativar deve delegar ao service`() {
-        `when`(service.reativarPeca("PEC001")).thenReturn(true)
+    fun `reativar deve delegar ao use case`() {
+        `when`(reativarPecaUseCase.executar("PEC001")).thenReturn(true)
 
         assertTrue(controller.reativar("PEC001"))
     }
 
     @Test
-    fun `deletar deve delegar ao service`() {
-        `when`(service.deletarPeca("PEC001")).thenReturn(true)
+    fun `deletar deve delegar ao use case`() {
+        `when`(deletarPecaUseCase.executar("PEC001")).thenReturn(true)
 
         assertTrue(controller.deletar("PEC001"))
     }
 
     @Test
     fun `listar deve mapear todas as pecas`() {
-        `when`(service.listarPecas()).thenReturn(listOf(peca))
+        `when`(listarPecasUseCase.executar()).thenReturn(listOf(peca))
 
         assertEquals(1, controller.listar().size)
     }
 
     @Test
     fun `buscarPorCodigo deve mapear resultado`() {
-        `when`(service.buscarPorCodigo("PEC001")).thenReturn(peca)
+        `when`(buscarPecaPorCodigoUseCase.executar("PEC001")).thenReturn(peca)
 
         assertEquals("PEC001", controller.buscarPorCodigo("PEC001")?.codigo)
     }
 
     @Test
     fun `buscarPorNome deve mapear resultado`() {
-        `when`(service.buscarPorNome("Filtro de Óleo")).thenReturn(peca)
+        `when`(buscarPecaPorNomeUseCase.executar("Filtro de Óleo")).thenReturn(peca)
 
         assertEquals("PEC001", controller.buscarPorNome("Filtro de Óleo")?.codigo)
     }
