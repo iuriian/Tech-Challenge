@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.application.port.out.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.PecaJpaRepository
