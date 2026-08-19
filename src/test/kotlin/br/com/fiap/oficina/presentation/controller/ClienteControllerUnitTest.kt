@@ -26,13 +26,12 @@ class ClienteControllerUnitTest {
             email = "joao@example.com",
         )
 
-    private fun clienteDto() =
-        ClienteDto(
-            nome = "João Silva",
-            numeroDocumento = "39053344705",
-            tipoPessoa = "PESSOA_FISICA",
-            email = "joao@example.com",
-        )
+    private fun clienteDto() = ClienteDto(
+        nome = "João Silva",
+        numeroDocumento = "39053344705",
+        tipoPessoa = "PESSOA_FISICA",
+        email = "joao@example.com",
+    )
 
     @Test
     fun `criar deve retornar dto do cliente salvo`() {

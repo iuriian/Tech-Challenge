@@ -144,10 +144,10 @@ class ServicoServiceTest {
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
-                        listOf(
-                            PecaServicoComando(pecaId1, quantidade1),
-                            PecaServicoComando(pecaId2, quantidade2),
-                        ),
+                    listOf(
+                        PecaServicoComando(pecaId1, quantidade1),
+                        PecaServicoComando(pecaId2, quantidade2),
+                    ),
                 ),
             )
 
@@ -172,10 +172,10 @@ class ServicoServiceTest {
                         clienteId = clienteId,
                         veiculoId = veiculoId,
                         pecas =
-                            listOf(
-                                PecaServicoComando(pecaId1, BigDecimal("2")),
-                                PecaServicoComando(pecaId2, BigDecimal("3")),
-                            ),
+                        listOf(
+                            PecaServicoComando(pecaId1, BigDecimal("2")),
+                            PecaServicoComando(pecaId2, BigDecimal("3")),
+                        ),
                     ),
                 )
             }
@@ -213,10 +213,10 @@ class ServicoServiceTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                    listOf(
-                        PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
-                        PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
-                    ),
+                listOf(
+                    PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
+                    PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
+                ),
             )
         `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
@@ -269,10 +269,7 @@ class ServicoServiceTest {
         "EM_EXECUCAO, FINALIZADA",
         "FINALIZADA, ENTREGUE",
     )
-    fun `avancarStatus deve seguir a ordem de declaracao do enum`(
-        de: ServicoStatus,
-        esperado: ServicoStatus,
-    ) {
+    fun `avancarStatus deve seguir a ordem de declaracao do enum`(de: ServicoStatus, esperado: ServicoStatus) {
         val atual = servicoComStatus(de)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
         `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
@@ -325,10 +322,7 @@ class ServicoServiceTest {
         "EM_EXECUCAO, CANCELADA",
         "ENTREGUE, CANCELADA",
     )
-    fun `alterarStatus deve rejeitar transicoes invalidas`(
-        de: ServicoStatus,
-        alvo: ServicoStatus,
-    ) {
+    fun `alterarStatus deve rejeitar transicoes invalidas`(de: ServicoStatus, alvo: ServicoStatus) {
         `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
 
         assertThrows(IllegalStateException::class.java) {
@@ -414,24 +408,19 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun servicoComStatus(status: ServicoStatus): Servico =
-        Servico(
-            id = servicoId,
-            descricao = "Troca de Óleo",
-            status = status,
-            funcionario = funcionario,
-            cliente = cliente,
-            veiculo = veiculo,
-        )
+    private fun servicoComStatus(status: ServicoStatus): Servico = Servico(
+        id = servicoId,
+        descricao = "Troca de Óleo",
+        status = status,
+        funcionario = funcionario,
+        cliente = cliente,
+        veiculo = veiculo,
+    )
 
-    private fun criarPeca(
-        id: Id,
-        codigo: String,
-    ): Peca =
-        Peca(
-            id = id,
-            codigo = codigo,
-            nome = "Peça Teste",
-            precoDeVenda = BigDecimal.TEN,
-        )
+    private fun criarPeca(id: Id, codigo: String): Peca = Peca(
+        id = id,
+        codigo = codigo,
+        nome = "Peça Teste",
+        precoDeVenda = BigDecimal.TEN,
+    )
 }

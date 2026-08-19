@@ -7,15 +7,14 @@ import org.springframework.security.oauth2.jwt.Jwt
 import java.util.stream.Stream
 
 class KeycloakJwtRoleConverter : Converter<Jwt, MutableCollection<GrantedAuthority>> {
-    override fun convert(jwt: Jwt): MutableCollection<GrantedAuthority> =
-        Stream
-            .concat(
-                extractRealmRoles(jwt).stream(),
-                extractClientRoles(jwt).stream(),
-            ).distinct()
-            .map { SimpleGrantedAuthority("ROLE_$it") }
-            .map { GrantedAuthority::class.java.cast(it) }
-            .toList()
+    override fun convert(jwt: Jwt): MutableCollection<GrantedAuthority> = Stream
+        .concat(
+            extractRealmRoles(jwt).stream(),
+            extractClientRoles(jwt).stream(),
+        ).distinct()
+        .map { SimpleGrantedAuthority("ROLE_$it") }
+        .map { GrantedAuthority::class.java.cast(it) }
+        .toList()
 
     private fun extractRealmRoles(jwt: Jwt): MutableList<String> {
         val realmAccess: Map<String?, Any> = jwt.getClaimAsMap("realm_access") ?: return mutableListOf()

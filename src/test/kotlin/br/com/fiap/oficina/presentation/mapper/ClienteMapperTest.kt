@@ -23,18 +23,18 @@ class ClienteMapperTest {
                 documento = Documento.cpf("39053344705"),
                 email = "joao.silva@example.com",
                 endereco =
-                    Endereco.criar(
-                        logradouro = "Rua A",
-                        numero = "100",
-                        bairro = "Centro",
-                        cidade = "São Paulo",
-                        estado = "SP",
-                        cep = "01000-000",
-                    ),
+                Endereco.criar(
+                    logradouro = "Rua A",
+                    numero = "100",
+                    bairro = "Centro",
+                    cidade = "São Paulo",
+                    estado = "SP",
+                    cep = "01000-000",
+                ),
                 contatos =
-                    listOf(
-                        Contato.criar(tipo = "Pessoal", nome = "Contato 1", telefone = "123456789"),
-                    ),
+                listOf(
+                    Contato.criar(tipo = "Pessoal", nome = "Contato 1", telefone = "123456789"),
+                ),
             )
 
         val response = mapper.toResponse(cliente)

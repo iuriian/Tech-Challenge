@@ -1,9 +1,6 @@
 package br.com.fiap.oficina.domain.valueobject
 
-class Documento(
-    val numero: String,
-    val tipoPessoa: TipoPessoa,
-) {
+class Documento(val numero: String, val tipoPessoa: TipoPessoa) {
     fun isFormatoValido(): Boolean = this.tipoPessoa.valida(this)
 
     fun getNumeroFormatado(): String = this.tipoPessoa.formata(numero)

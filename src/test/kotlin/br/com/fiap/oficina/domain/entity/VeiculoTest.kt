@@ -8,13 +8,12 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class VeiculoTest {
-    private fun motorista(): Cliente =
-        Cliente(
-            id = Id.generate(),
-            nome = "Dono",
-            documento = Documento.cpf("39053344705"),
-            email = "dono@example.com",
-        )
+    private fun motorista(): Cliente = Cliente(
+        id = Id.generate(),
+        nome = "Dono",
+        documento = Documento.cpf("39053344705"),
+        email = "dono@example.com",
+    )
 
     @Test
     fun `deve criar um veiculo valido`() {

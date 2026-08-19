@@ -45,20 +45,13 @@ data class Servico(
 
     fun adicionarPeca(pecaServico: PecaServico): Servico = copy(pecas = pecas + pecaServico)
 
-    fun adicionarPeca(
-        peca: Peca,
-        quantidade: BigDecimal,
-    ): Servico = adicionarPeca(PecaServico.criar(peca, quantidade))
+    fun adicionarPeca(peca: Peca, quantidade: BigDecimal): Servico = adicionarPeca(PecaServico.criar(peca, quantidade))
 
-    fun alterarStatus(
-        novoStatus: ServicoStatus,
-        agora: Instant = Instant.now(),
-    ): Servico =
-        when (novoStatus) {
-            ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
-            ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
-            else -> copy(status = novoStatus)
-        }
+    fun alterarStatus(novoStatus: ServicoStatus, agora: Instant = Instant.now()): Servico = when (novoStatus) {
+        ServicoStatus.EM_EXECUCAO -> copy(status = novoStatus, dataInicioExecucao = agora)
+        ServicoStatus.FINALIZADA -> copy(status = novoStatus, dataFinalizacao = agora)
+        else -> copy(status = novoStatus)
+    }
 
     /**
      * Gera o orçamento do serviço, discriminando cada peça consumida e

@@ -40,18 +40,16 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
 
     private fun pecaId(): UUID = pecaRepository.buscarAtivoPorCodigo("PEC001")!!.id.valor
 
-    private fun servicoJson(
-        descricao: String = "Revisão completa",
-        quantidadePeca: BigDecimal = BigDecimal("2"),
-    ) = objectMapper.writeValueAsString(
-        ServicoDto(
-            descricao = descricao,
-            funcionarioId = "3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3",
-            clienteId = clienteId().toString(),
-            veiculoId = veiculoId().toString(),
-            pecas = listOf(PecaServicoDto(pecaId = pecaId().toString(), quantidade = quantidadePeca)),
-        ),
-    )
+    private fun servicoJson(descricao: String = "Revisão completa", quantidadePeca: BigDecimal = BigDecimal("2")) =
+        objectMapper.writeValueAsString(
+            ServicoDto(
+                descricao = descricao,
+                funcionarioId = "3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3",
+                clienteId = clienteId().toString(),
+                veiculoId = veiculoId().toString(),
+                pecas = listOf(PecaServicoDto(pecaId = pecaId().toString(), quantidade = quantidadePeca)),
+            ),
+        )
 
     private fun criarServico(): ServicoDto {
         val response =

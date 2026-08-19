@@ -21,12 +21,12 @@ class VeiculoPersistenceMapperTest {
                 ano = "2020",
                 placa = "ABC1D23",
                 motorista =
-                    Cliente(
-                        id = Id.generate(),
-                        nome = "Dono",
-                        documento = Documento.cpf("39053344705"),
-                        email = "dono@example.com",
-                    ),
+                Cliente(
+                    id = Id.generate(),
+                    nome = "Dono",
+                    documento = Documento.cpf("39053344705"),
+                    email = "dono@example.com",
+                ),
             )
 
         val jpa = mapper.toJpa(veiculo)

@@ -16,8 +16,4 @@ data class ItemOrcamento(
  * Orçamento de um serviço: discrimina cada peça consumida e totaliza o valor
  * das peças (preço de venda × quantidade).
  */
-data class Orcamento(
-    val servicoId: Id,
-    val itens: List<ItemOrcamento>,
-    val valorTotal: BigDecimal,
-)
+data class Orcamento(val servicoId: Id, val itens: List<ItemOrcamento>, val valorTotal: BigDecimal)

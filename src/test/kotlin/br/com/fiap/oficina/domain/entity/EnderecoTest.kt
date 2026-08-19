@@ -74,20 +74,39 @@ class EnderecoTest {
                 "cep" to "01001-000",
             )
 
-        fun criar(campoVazio: String) =
-            Endereco.criar(
-                logradouro = "Rua A",
-                numero = if (campoVazio == "numero") "" else base["numero"]!!,
-                bairro = if (campoVazio == "bairro") "" else base["bairro"]!!,
-                cidade = if (campoVazio == "cidade") "" else base["cidade"]!!,
-                estado = if (campoVazio == "estado") "" else base["estado"]!!,
-                cep = if (campoVazio == "cep") "" else base["cep"]!!,
-            )
+        fun criar(campoVazio: String) = Endereco.criar(
+            logradouro = "Rua A",
+            numero = if (campoVazio == "numero") "" else base["numero"]!!,
+            bairro = if (campoVazio == "bairro") "" else base["bairro"]!!,
+            cidade = if (campoVazio == "cidade") "" else base["cidade"]!!,
+            estado = if (campoVazio == "estado") "" else base["estado"]!!,
+            cep = if (campoVazio == "cep") "" else base["cep"]!!,
+        )
 
-        assertEquals("Número é obrigatório", assertThrows(IllegalArgumentException::class.java) { criar("numero") }.message)
-        assertEquals("Bairro é obrigatório", assertThrows(IllegalArgumentException::class.java) { criar("bairro") }.message)
-        assertEquals("Cidade é obrigatória", assertThrows(IllegalArgumentException::class.java) { criar("cidade") }.message)
-        assertEquals("Estado é obrigatório", assertThrows(IllegalArgumentException::class.java) { criar("estado") }.message)
+        assertEquals(
+            "Número é obrigatório",
+            assertThrows(IllegalArgumentException::class.java) {
+                criar("numero")
+            }.message,
+        )
+        assertEquals(
+            "Bairro é obrigatório",
+            assertThrows(IllegalArgumentException::class.java) {
+                criar("bairro")
+            }.message,
+        )
+        assertEquals(
+            "Cidade é obrigatória",
+            assertThrows(IllegalArgumentException::class.java) {
+                criar("cidade")
+            }.message,
+        )
+        assertEquals(
+            "Estado é obrigatório",
+            assertThrows(IllegalArgumentException::class.java) {
+                criar("estado")
+            }.message,
+        )
         assertEquals("CEP é obrigatório", assertThrows(IllegalArgumentException::class.java) { criar("cep") }.message)
     }
 }

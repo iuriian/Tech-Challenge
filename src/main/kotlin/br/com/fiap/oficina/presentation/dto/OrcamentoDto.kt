@@ -12,8 +12,4 @@ data class ItemOrcamentoDto(
     val subtotal: BigDecimal,
 )
 
-data class OrcamentoDto(
-    val servicoId: UUID,
-    val itens: List<ItemOrcamentoDto>,
-    val valorTotal: BigDecimal,
-)
+data class OrcamentoDto(val servicoId: UUID, val itens: List<ItemOrcamentoDto>, val valorTotal: BigDecimal)

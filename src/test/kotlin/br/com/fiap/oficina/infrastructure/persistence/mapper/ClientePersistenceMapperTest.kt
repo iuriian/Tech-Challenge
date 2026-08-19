@@ -14,28 +14,27 @@ import kotlin.test.assertSame
 class ClientePersistenceMapperTest {
     private val mapper = ClientePersistenceMapper()
 
-    private fun clienteCompleto(): Cliente =
-        Cliente(
+    private fun clienteCompleto(): Cliente = Cliente(
+        id = Id.generate(),
+        nome = "João da Silva",
+        documento = Documento.cpf("39053344705"),
+        email = "joao@example.com",
+        endereco =
+        Endereco(
             id = Id.generate(),
-            nome = "João da Silva",
-            documento = Documento.cpf("39053344705"),
-            email = "joao@example.com",
-            endereco =
-                Endereco(
-                    id = Id.generate(),
-                    logradouro = "Rua A",
-                    numero = "100",
-                    complemento = "Apto 1",
-                    bairro = "Centro",
-                    cidade = "São Paulo",
-                    estado = "SP",
-                    cep = "01000000",
-                ),
-            contatos =
-                listOf(
-                    Contato(Id.generate(), "CELULAR", "João", "11999990000"),
-                ),
-        )
+            logradouro = "Rua A",
+            numero = "100",
+            complemento = "Apto 1",
+            bairro = "Centro",
+            cidade = "São Paulo",
+            estado = "SP",
+            cep = "01000000",
+        ),
+        contatos =
+        listOf(
+            Contato(Id.generate(), "CELULAR", "João", "11999990000"),
+        ),
+    )
 
     @Test
     fun `deve fazer round-trip de cliente completo`() {

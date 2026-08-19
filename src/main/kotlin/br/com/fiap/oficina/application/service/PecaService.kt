@@ -6,19 +6,14 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class PecaService(
-    private val repository: PecaRepository,
-) {
+class PecaService(private val repository: PecaRepository) {
     fun salvarPeca(peca: Peca): Peca {
         require(!repository.existePorCodigo(peca.codigo)) { "Peça já cadastrada" }
 
         return repository.salvar(peca)
     }
 
-    fun atualizarPeca(
-        codigo: String,
-        dadosAtualizados: Peca,
-    ): Peca {
+    fun atualizarPeca(codigo: String, dadosAtualizados: Peca): Peca {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(
@@ -33,19 +28,13 @@ class PecaService(
         )
     }
 
-    fun retirarPecas(
-        codigo: String,
-        qtd: Int,
-    ): Peca? {
+    fun retirarPecas(codigo: String, qtd: Int): Peca? {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(peca.retirarPecas(qtd))
     }
 
-    fun reporPecas(
-        codigo: String,
-        qtd: Int,
-    ): Peca? {
+    fun reporPecas(codigo: String, qtd: Int): Peca? {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(peca.reporPecas(qtd))

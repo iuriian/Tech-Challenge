@@ -28,10 +28,7 @@ private const val RESTO_MINIMO_SEM_DIGITO = 2
 
 private val CARACTERES_NAO_NUMERICOS = Regex("[^0-9]")
 
-private fun calcularDigitoVerificador(
-    base: String,
-    pesos: IntArray,
-): Int {
+private fun calcularDigitoVerificador(base: String, pesos: IntArray): Int {
     val soma = base.mapIndexed { index, char -> char.digitToInt() * pesos[index] }.sum()
     val resto = soma % MODULO_DIGITO_VERIFICADOR
     return if (resto < RESTO_MINIMO_SEM_DIGITO) 0 else MODULO_DIGITO_VERIFICADOR - resto

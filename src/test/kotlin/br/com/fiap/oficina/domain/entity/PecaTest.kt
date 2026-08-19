@@ -137,12 +137,11 @@ class PecaTest {
         assertEquals("Quantidade para reposição deve ser maior que zero", reposicao.message)
     }
 
-    private fun criarPeca(qtdEstoque: Int = 0): Peca =
-        Peca(
-            id = Id.fromString("00000000-0000-0000-0000-000000000010"),
-            codigo = "PEC010",
-            nome = "Filtro de Combustível",
-            precoDeVenda = BigDecimal("45.90"),
-            qtdEstoque = qtdEstoque,
-        )
+    private fun criarPeca(qtdEstoque: Int = 0): Peca = Peca(
+        id = Id.fromString("00000000-0000-0000-0000-000000000010"),
+        codigo = "PEC010",
+        nome = "Filtro de Combustível",
+        precoDeVenda = BigDecimal("45.90"),
+        qtdEstoque = qtdEstoque,
+    )
 }

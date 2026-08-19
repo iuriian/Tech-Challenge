@@ -2,15 +2,9 @@ package br.com.fiap.oficina.domain.entity
 
 import java.math.BigDecimal
 
-data class PecaServico(
-    val peca: Peca,
-    val quantidade: BigDecimal,
-) {
+data class PecaServico(val peca: Peca, val quantidade: BigDecimal) {
     companion object {
-        fun criar(
-            peca: Peca,
-            quantidade: BigDecimal,
-        ): PecaServico {
+        fun criar(peca: Peca, quantidade: BigDecimal): PecaServico {
             require(quantidade > BigDecimal.ZERO) {
                 "Quantidade consumida da peça deve ser maior que zero"
             }

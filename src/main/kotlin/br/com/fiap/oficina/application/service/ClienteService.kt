@@ -6,9 +6,7 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class ClienteService(
-    private val repository: ClienteRepository,
-) {
+class ClienteService(private val repository: ClienteRepository) {
     fun salvarCliente(cliente: Cliente): Cliente = repository.salvar(cliente)
 
     fun buscarPorId(id: Id): Cliente? = repository.buscarPorId(id)

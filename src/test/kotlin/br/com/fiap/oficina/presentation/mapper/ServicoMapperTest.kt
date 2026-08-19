@@ -57,16 +57,16 @@ class ServicoMapperTest {
             Orcamento(
                 servicoId = servicoId,
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            pecaId = pecaId,
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal("2"),
-                            subtotal = BigDecimal("20"),
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        pecaId = pecaId,
+                        codigo = "PEC001",
+                        nome = "Filtro",
+                        precoUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        subtotal = BigDecimal("20"),
                     ),
+                ),
                 valorTotal = BigDecimal("20"),
             )
 

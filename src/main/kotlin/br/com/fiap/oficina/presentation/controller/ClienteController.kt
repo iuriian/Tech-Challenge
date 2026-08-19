@@ -23,17 +23,12 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/clientes")
 @Tag(name = "Clientes", description = "Operações relacionadas ao gerenciamento de clientes")
-class ClienteController(
-    private val service: ClienteService,
-    private val mapper: ClienteMapper,
-) {
+class ClienteController(private val service: ClienteService, private val mapper: ClienteMapper) {
     @PostMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo cliente", description = "Cadastra um novo cliente no sistema")
-    fun criar(
-        @Valid @RequestBody cliente: ClienteDto,
-    ): ClienteDto {
+    fun criar(@Valid @RequestBody cliente: ClienteDto): ClienteDto {
         val entity = this.mapper.toEntity(cliente)
         return mapper.toResponse(service.salvarCliente(entity))
     }
@@ -63,8 +58,8 @@ class ClienteController(
     fun buscarPorCpf(
         @Parameter(
             description =
-                "Número do documento de identificação. " +
-                    "Deve conter apenas números, sem caracteres especiais (pontos, hífens, etc.)",
+            "Número do documento de identificação. " +
+                "Deve conter apenas números, sem caracteres especiais (pontos, hífens, etc.)",
             required = true,
             example = "12345678900",
         )

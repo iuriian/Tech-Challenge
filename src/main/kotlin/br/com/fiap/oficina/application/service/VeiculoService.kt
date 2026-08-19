@@ -16,10 +16,7 @@ data class VeiculoComando(
 )
 
 @Service
-class VeiculoService(
-    private val repository: VeiculoRepository,
-    private val clienteRepository: ClienteRepository,
-) {
+class VeiculoService(private val repository: VeiculoRepository, private val clienteRepository: ClienteRepository) {
     fun salvarVeiculo(comando: VeiculoComando): Veiculo {
         require(!repository.existePorPlaca(comando.placa)) { "Veiculo já cadastrado" }
 
@@ -39,10 +36,7 @@ class VeiculoService(
         )
     }
 
-    fun atualizarVeiculo(
-        id: Id,
-        comando: VeiculoComando,
-    ): Veiculo {
+    fun atualizarVeiculo(id: Id, comando: VeiculoComando): Veiculo {
         val existente =
             repository.buscarPorId(id)
                 ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $id")

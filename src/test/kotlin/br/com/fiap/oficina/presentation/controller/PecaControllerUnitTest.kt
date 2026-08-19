@@ -31,13 +31,12 @@ class PecaControllerUnitTest {
             qtdEstoque = 10,
         )
 
-    private fun pecaDto() =
-        PecaDto(
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 10,
-        )
+    private fun pecaDto() = PecaDto(
+        codigo = "PEC001",
+        nome = "Filtro de Óleo",
+        precoDeVenda = BigDecimal("45.00"),
+        qtdEstoque = 10,
+    )
 
     @Test
     fun `criar deve retornar dto da peca salva`() {

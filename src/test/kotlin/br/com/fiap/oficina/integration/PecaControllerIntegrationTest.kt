@@ -17,21 +17,19 @@ import java.math.BigDecimal
  * PEC001 (Filtro de Óleo, venda 45.00, estoque 50) e PEC003 (Pastilha, estoque 20).
  */
 class PecaControllerIntegrationTest : AbstractIntegrationTest() {
-    private fun novaPecaJson(
-        codigo: String = "PEC999",
-        nome: String = "Peça de Teste",
-    ) = objectMapper.writeValueAsString(
-        PecaDto(
-            codigo = codigo,
-            nome = nome,
-            descricao = "Peça criada em teste de integração",
-            fabricante = "ACME",
-            fornecedor = "Fornecedor Teste",
-            precoDeCompra = BigDecimal("10.00"),
-            precoDeVenda = BigDecimal("25.00"),
-            qtdEstoque = 30,
-        ),
-    )
+    private fun novaPecaJson(codigo: String = "PEC999", nome: String = "Peça de Teste") =
+        objectMapper.writeValueAsString(
+            PecaDto(
+                codigo = codigo,
+                nome = nome,
+                descricao = "Peça criada em teste de integração",
+                fabricante = "ACME",
+                fornecedor = "Fornecedor Teste",
+                precoDeCompra = BigDecimal("10.00"),
+                precoDeVenda = BigDecimal("25.00"),
+                qtdEstoque = 30,
+            ),
+        )
 
     @Test
     @WithMockUser(roles = ["ADMIN"])

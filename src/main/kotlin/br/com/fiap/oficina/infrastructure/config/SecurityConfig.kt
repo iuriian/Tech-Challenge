@@ -38,8 +38,7 @@ class SecurityConfig {
     }
 
     @Bean
-    fun keycloakJwtAuthenticationConverter(): JwtAuthenticationConverter =
-        JwtAuthenticationConverter().apply {
-            setJwtGrantedAuthoritiesConverter(KeycloakJwtRoleConverter())
-        }
+    fun keycloakJwtAuthenticationConverter(): JwtAuthenticationConverter = JwtAuthenticationConverter().apply {
+        setJwtGrantedAuthoritiesConverter(KeycloakJwtRoleConverter())
+    }
 }

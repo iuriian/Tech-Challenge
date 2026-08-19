@@ -8,11 +8,10 @@ import org.springframework.security.oauth2.jwt.Jwt
 class KeycloakJwtRoleConverterTest {
     private val converter = KeycloakJwtRoleConverter()
 
-    private fun jwtBuilder(): Jwt.Builder =
-        Jwt
-            .withTokenValue("token")
-            .header("alg", "none")
-            .subject("user")
+    private fun jwtBuilder(): Jwt.Builder = Jwt
+        .withTokenValue("token")
+        .header("alg", "none")
+        .subject("user")
 
     @Test
     fun `deve extrair roles de realm e client com prefixo ROLE_`() {

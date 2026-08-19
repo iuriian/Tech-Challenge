@@ -213,10 +213,10 @@ class ServicoTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                    listOf(
-                        PecaServico.criar(peca, BigDecimal("2")), // 10 * 2 = 20
-                        PecaServico.criar(outraPeca, BigDecimal("1.5")), // 30 * 1.5 = 45.0
-                    ),
+                listOf(
+                    PecaServico.criar(peca, BigDecimal("2")), // 10 * 2 = 20
+                    PecaServico.criar(outraPeca, BigDecimal("1.5")), // 30 * 1.5 = 45.0
+                ),
             )
 
         val orcamento = servico.gerarOrcamento()

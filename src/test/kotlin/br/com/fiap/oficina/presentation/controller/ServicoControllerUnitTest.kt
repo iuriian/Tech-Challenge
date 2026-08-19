@@ -67,13 +67,12 @@ class ServicoControllerUnitTest {
             veiculo = veiculo,
         )
 
-    private fun servicoDto() =
-        ServicoDto(
-            descricao = "Troca de óleo",
-            funcionarioId = funcionario.id.valor.toString(),
-            clienteId = cliente.id.valor.toString(),
-            veiculoId = veiculo.id.valor.toString(),
-        )
+    private fun servicoDto() = ServicoDto(
+        descricao = "Troca de óleo",
+        funcionarioId = funcionario.id.valor.toString(),
+        clienteId = cliente.id.valor.toString(),
+        veiculoId = veiculo.id.valor.toString(),
+    )
 
     @Test
     fun `criar deve retornar dto do servico salvo`() {
@@ -127,16 +126,16 @@ class ServicoControllerUnitTest {
             Orcamento(
                 servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            pecaId = UUID.randomUUID().let { Id.fromString("00000000-0000-0000-0000-000000000002") },
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal("2"),
-                            subtotal = BigDecimal("20"),
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        pecaId = UUID.randomUUID().let { Id.fromString("00000000-0000-0000-0000-000000000002") },
+                        codigo = "PEC001",
+                        nome = "Filtro",
+                        precoUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        subtotal = BigDecimal("20"),
                     ),
+                ),
                 valorTotal = BigDecimal("20"),
             )
         `when`(service.obterOrcamento(Id(id.valor))).thenReturn(orcamento)
@@ -215,7 +214,9 @@ class ServicoControllerUnitTest {
     fun `alterarStatus deve retornar dto com status alterado`() {
         val id = servico.id.valor
         val servicoCancelado = servico.copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        `when`(
+            service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA),
+        ).thenReturn(servicoCancelado)
 
         val dto = controller.alterarStatus(id.toString(), AlterarStatusDto(ServicoStatus.CANCELADA))
 

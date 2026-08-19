@@ -26,10 +26,7 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @RequestMapping("/pecas")
 @Tag(name = "Peças", description = "Operações relacionadas ao gerenciamento de peças e estoque")
-class PecaController(
-    private val service: PecaService,
-    private val mapper: PecaMapper,
-) {
+class PecaController(private val service: PecaService, private val mapper: PecaMapper) {
     @PostMapping
     @RolesAllowed("ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,9 +34,7 @@ class PecaController(
         summary = "Criar uma nova peça",
         description = "Cadastra uma nova peça no sistema. Retorna conflito (409) se o código já existir.",
     )
-    fun criar(
-        @Valid @RequestBody peca: PecaDto,
-    ): PecaDto {
+    fun criar(@Valid @RequestBody peca: PecaDto): PecaDto {
         val entity = mapper.toEntity(peca)
 
         return try {
@@ -76,12 +71,11 @@ class PecaController(
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser retirada do estoque", required = true, example = "5")
         @RequestParam qtd: Int,
-    ): PecaDto? =
-        try {
-            service.retirarPecas(codigo, qtd)?.let { mapper.toDto(it) }
-        } catch (exception: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-        }
+    ): PecaDto? = try {
+        service.retirarPecas(codigo, qtd)?.let { mapper.toDto(it) }
+    } catch (exception: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
+    }
 
     @PatchMapping("/{codigo}/estoque/repor")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -94,12 +88,11 @@ class PecaController(
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser reposta no estoque", required = true, example = "10")
         @RequestParam qtd: Int,
-    ): PecaDto? =
-        try {
-            service.reporPecas(codigo, qtd)?.let { mapper.toDto(it) }
-        } catch (exception: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-        }
+    ): PecaDto? = try {
+        service.reporPecas(codigo, qtd)?.let { mapper.toDto(it) }
+    } catch (exception: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
+    }
 
     @PatchMapping("/{codigo}/reativar")
     @RolesAllowed("ADMIN")
