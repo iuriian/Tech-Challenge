@@ -61,8 +61,9 @@ class ClienteServiceTest {
         val resultado = service.buscarPorId(clienteId)
 
         assertNotNull(resultado)
-        assertEquals(cliente.id, resultado?.id)
-        assertEquals(cliente.nome, resultado?.nome)
+        assertEquals(cliente.id, resultado.id)
+        assertEquals(cliente.nome, resultado.nome)
+        assertEquals(cliente.email, resultado.email)
         verify(repository, times(1)).buscarPorId(clienteId)
     }
 
@@ -85,7 +86,7 @@ class ClienteServiceTest {
         val resultado = service.buscarPorDocumento(documentoNumero)
 
         assertNotNull(resultado)
-        assertEquals(cliente.nome, resultado?.nome)
+        assertEquals(cliente.nome, resultado.nome)
         verify(repository, times(1)).buscarPorDocumento(documentoNumero)
     }
 
@@ -108,7 +109,7 @@ class ClienteServiceTest {
         val resultado = service.buscarPorNome(nome)
 
         assertNotNull(resultado)
-        assertEquals(nome, resultado?.nome)
+        assertEquals(nome, resultado.nome)
         verify(repository, times(1)).buscarPorNome(nome)
     }
 

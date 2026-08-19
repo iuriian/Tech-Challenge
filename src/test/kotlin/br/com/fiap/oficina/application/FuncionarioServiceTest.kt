@@ -82,7 +82,7 @@ class FuncionarioServiceTest {
         val found = service.buscarPorId(f.id.valor.toString())
 
         assertNotNull(found)
-        assertEquals(f.nome, found?.nome)
+        assertEquals(f.nome, found.nome)
     }
 
     @Test
@@ -110,7 +110,7 @@ class FuncionarioServiceTest {
         val found = service.buscarPorNome("Nome1")
 
         assertNotNull(found)
-        assertEquals(f.nome, found?.nome)
+        assertEquals(f.nome, found.nome)
     }
 
     @Test
