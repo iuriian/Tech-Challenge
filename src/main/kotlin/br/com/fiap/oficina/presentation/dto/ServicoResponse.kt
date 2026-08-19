@@ -1,0 +1,10 @@
+package br.com.fiap.oficina.presentation.dto
+
+import java.math.BigDecimal
+import java.util.UUID
+
+data class ServicoResponse(
+    val id: UUID,
+    val descricao: String,
+    val valor: BigDecimal,
+)
