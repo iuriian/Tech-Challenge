@@ -16,9 +16,11 @@ class PecaRepositoryAdapter(
 
     override fun listarAtivos(): List<Peca> = jpaRepository.findAllByAtivoTrue().map(mapper::toDomain)
 
-    override fun buscarAtivoPorCodigo(codigo: String): Peca? = jpaRepository.findByCodigoAndAtivoTrue(codigo)?.let(mapper::toDomain)
+    override fun buscarAtivoPorCodigo(codigo: String): Peca? =
+        jpaRepository.findByCodigoAndAtivoTrue(codigo)?.let(mapper::toDomain)
 
-    override fun buscarAtivoPorNome(nome: String): Peca? = jpaRepository.findByNomeIgnoreCaseAndAtivoTrue(nome)?.let(mapper::toDomain)
+    override fun buscarAtivoPorNome(nome: String): Peca? =
+        jpaRepository.findByNomeIgnoreCaseAndAtivoTrue(nome)?.let(mapper::toDomain)
 
     override fun existeAtivoPorCodigo(codigo: String): Boolean = jpaRepository.existsByCodigoAndAtivoTrue(codigo)
 

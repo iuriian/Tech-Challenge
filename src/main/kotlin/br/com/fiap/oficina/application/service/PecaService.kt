@@ -67,7 +67,8 @@ class PecaService(
         return true
     }
 
-    fun buscarPorCodigo(codigo: String) = repository.buscarAtivoPorCodigo(codigo) ?: throw IllegalArgumentException("Peça não encontrada")
+    fun buscarPorCodigo(codigo: String) =
+        repository.buscarAtivoPorCodigo(codigo) ?: throw IllegalArgumentException("Peça não encontrada")
 
     fun buscarPorNome(nome: String) = repository.buscarAtivoPorNome(nome)
 
