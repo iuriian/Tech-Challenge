@@ -5,8 +5,11 @@ import br.com.fiap.oficina.domain.entity.Contato
 import br.com.fiap.oficina.domain.entity.Endereco
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class ClientePersistenceMapperTest {
     private val mapper = ClientePersistenceMapper()

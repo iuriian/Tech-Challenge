@@ -6,7 +6,6 @@ import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 data class Servico(
     val id: Id,

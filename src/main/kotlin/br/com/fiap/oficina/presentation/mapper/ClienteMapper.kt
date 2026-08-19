@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class ClienteMapper {
-
     fun toResponse(cliente: Cliente): ClienteDto =
         ClienteDto(
             id = cliente.id.valor,
@@ -21,7 +20,7 @@ class ClienteMapper {
             tipoPessoa = cliente.documento.tipoPessoa.name,
             email = cliente.email,
             endereco = cliente.endereco?.let(::toEnderecoDto),
-            contatos = cliente.contatos.map(::toContatoDto)
+            contatos = cliente.contatos.map(::toContatoDto),
         )
 
     fun toEntity(dto: ClienteDto): Cliente =
@@ -30,7 +29,7 @@ class ClienteMapper {
             documento = Documento(dto.numeroDocumento, TipoPessoa.valueOf(dto.tipoPessoa)),
             email = dto.email,
             endereco = dto.endereco?.let(::toEnderecoEntity),
-            contatos = dto.contatos.map(::toContatoEntity)
+            contatos = dto.contatos.map(::toContatoEntity),
         )
 
     fun toEnderecoDto(endereco: Endereco): EnderecoDto =
@@ -41,14 +40,14 @@ class ClienteMapper {
             bairro = endereco.bairro,
             cidade = endereco.cidade,
             estado = endereco.estado,
-            cep = endereco.cep
+            cep = endereco.cep,
         )
 
     fun toContatoDto(contato: Contato): ContatoDto =
         ContatoDto(
             tipo = contato.tipo,
             nome = contato.nome,
-            telefone = contato.telefone
+            telefone = contato.telefone,
         )
 
     fun toEnderecoEntity(dto: EnderecoDto): Endereco =
@@ -59,13 +58,13 @@ class ClienteMapper {
             bairro = dto.bairro,
             cidade = dto.cidade,
             estado = dto.estado,
-            cep = dto.cep
+            cep = dto.cep,
         )
 
     fun toContatoEntity(dto: ContatoDto): Contato =
         Contato.criar(
             tipo = dto.tipo,
             nome = dto.nome,
-            telefone = dto.telefone
+            telefone = dto.telefone,
         )
 }

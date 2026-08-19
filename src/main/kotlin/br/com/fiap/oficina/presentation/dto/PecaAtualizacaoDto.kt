@@ -9,19 +9,14 @@ data class PecaAtualizacaoDto(
     @field:NotBlank
     @field:Size(min = 3, max = 100)
     val nome: String,
-
     @field:Size(max = 255)
     val descricao: String? = null,
-
     @field:Size(max = 100)
     val fabricante: String? = null,
-
     @field:Size(max = 100)
     val fornecedor: String? = null,
-
     @field:DecimalMin("0.00")
     val precoDeCompra: BigDecimal? = null,
-
     @field:DecimalMin("0.00")
-    val precoDeVenda: BigDecimal
+    val precoDeVenda: BigDecimal,
 )

@@ -4,8 +4,8 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class VeiculoPersistenceMapperTest {
     private val mapper = VeiculoPersistenceMapper(ClientePersistenceMapper())

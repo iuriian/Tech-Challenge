@@ -9,13 +9,14 @@ import br.com.fiap.oficina.infrastructure.persistence.entity.VeiculoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.VeiculoJpaRepository
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import kotlin.test.assertEquals
 
 @ExtendWith(MockitoExtension::class)
 class VeiculoRepositoryAdapterTest {

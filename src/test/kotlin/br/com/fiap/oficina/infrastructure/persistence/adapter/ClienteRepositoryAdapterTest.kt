@@ -7,14 +7,16 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.ClienteJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.ClienteJpaRepository
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.util.Optional
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
 class ClienteRepositoryAdapterTest {

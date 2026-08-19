@@ -6,15 +6,19 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class PecaService(private val repository: PecaRepository) {
-
+class PecaService(
+    private val repository: PecaRepository,
+) {
     fun salvarPeca(peca: Peca): Peca {
         require(!repository.existePorCodigo(peca.codigo)) { "Peça já cadastrada" }
 
         return repository.salvar(peca)
     }
 
-    fun atualizarPeca(codigo: String, dadosAtualizados: Peca): Peca {
+    fun atualizarPeca(
+        codigo: String,
+        dadosAtualizados: Peca,
+    ): Peca {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(
@@ -24,18 +28,24 @@ class PecaService(private val repository: PecaRepository) {
                 fabricante = dadosAtualizados.fabricante,
                 fornecedor = dadosAtualizados.fornecedor,
                 precoDeCompra = dadosAtualizados.precoDeCompra,
-                precoDeVenda = dadosAtualizados.precoDeVenda
-            )
+                precoDeVenda = dadosAtualizados.precoDeVenda,
+            ),
         )
     }
 
-    fun retirarPecas(codigo: String, qtd: Int): Peca? {
+    fun retirarPecas(
+        codigo: String,
+        qtd: Int,
+    ): Peca? {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(peca.retirarPecas(qtd))
     }
 
-    fun reporPecas(codigo: String, qtd: Int): Peca? {
+    fun reporPecas(
+        codigo: String,
+        qtd: Int,
+    ): Peca? {
         val peca = buscarPorCodigo(codigo)
 
         return repository.salvar(peca.reporPecas(qtd))
@@ -57,8 +67,7 @@ class PecaService(private val repository: PecaRepository) {
         return true
     }
 
-    fun buscarPorCodigo(codigo: String) =
-        repository.buscarAtivoPorCodigo(codigo) ?:throw IllegalArgumentException("Peça não encontrada")
+    fun buscarPorCodigo(codigo: String) = repository.buscarAtivoPorCodigo(codigo) ?: throw IllegalArgumentException("Peça não encontrada")
 
     fun buscarPorNome(nome: String) = repository.buscarAtivoPorNome(nome)
 
@@ -71,5 +80,4 @@ class PecaService(private val repository: PecaRepository) {
     fun existeEntreTodosPorCodigo(codigo: String) = repository.existePorCodigo(codigo)
 
     fun listarPecas() = repository.listarAtivos()
-
 }

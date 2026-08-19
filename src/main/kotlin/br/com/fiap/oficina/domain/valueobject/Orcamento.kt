@@ -9,7 +9,7 @@ data class ItemOrcamento(
     val nome: String,
     val precoUnitario: BigDecimal,
     val quantidade: BigDecimal,
-    val subtotal: BigDecimal
+    val subtotal: BigDecimal,
 )
 
 /**
@@ -19,5 +19,5 @@ data class ItemOrcamento(
 data class Orcamento(
     val servicoId: Id,
     val itens: List<ItemOrcamento>,
-    val valorTotal: BigDecimal
+    val valorTotal: BigDecimal,
 )

@@ -7,10 +7,12 @@ import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import java.util.UUID
+import kotlin.test.assertEquals
 
 class ClienteControllerUnitTest {
     private val service = mock(ClienteService::class.java)

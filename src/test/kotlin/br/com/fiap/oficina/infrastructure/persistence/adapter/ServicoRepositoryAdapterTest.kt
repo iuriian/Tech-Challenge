@@ -13,14 +13,16 @@ import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapp
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoJpaRepository
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import java.util.Optional
+import kotlin.test.assertEquals
 
 @ExtendWith(MockitoExtension::class)
 class ServicoRepositoryAdapterTest {

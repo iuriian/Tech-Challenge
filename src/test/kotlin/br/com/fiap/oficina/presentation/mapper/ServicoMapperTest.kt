@@ -13,9 +13,9 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import br.com.fiap.oficina.presentation.dto.PecaServicoDto
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlin.test.assertEquals
 
 class ServicoMapperTest {
     private val mapper = ServicoMapper()

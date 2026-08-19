@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.UUID
 
 class PecaTest {
     @Test
@@ -82,44 +81,48 @@ class PecaTest {
 
     @Test
     fun `deve impedir codigo em branco na criacao`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            Peca.criar(codigo = "", nome = "Sensor", precoDeVenda = BigDecimal("10.00"), qtdEstoque = 1)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                Peca.criar(codigo = "", nome = "Sensor", precoDeVenda = BigDecimal("10.00"), qtdEstoque = 1)
+            }
         assertEquals("Código da peça é obrigatório", exception.message)
     }
 
     @Test
     fun `deve impedir nome em branco na criacao`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            Peca.criar(codigo = "PEC012", nome = "", precoDeVenda = BigDecimal("10.00"), qtdEstoque = 1)
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                Peca.criar(codigo = "PEC012", nome = "", precoDeVenda = BigDecimal("10.00"), qtdEstoque = 1)
+            }
         assertEquals("Nome da peça é obrigatório", exception.message)
     }
 
     @Test
     fun `deve impedir preco de compra negativo na criacao`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            Peca.criar(
-                codigo = "PEC013",
-                nome = "Sensor",
-                precoDeCompra = BigDecimal("-1.00"),
-                precoDeVenda = BigDecimal("10.00"),
-                qtdEstoque = 1
-            )
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                Peca.criar(
+                    codigo = "PEC013",
+                    nome = "Sensor",
+                    precoDeCompra = BigDecimal("-1.00"),
+                    precoDeVenda = BigDecimal("10.00"),
+                    qtdEstoque = 1,
+                )
+            }
         assertEquals("Preço de compra não pode ser negativo", exception.message)
     }
 
     @Test
     fun `deve impedir preco de venda negativo na criacao`() {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            Peca.criar(
-                codigo = "PEC014",
-                nome = "Sensor",
-                precoDeVenda = BigDecimal("-10.00"),
-                qtdEstoque = 1
-            )
-        }
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                Peca.criar(
+                    codigo = "PEC014",
+                    nome = "Sensor",
+                    precoDeVenda = BigDecimal("-10.00"),
+                    qtdEstoque = 1,
+                )
+            }
         assertEquals("Preço de venda não pode ser negativo", exception.message)
     }
 

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class PecaMapper {
-
     fun toDto(peca: Peca): PecaDto =
         PecaDto(
             id = peca.id.valor,
@@ -19,7 +18,7 @@ class PecaMapper {
             precoDeCompra = peca.precoDeCompra,
             precoDeVenda = peca.precoDeVenda,
             qtdEstoque = peca.qtdEstoque,
-            ativo = peca.ativo
+            ativo = peca.ativo,
         )
 
     fun toEntity(dto: PecaDto): Peca =
@@ -31,7 +30,7 @@ class PecaMapper {
             fornecedor = dto.fornecedor,
             precoDeCompra = dto.precoDeCompra,
             precoDeVenda = dto.precoDeVenda,
-            qtdEstoque = dto.qtdEstoque
+            qtdEstoque = dto.qtdEstoque,
         )
 
     fun toEntity(dto: PecaAtualizacaoDto): Peca =
@@ -43,7 +42,7 @@ class PecaMapper {
             fornecedor = dto.fornecedor,
             precoDeCompra = dto.precoDeCompra,
             precoDeVenda = dto.precoDeVenda,
-            qtdEstoque = 0
+            qtdEstoque = 0,
         )
 
     private companion object {

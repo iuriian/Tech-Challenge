@@ -15,13 +15,17 @@ import br.com.fiap.oficina.domain.valueobject.Orcamento
 import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
 import br.com.fiap.oficina.presentation.dto.ServicoDto
 import br.com.fiap.oficina.presentation.mapper.ServicoMapper
-import org.junit.jupiter.api.Assertions.*
+import org.junit.Assert.assertThrows
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ServicoControllerUnitTest {
     private val service = mock(ServicoService::class.java)

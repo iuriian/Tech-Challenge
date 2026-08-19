@@ -7,7 +7,6 @@ import java.util.UUID
 
 @Repository
 interface ClienteJpaRepository : JpaRepository<ClienteJpaEntity, UUID> {
-
     fun findByDocumentoNumero(numeroDocumento: String): ClienteJpaEntity?
 
     fun findByNome(nome: String): ClienteJpaEntity?

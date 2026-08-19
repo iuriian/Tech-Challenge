@@ -12,19 +12,20 @@ data class VeiculoComando(
     val modelo: String,
     val ano: String,
     val placa: String,
-    val motoristaId: Id
+    val motoristaId: Id,
 )
 
 @Service
 class VeiculoService(
     private val repository: VeiculoRepository,
-    private val clienteRepository: ClienteRepository
+    private val clienteRepository: ClienteRepository,
 ) {
     fun salvarVeiculo(comando: VeiculoComando): Veiculo {
         require(!repository.existePorPlaca(comando.placa)) { "Veiculo já cadastrado" }
 
-        val motorista = clienteRepository.buscarPorId(comando.motoristaId)
-            ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
+        val motorista =
+            clienteRepository.buscarPorId(comando.motoristaId)
+                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
 
         return repository.salvar(
             Veiculo.criar(
@@ -33,14 +34,18 @@ class VeiculoService(
                 modelo = comando.modelo,
                 ano = comando.ano,
                 placa = comando.placa,
-                motorista = motorista
-            )
+                motorista = motorista,
+            ),
         )
     }
 
-    fun atualizarVeiculo(id: Id, comando: VeiculoComando): Veiculo {
-        val existente = repository.buscarPorId(id)
-            ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $id")
+    fun atualizarVeiculo(
+        id: Id,
+        comando: VeiculoComando,
+    ): Veiculo {
+        val existente =
+            repository.buscarPorId(id)
+                ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $id")
 
         if (existente.placa != comando.placa) {
             require(!repository.existePorPlaca(comando.placa)) {
@@ -48,8 +53,9 @@ class VeiculoService(
             }
         }
 
-        val motorista = clienteRepository.buscarPorId(comando.motoristaId)
-            ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
+        val motorista =
+            clienteRepository.buscarPorId(comando.motoristaId)
+                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
 
         return repository.salvar(
             Veiculo(
@@ -59,8 +65,8 @@ class VeiculoService(
                 modelo = comando.modelo,
                 ano = comando.ano,
                 placa = comando.placa,
-                motorista = motorista
-            )
+                motorista = motorista,
+            ),
         )
     }
 
