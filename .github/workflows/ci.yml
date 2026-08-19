@@ -9,8 +9,11 @@ jobs:
     name: Quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-kotlin
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kotlin
+        uses: ./.github/actions/setup-kotlin
 
       - name: Spotless Check
         run: ./gradlew spotlessCheck
@@ -24,12 +27,17 @@ jobs:
     needs: quality
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-kotlin
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - run: ./gradlew test jacocoTestReport
+      - name: Setup Kotlin
+        uses: ./.github/actions/setup-kotlin
 
-      - uses: ./.github/actions/upload-reports
+      - name: Run Tests
+        run: ./gradlew test jacocoTestReport
+
+      - name: Upload Reports
+        uses: ./.github/actions/upload-reports
 
   build:
     name: Build
@@ -37,7 +45,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-kotlin
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - run: ./gradlew build
+      - name: Setup Kotlin
+        uses: ./.github/actions/setup-kotlin
+
+      - name: Run build
+        run: ./gradlew build
