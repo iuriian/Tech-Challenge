@@ -25,6 +25,9 @@ jobs:
     name: Unit Test
     runs-on: ubuntu-latest
     needs: quality
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -34,10 +37,28 @@ jobs:
         uses: ./.github/actions/setup-kotlin
 
       - name: Run Tests
-        run: ./gradlew test jacocoTestReport
+        run: ./gradlew test
+
+      - name: Coverage Report
+        if: always()
+        run: ./gradlew jacocoTestReport
+
+      - name: Show coverage report
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          minimum-coverage: 80
+          minimum-coverage-changed-files: 80
+          title: Cobertura de testes
+          update-comment: false
 
       - name: Upload Reports
         uses: ./.github/actions/upload-reports
+
+      - name: Verify minimum coverage
+        run: ./gradlew jacocoTestCoverageVerification
 
   build:
     name: Build
