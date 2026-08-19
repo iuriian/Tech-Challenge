@@ -13,7 +13,7 @@ interface OrdemServicoJpaRepository : JpaRepository<ServicoJpaEntity, UUID> {
 
     fun findByClienteId(clienteId: UUID): List<ServicoJpaEntity>
 
-    fun findByVeiculo_IdVeiculo(veiculoId: UUID): List<ServicoJpaEntity>
+    fun findByVeiculoIdVeiculo(veiculoId: UUID): List<ServicoJpaEntity>
 
     fun findByDataAberturaBetween(
         inicio: Instant,

@@ -31,7 +31,7 @@ class OrdemServicoRepositoryAdapter(
         jpaRepository.findByClienteId(clienteId.valor).map(mapper::toDomain)
 
     override fun listarPorVeiculo(veiculoId: Id): List<OrdemServico> =
-        jpaRepository.findByVeiculo_IdVeiculo(veiculoId.valor).map(mapper::toDomain)
+        jpaRepository.findByVeiculoIdVeiculo(veiculoId.valor).map(mapper::toDomain)
 
     override fun listarPorDataAberturaEntre(
         inicio: Instant,

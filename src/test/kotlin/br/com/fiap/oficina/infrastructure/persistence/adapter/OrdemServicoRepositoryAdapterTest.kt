@@ -130,14 +130,14 @@ class OrdemServicoRepositoryAdapterTest {
         val veiculoId = ordemServico.veiculo.id
         `when`(
             jpaRepository
-                .findByVeiculo_IdVeiculo(veiculoId.valor)
+                .findByVeiculoIdVeiculo(veiculoId.valor)
         )
             .thenReturn(listOf(jpa))
 
         val resultado = adapter.listarPorVeiculo(veiculoId)
 
         assertEquals(listOf(ordemServico), resultado)
-        verify(jpaRepository).findByVeiculo_IdVeiculo(veiculoId.valor)
+        verify(jpaRepository).findByVeiculoIdVeiculo(veiculoId.valor)
     }
 
     @Test
