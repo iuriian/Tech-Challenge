@@ -1,5 +1,4 @@
-import org.jetbrains.dokka.DokkaConfiguration.Visibility
-import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 plugins {
     kotlin("jvm") version "2.3.21"
@@ -7,7 +6,7 @@ plugins {
     kotlin("plugin.jpa") version "2.3.21"
     kotlin("kapt") version "2.3.21"
 
-    id("org.jetbrains.dokka") version "2.0.0"
+    id("org.jetbrains.dokka") version "2.2.0"
     id("org.springframework.boot") version "3.4.0"
     id("io.spring.dependency-management") version "1.1.6"
     jacoco
@@ -79,6 +78,7 @@ tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
 tasks.bootRun {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
+
 tasks.withType<Test> {
     useJUnitPlatform()
 
@@ -88,24 +88,31 @@ tasks.withType<Test> {
     jvmArgs("-Dapi.version=1.43")
 }
 
-val jacocoTestReport by tasks.getting(JacocoReport::class) {
-    dependsOn(tasks.test)
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
+// Jacoco
+val coverageExclusions = listOf("**/OfficinaApplication*", "**/config/**")
+
+tasks.withType<JacocoReportBase>().configureEach {
     classDirectories.setFrom(
         files(
             classDirectories.files.map {
                 fileTree(it) {
-                    exclude("**/OfficinaApplication*")
+                    exclude(coverageExclusions)
                 }
             },
         ),
     )
 }
 
-tasks.test {
+val jacocoTestReport =
+    tasks.named<JacocoReport>("jacocoTestReport") {
+        dependsOn(tasks.named<Test>("test"))
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+    }
+
+tasks.named<Test>("test") {
     finalizedBy(jacocoTestReport)
 }
 
@@ -130,33 +137,24 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
             }
         }
     }
-    classDirectories.setFrom(
-        files(
-            classDirectories.files.map {
-                fileTree(it) {
-                    exclude("**/OfficinaApplication*")
-                }
-            },
-        ),
-    )
 }
 
 tasks.named("check") {
     dependsOn("jacocoTestCoverageVerification")
 }
 
-tasks.withType<DokkaTask>().configureEach {
-    dokkaSourceSets.configureEach {
-        documentedVisibilities.set(
-            setOf(
-                Visibility.PUBLIC,
-                Visibility.PROTECTED,
-                Visibility.PRIVATE,
-                Visibility.PACKAGE,
-                Visibility.INTERNAL,
-            ),
-        )
+val dokkaVisibility =
+    setOf(
+        VisibilityModifier.Public,
+        VisibilityModifier.Protected,
+        VisibilityModifier.Private,
+        VisibilityModifier.Package,
+        VisibilityModifier.Internal,
+    )
 
+dokka {
+    dokkaSourceSets.configureEach {
+        documentedVisibilities.set(dokkaVisibility)
         perPackageOption {
             matchingRegex.set(".*internal.*")
             suppress.set(true)

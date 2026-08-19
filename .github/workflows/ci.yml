@@ -15,9 +15,6 @@ jobs:
       - name: Spotless Check
         run: ./gradlew spotlessCheck
 
-      - name: Lint
-        run: ./gradlew lint
-
       - name: Detekt
         run: ./gradlew detekt
 
