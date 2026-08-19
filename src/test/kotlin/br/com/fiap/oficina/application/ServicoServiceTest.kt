@@ -15,7 +15,7 @@ import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
-import br.com.fiap.oficina.domain.repository.ServicoRepository
+import br.com.fiap.oficina.domain.repository.OrdemServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -35,7 +35,7 @@ import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class ServicoServiceTest {
-    @Mock lateinit var repository: ServicoRepository
+    @Mock lateinit var repository: OrdemServicoRepository
 
     @Mock lateinit var clienteRepository: ClienteRepository
 

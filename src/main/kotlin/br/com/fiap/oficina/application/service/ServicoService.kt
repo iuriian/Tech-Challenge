@@ -9,7 +9,7 @@ import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
-import br.com.fiap.oficina.domain.repository.ServicoRepository
+import br.com.fiap.oficina.domain.repository.OrdemServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.Orcamento
@@ -40,7 +40,7 @@ data class ServicoComando(
 
 @Service
 class ServicoService(
-    private val repository: ServicoRepository,
+    private val repository: OrdemServicoRepository,
     private val clienteRepository: ClienteRepository,
     private val veiculoRepository: VeiculoRepository,
     private val pecaRepository: PecaRepository,

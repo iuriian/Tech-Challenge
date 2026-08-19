@@ -12,7 +12,7 @@ import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceM
 import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.repository.OrdemServicoJpaRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,9 +24,9 @@ import java.time.Instant
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
-class ServicoRepositoryAdapterTest {
+class OrdemServicoRepositoryAdapterTest {
     @Mock
-    lateinit var jpaRepository: ServicoJpaRepository
+    lateinit var jpaRepository: OrdemServicoJpaRepository
 
     private val clienteMapper = ClientePersistenceMapper()
     private val mapper =
@@ -35,13 +35,13 @@ class ServicoRepositoryAdapterTest {
             VeiculoPersistenceMapper(clienteMapper),
             PecaPersistenceMapper(),
         )
-    private lateinit var adapter: ServicoRepositoryAdapter
+    private lateinit var adapter: OrdemServicoRepositoryAdapter
     private lateinit var ordemServico: OrdemServico
     private lateinit var jpa: ServicoJpaEntity
 
     @BeforeEach
     fun setup() {
-        adapter = ServicoRepositoryAdapter(jpaRepository, mapper)
+        adapter = OrdemServicoRepositoryAdapter(jpaRepository, mapper)
         val cliente =
             Cliente(
                 id = Id.generate(),

@@ -5,7 +5,7 @@ import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
 import java.time.Instant
 
-interface ServicoRepository {
+interface OrdemServicoRepository {
 
     fun salvar(ordemServico: OrdemServico): OrdemServico
 

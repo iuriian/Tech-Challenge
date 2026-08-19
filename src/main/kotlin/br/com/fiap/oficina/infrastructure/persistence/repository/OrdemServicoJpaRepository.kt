@@ -8,7 +8,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Repository
-interface ServicoJpaRepository : JpaRepository<ServicoJpaEntity, UUID> {
+interface OrdemServicoJpaRepository : JpaRepository<ServicoJpaEntity, UUID> {
     fun findByStatus(status: OrdemServicoStatus): List<ServicoJpaEntity>
 
     fun findByClienteId(clienteId: UUID): List<ServicoJpaEntity>

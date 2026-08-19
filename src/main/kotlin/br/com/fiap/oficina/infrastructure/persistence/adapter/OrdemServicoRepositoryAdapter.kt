@@ -2,18 +2,18 @@ package br.com.fiap.oficina.infrastructure.persistence.adapter
 
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
-import br.com.fiap.oficina.domain.repository.ServicoRepository
+import br.com.fiap.oficina.domain.repository.OrdemServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.repository.OrdemServicoJpaRepository
 import org.springframework.stereotype.Component
 import java.time.Instant
 
 @Component
-class ServicoRepositoryAdapter(
-    private val jpaRepository: ServicoJpaRepository,
+class OrdemServicoRepositoryAdapter(
+    private val jpaRepository: OrdemServicoJpaRepository,
     private val mapper: ServicoPersistenceMapper
-) : ServicoRepository {
+) : OrdemServicoRepository {
 
     override fun salvar(ordemServico: OrdemServico): OrdemServico =
         mapper.toDomain(jpaRepository.save(mapper.toJpa(ordemServico)))
