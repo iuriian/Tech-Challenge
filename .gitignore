@@ -40,8 +40,4 @@ out/
 ### Kotlin ###
 .kotlin
 
-### Codex ###
-/.codex/
-
-### Agents ###
-/.agents/
+.env
