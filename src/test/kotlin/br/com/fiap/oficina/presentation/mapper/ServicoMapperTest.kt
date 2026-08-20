@@ -13,9 +13,9 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import br.com.fiap.oficina.presentation.dto.PecaServicoDto
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlin.test.assertEquals
 
 class ServicoMapperTest {
     private val mapper = ServicoMapper()
@@ -57,16 +57,16 @@ class ServicoMapperTest {
             Orcamento(
                 servicoId = servicoId,
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            pecaId = pecaId,
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal("2"),
-                            subtotal = BigDecimal("20"),
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        pecaId = pecaId,
+                        codigo = "PEC001",
+                        nome = "Filtro",
+                        precoUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        subtotal = BigDecimal("20"),
                     ),
+                ),
                 valorTotal = BigDecimal("20"),
             )
 

@@ -4,7 +4,6 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface ClienteRepository {
-
     fun salvar(cliente: Cliente): Cliente
 
     fun buscarPorId(id: Id): Cliente?

@@ -8,9 +8,7 @@ import br.com.fiap.oficina.presentation.mapper.toDto
 import org.springframework.stereotype.Service
 
 @Service
-class FuncionarioService(
-    private val repository: FuncionarioRepository,
-) {
+class FuncionarioService(private val repository: FuncionarioRepository) {
     fun cadastrar(dto: FuncionarioDto): FuncionarioDto {
         val funcionario =
             Funcionario
@@ -40,10 +38,7 @@ class FuncionarioService(
         return resultado?.toDto()
     }
 
-    fun editar(
-        id: String,
-        dto: FuncionarioDto,
-    ): FuncionarioDto {
+    fun editar(id: String, dto: FuncionarioDto): FuncionarioDto {
         val funcionario =
             Funcionario.reconstruir(
                 id = id,

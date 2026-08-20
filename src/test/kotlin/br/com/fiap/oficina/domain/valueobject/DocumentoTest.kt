@@ -1,10 +1,12 @@
 package br.com.fiap.oficina.domain.valueobject
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class DocumentoTest {
-
     @Test
     fun `deve criar cpf via factory`() {
         val documento = Documento.cpf("39053344705")

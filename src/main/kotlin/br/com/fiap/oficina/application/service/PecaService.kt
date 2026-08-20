@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class PecaService(private val repository: PecaRepository) {
-
     fun salvarPeca(peca: Peca): Peca {
         require(!repository.existePorCodigo(peca.codigo)) { "Peça já cadastrada" }
 
@@ -24,8 +23,8 @@ class PecaService(private val repository: PecaRepository) {
                 fabricante = dadosAtualizados.fabricante,
                 fornecedor = dadosAtualizados.fornecedor,
                 precoDeCompra = dadosAtualizados.precoDeCompra,
-                precoDeVenda = dadosAtualizados.precoDeVenda
-            )
+                precoDeVenda = dadosAtualizados.precoDeVenda,
+            ),
         )
     }
 
@@ -58,7 +57,7 @@ class PecaService(private val repository: PecaRepository) {
     }
 
     fun buscarPorCodigo(codigo: String) =
-        repository.buscarAtivoPorCodigo(codigo) ?:throw IllegalArgumentException("Peça não encontrada")
+        repository.buscarAtivoPorCodigo(codigo) ?: throw IllegalArgumentException("Peça não encontrada")
 
     fun buscarPorNome(nome: String) = repository.buscarAtivoPorNome(nome)
 
@@ -71,5 +70,4 @@ class PecaService(private val repository: PecaRepository) {
     fun existeEntreTodosPorCodigo(codigo: String) = repository.existePorCodigo(codigo)
 
     fun listarPecas() = repository.listarAtivos()
-
 }

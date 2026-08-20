@@ -7,5 +7,5 @@ data class EnderecoDto(
     val bairro: String,
     val cidade: String,
     val estado: String,
-    val cep: String
+    val cep: String,
 )

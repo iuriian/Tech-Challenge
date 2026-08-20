@@ -2,9 +2,9 @@ package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import kotlin.test.assertEquals
 
 class PecaPersistenceMapperTest {
     private val mapper = PecaPersistenceMapper()

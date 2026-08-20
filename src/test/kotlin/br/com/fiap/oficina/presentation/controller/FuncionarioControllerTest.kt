@@ -11,8 +11,13 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(FuncionarioController::class)
 class FuncionarioControllerTest {
@@ -26,7 +31,8 @@ class FuncionarioControllerTest {
     @WithMockUser
     fun `deve cadastrar funcionario via endpoint POST`() {
         val requestJson = """{ "nome": "João", "cargo": "ATENDENTE" }"""
-        val responseDto = FuncionarioDto(id = "00000000-0000-0000-0000-000000000050", nome = "João", cargo = "ATENDENTE")
+        val responseDto =
+            FuncionarioDto(id = "00000000-0000-0000-0000-000000000050", nome = "João", cargo = "ATENDENTE")
 
         `when`(service.cadastrar(FuncionarioDto(nome = "João", cargo = "ATENDENTE"))).thenReturn(responseDto)
 
@@ -97,7 +103,9 @@ class FuncionarioControllerTest {
         val requestJson = """{ "id": "30", "nome": "Alterado", "cargo": "MECANICO" }"""
         val responseDto = FuncionarioDto(id = "30", nome = "Alterado", cargo = "MECANICO")
 
-        `when`(service.editar("30", FuncionarioDto(id = "30", nome = "Alterado", cargo = "MECANICO"))).thenReturn(responseDto)
+        `when`(
+            service.editar("30", FuncionarioDto(id = "30", nome = "Alterado", cargo = "MECANICO")),
+        ).thenReturn(responseDto)
 
         mockMvc
             .perform(

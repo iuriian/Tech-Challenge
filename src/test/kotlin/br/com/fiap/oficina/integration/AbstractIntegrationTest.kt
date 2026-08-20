@@ -23,7 +23,6 @@ import org.testcontainers.containers.PostgreSQLContainer
 @ActiveProfiles("test")
 @Transactional
 abstract class AbstractIntegrationTest {
-
     @Autowired
     protected lateinit var mockMvc: MockMvc
 

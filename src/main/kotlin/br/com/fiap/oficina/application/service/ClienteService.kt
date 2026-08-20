@@ -7,13 +7,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class ClienteService(private val repository: ClienteRepository) {
-
     fun salvarCliente(cliente: Cliente): Cliente = repository.salvar(cliente)
 
     fun buscarPorId(id: Id): Cliente? = repository.buscarPorId(id)
 
-    fun buscarPorDocumento(documentoNumero: String): Cliente? =
-        repository.buscarPorDocumento(documentoNumero)
+    fun buscarPorDocumento(documentoNumero: String): Cliente? = repository.buscarPorDocumento(documentoNumero)
 
     fun buscarPorNome(nome: String): Cliente? = repository.buscarPorNome(nome)
 
@@ -22,5 +20,4 @@ class ClienteService(private val repository: ClienteRepository) {
     fun removerCliente(id: Id) {
         this.repository.remover(id)
     }
-
 }

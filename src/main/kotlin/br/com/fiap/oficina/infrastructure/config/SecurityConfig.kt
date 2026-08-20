@@ -13,7 +13,6 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true)
 class SecurityConfig {
-
     @Bean
     @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -21,11 +20,17 @@ class SecurityConfig {
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/actuator/health", "/actuator/info", "/swagger-ui.html",
-                    "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                    .anyRequest().authenticated()
-            }
-            .oauth2ResourceServer { oauth2 ->
+                auth
+                    .requestMatchers(
+                        "/actuator/health",
+                        "/actuator/info",
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                    ).permitAll()
+                    .anyRequest()
+                    .authenticated()
+            }.oauth2ResourceServer { oauth2 ->
                 oauth2.jwt { it.jwtAuthenticationConverter(keycloakJwtAuthenticationConverter()) }
             }
 
@@ -33,9 +38,7 @@ class SecurityConfig {
     }
 
     @Bean
-    fun keycloakJwtAuthenticationConverter(): JwtAuthenticationConverter {
-        return JwtAuthenticationConverter().apply {
-            setJwtGrantedAuthoritiesConverter(KeycloakJwtRoleConverter())
-        }
+    fun keycloakJwtAuthenticationConverter(): JwtAuthenticationConverter = JwtAuthenticationConverter().apply {
+        setJwtGrantedAuthoritiesConverter(KeycloakJwtRoleConverter())
     }
 }

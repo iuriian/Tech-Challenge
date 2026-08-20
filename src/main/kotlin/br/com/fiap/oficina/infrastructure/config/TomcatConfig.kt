@@ -7,15 +7,15 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-
 @Configuration
 class TomcatConfig {
     @Bean
-    fun aprCustomizer(): WebServerFactoryCustomizer<TomcatServletWebServerFactory?> {
-        return WebServerFactoryCustomizer { factory: TomcatServletWebServerFactory? ->
-            factory?.addContextCustomizers(TomcatContextCustomizer { context: Context? ->
-                context?.allowCasualMultipartParsing = true
-            })
+    fun aprCustomizer(): WebServerFactoryCustomizer<TomcatServletWebServerFactory?> =
+        WebServerFactoryCustomizer { factory: TomcatServletWebServerFactory? ->
+            factory?.addContextCustomizers(
+                TomcatContextCustomizer { context: Context? ->
+                    context?.allowCasualMultipartParsing = true
+                },
+            )
         }
-    }
 }

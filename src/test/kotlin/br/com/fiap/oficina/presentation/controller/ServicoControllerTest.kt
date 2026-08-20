@@ -62,16 +62,15 @@ class ServicoControllerTest {
             cargo = Cargo.MECANICO,
         )
 
-    private fun buildServico(id: UUID) =
-        Servico(
-            id = Id.fromString(id.toString()),
-            descricao = "Revisao Geral",
-            status = ServicoStatus.RECEBIDA,
-            funcionario = funcionario,
-            cliente = cliente,
-            veiculo = veiculo,
-            pecas = emptyList(),
-        )
+    private fun buildServico(id: UUID) = Servico(
+        id = Id.fromString(id.toString()),
+        descricao = "Revisao Geral",
+        status = ServicoStatus.RECEBIDA,
+        funcionario = funcionario,
+        cliente = cliente,
+        veiculo = veiculo,
+        pecas = emptyList(),
+    )
 
     @Test
     @WithMockUser
@@ -94,8 +93,8 @@ class ServicoControllerTest {
                 descricao = servico.descricao,
                 status = servico.status,
                 funcionarioId =
-                    servico.funcionario.id.valor
-                        .toString(),
+                servico.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -112,16 +111,16 @@ class ServicoControllerTest {
             Orcamento(
                 servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            pecaId = Id.generate(),
-                            codigo = "PEC001",
-                            nome = "Filtro",
-                            precoUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal.ONE,
-                            subtotal = BigDecimal.TEN,
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        pecaId = Id.generate(),
+                        codigo = "PEC001",
+                        nome = "Filtro",
+                        precoUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal.ONE,
+                        subtotal = BigDecimal.TEN,
                     ),
+                ),
                 valorTotal = BigDecimal.TEN,
             )
         `when`(service.obterOrcamento(Id.fromString(id.toString()))).thenReturn(orcamento)
@@ -141,8 +140,8 @@ class ServicoControllerTest {
                 descricao = servicoAvancado.descricao,
                 status = servicoAvancado.status,
                 funcionarioId =
-                    servicoAvancado.funcionario.id.valor
-                        .toString(),
+                servicoAvancado.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -156,15 +155,17 @@ class ServicoControllerTest {
     fun `cliente pode alterar status para cancelada via endpoint de status`() {
         val id = UUID.randomUUID()
         val servicoCancelado = buildServico(id).copy(status = ServicoStatus.CANCELADA)
-        `when`(service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA)).thenReturn(servicoCancelado)
+        `when`(
+            service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA),
+        ).thenReturn(servicoCancelado)
         `when`(mapper.toResponse(servicoCancelado)).thenReturn(
             ServicoDto(
                 id = id,
                 descricao = servicoCancelado.descricao,
                 status = servicoCancelado.status,
                 funcionarioId =
-                    servicoCancelado.funcionario.id.valor
-                        .toString(),
+                servicoCancelado.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),

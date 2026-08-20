@@ -4,7 +4,6 @@ import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface PecaRepository {
-
     fun salvar(peca: Peca): Peca
 
     fun listarAtivos(): List<Peca>

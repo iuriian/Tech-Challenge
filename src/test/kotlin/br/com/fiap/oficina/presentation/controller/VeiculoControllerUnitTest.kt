@@ -8,10 +8,10 @@ import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
-import java.util.UUID
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import kotlin.test.assertEquals
 
 class VeiculoControllerUnitTest {
     private val service = mock(VeiculoService::class.java)

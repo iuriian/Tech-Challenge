@@ -7,12 +7,16 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
 import br.com.fiap.oficina.presentation.mapper.PecaMapper
-import org.junit.jupiter.api.Assertions.*
+import org.junit.Assert.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 class PecaControllerUnitTest {
     private val service = mock(PecaService::class.java)
@@ -27,13 +31,12 @@ class PecaControllerUnitTest {
             qtdEstoque = 10,
         )
 
-    private fun pecaDto() =
-        PecaDto(
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 10,
-        )
+    private fun pecaDto() = PecaDto(
+        codigo = "PEC001",
+        nome = "Filtro de Óleo",
+        precoDeVenda = BigDecimal("45.00"),
+        qtdEstoque = 10,
+    )
 
     @Test
     fun `criar deve retornar dto da peca salva`() {

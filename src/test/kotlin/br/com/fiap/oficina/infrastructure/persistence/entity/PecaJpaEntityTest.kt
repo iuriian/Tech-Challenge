@@ -1,12 +1,15 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class PecaJpaEntityTest {
-
     @Test
     fun `deve aplicar valores padrao no construtor sem argumentos`() {
         val entity = PecaJpaEntity()
@@ -25,11 +28,12 @@ class PecaJpaEntityTest {
 
     @Test
     fun `deve permitir construir com parte dos argumentos e mutar propriedades`() {
-        val entity = PecaJpaEntity(
-            codigo = "PEC002",
-            nome = "Vela",
-            precoDeVenda = BigDecimal("32.00")
-        )
+        val entity =
+            PecaJpaEntity(
+                codigo = "PEC002",
+                nome = "Vela",
+                precoDeVenda = BigDecimal("32.00"),
+            )
 
         assertEquals("PEC002", entity.codigo)
         assertEquals(BigDecimal("32.00"), entity.precoDeVenda)
