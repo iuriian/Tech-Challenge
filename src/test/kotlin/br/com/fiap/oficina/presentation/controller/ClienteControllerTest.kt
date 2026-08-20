@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.service.ClienteService
+import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -26,6 +27,9 @@ class ClienteControllerTest {
 
     @MockitoBean
     lateinit var mapper: ClienteMapper
+
+    @MockitoBean
+    lateinit var criarClienteUseCase: CriarClienteUseCase
 
     @Test
     @WithMockUser

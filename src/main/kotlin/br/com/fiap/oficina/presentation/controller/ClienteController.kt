@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.service.ClienteService
+import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
@@ -23,14 +24,18 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/clientes")
 @Tag(name = "Clientes", description = "Operações relacionadas ao gerenciamento de clientes")
-class ClienteController(private val service: ClienteService, private val mapper: ClienteMapper) {
+class ClienteController(
+    private val service: ClienteService,
+    private val mapper: ClienteMapper,
+    private val usecase: CriarClienteUseCase
+) {
     @PostMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo cliente", description = "Cadastra um novo cliente no sistema")
     fun criar(@Valid @RequestBody cliente: ClienteDto): ClienteDto {
         val entity = this.mapper.toEntity(cliente)
-        return mapper.toResponse(service.salvarCliente(entity))
+        return mapper.toResponse(usecase.executar(entity))
     }
 
     @GetMapping("/{id}")
