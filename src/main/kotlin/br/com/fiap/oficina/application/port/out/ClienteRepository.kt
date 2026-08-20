@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.domain.repository
+package br.com.fiap.oficina.application.port.out
 
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Id
