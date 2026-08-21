@@ -1,0 +1,199 @@
+name: Spotless
+description: Run Spotless static code analysis for Kotlin projects
+
+inputs:
+  github-token:
+    description: 'GitHub token for authentication'
+    required: false
+    default: ''
+  max-files:
+    description: 'Maximum number of files listed in the PR comment'
+    required: false
+    default: '15'
+
+outputs:
+  outcome:
+    description: 'success | failure'
+    value: ${{ steps.spotless.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - name: Spotless Check
+      id: spotless
+      shell: bash
+      run: |
+        set -o pipefail
+        if ./gradlew spotlessCheck 2>&1 | tee spotless-output.log; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Spotless Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      continue-on-error: true
+      env:
+        SPOTLESS_OUTCOME: ${{ steps.spotless.outputs.outcome }}
+        MAX_FILES: ${{ inputs.max-files }}
+      with:
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+
+          const spotlessOk = process.env.SPOTLESS_OUTCOME === 'success';
+          const maxFiles = parseInt(process.env.MAX_FILES || '15', 10);
+          const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+          const lines = [];
+
+          function parseSpotlessLog(log) {
+            const result = new Map();
+            const fileRegex = /^\s{2,}(?:\.[/\\])?([\w./\\-]+\.(?:kt|kts|java))\s*$/;
+            const hunkRegex = /^\s*@@\s+-(\d+)/;
+            let current = null;
+
+            for (const raw of log.split(/\r?\n/)) {
+              const fileMatch = raw.match(fileRegex);
+              if (fileMatch) {
+                current = fileMatch[1].replace(/\\/g, '/');
+                if (!result.has(current)) {
+                  result.set(current, new Set());
+                }
+                continue;
+              }
+
+              const hunkMatch = raw.match(hunkRegex);
+              if (hunkMatch && current) {
+                result.get(current).add(parseInt(hunkMatch[1], 10));
+              }
+            }
+
+            if (result.size === 0) {
+              const legacy = [
+                /\[ERROR\]\s+(\S+\.kts?):/g,
+                /Error in file:\s+(\S+)/g,
+                /Mismatch at line \d+ in (\S+)/g,
+              ];
+
+              for (const pattern of legacy) {
+                let match;
+                while ((match = pattern.exec(log)) !== null) {
+                  const file = match[1].split(':')[0];
+                  if (/\.(kt|kts|java)$/.test(file) && !result.has(file)) {
+                    result.set(file, new Set());
+                  }
+                }
+              }
+            }
+
+            return result;
+          }
+
+          if (spotlessOk) {
+            lines.push(
+              '## ✅ Spotless - Formatação de Código',
+              '',
+              'Muito bem! Seu código segue os padrões de formatação do projeto.'
+            );
+          } else {
+            lines.push(
+              '## ⚠️ Spotless - Problemas de Formatação de Código',
+              '',
+              'Seu código possui problemas de formatação que precisam ser corrigidos.',
+              '',
+              '**Arquivos com problemas de formatação:**'
+            );
+
+            let files = new Map();
+
+            try {
+              const logPath = path.join(workspace, 'spotless-output.log');
+              if (fs.existsSync(logPath)) {
+                files = parseSpotlessLog(fs.readFileSync(logPath, 'utf8'));
+              } else {
+                core.warning('Arquivo spotless-output.log não encontrado em ' + logPath);
+              }
+            } catch (e) {
+              core.warning('Não foi possível analisar o log do Spotless: ' + e.message);
+            }
+
+            core.info('Arquivos com violação encontrados: ' + files.size);
+
+            if (files.size > 0) {
+              const entries = Array.from(files.entries());
+
+              for (const [file, hunks] of entries.slice(0, maxFiles)) {
+                const numbers = Array.from(hunks).sort((a, b) => a - b);
+                const suffix = numbers.length > 0
+                  ? ' — ' + (numbers.length === 1 ? 'linha ' : 'linhas ') + numbers.join(', ')
+                  : '';
+                lines.push('- `' + file + '`' + suffix);
+              }
+
+              if (entries.length > maxFiles) {
+                lines.push('- ... e mais ' + (entries.length - maxFiles) + ' arquivo(s)');
+              }
+            } else {
+              lines.push('- Vários arquivos (execute `./gradlew spotlessApply` para corrigir todos)');
+            }
+
+            lines.push(
+              '',
+              '**Como corrigir:**',
+              '```bash',
+              './gradlew spotlessApply',
+              'git add -A',
+              'git commit -m "style: aplica formatação do spotless"',
+              'git push',
+              '```',
+              '',
+              'Isso corrigirá automaticamente todos os problemas de formatação.'
+            );
+          }
+
+          const marker = '<!-- spotless-report -->';
+          const body = marker + '\n' + lines.join('\n');
+
+          // O resumo do job sempre é gravado, mesmo que o comentário falhe
+          await core.summary.addRaw(lines.join('\n')).write();
+
+          try {
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const oldComment = comments.find(
+              c => c.body && (c.body.includes(marker) || c.body.includes('Spotless - '))
+            );
+
+            if (oldComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: oldComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          } catch (e) {
+            if (e.status === 403) {
+              core.warning(
+                'Sem permissão para comentar no PR (403). ' +
+                'Adicione "permissions: pull-requests: write" ao job no workflow. ' +
+                'O relatório foi gravado no resumo do job.'
+              );
+            } else {
+              core.warning('Falha ao publicar o comentário: ' + e.message);
+            }
+          }

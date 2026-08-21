@@ -8,6 +8,9 @@ jobs:
   quality:
     name: Quality
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,11 +18,16 @@ jobs:
       - name: Setup Kotlin
         uses: ./.github/actions/setup-kotlin
 
-      - name: Spotless Check
-        run: ./gradlew spotlessCheck
+      - name: Spotless
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+        uses: ./.github/actions/spotless
 
       - name: Detekt
-        run: ./gradlew detekt
+        with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            max-issues: ${{ inputs.max-issues }}
+        uses: ./.github/actions/detekt
 
   unit_test:
     name: Unit Test
@@ -52,7 +60,7 @@ jobs:
           minimum-coverage: 80
           minimum-coverage-changed-files: 80
           title: Cobertura de testes
-          update-comment: false
+          update-comment: true
 
       - name: Upload Reports
         uses: ./.github/actions/upload-reports

@@ -184,6 +184,13 @@ detekt {
     failOnSeverity = dev.detekt.gradle.extensions.FailOnSeverity.Warning
 }
 
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    reports {
+        checkstyle.required.set(true)
+        html.required.set(true)
+    }
+}
+
 sonar {
     properties {
         property("sonar.projectKey", "br.com.fiap.oficina:tech-challenge")
