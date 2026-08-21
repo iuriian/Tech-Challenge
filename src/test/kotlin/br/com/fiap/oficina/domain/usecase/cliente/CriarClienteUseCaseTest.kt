@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.domain.usecase.cliente
 
+import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.usecase.cliente.CriarClienteUseCase
-import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +29,7 @@ class CriarClienteUseCaseTest {
     private lateinit var cliente: Cliente
 
     @BeforeEach
-    fun setUp(){
+    fun setUp() {
         cliente = Cliente(
             id = Id.generate(),
             nome = "Joao",
@@ -52,7 +52,7 @@ class CriarClienteUseCaseTest {
 
         verify(
             clienteRepository,
-            times(1)
+            times(1),
         ).salvar(cliente)
     }
 }

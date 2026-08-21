@@ -3,8 +3,8 @@ package br.com.fiap.oficina.infrastructure.persistence.repository
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.jpa.ServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import org.springframework.stereotype.Component
 
 @Component
