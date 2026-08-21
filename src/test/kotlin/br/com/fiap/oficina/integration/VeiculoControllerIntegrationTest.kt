@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.integration
 
-import br.com.fiap.oficina.application.port.out.ClienteRepository
+import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test

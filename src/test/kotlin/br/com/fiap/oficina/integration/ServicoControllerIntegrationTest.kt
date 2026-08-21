@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.integration
 
 import br.com.fiap.oficina.domain.enum.ServicoStatus
-import br.com.fiap.oficina.application.port.out.ClienteRepository
+import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
