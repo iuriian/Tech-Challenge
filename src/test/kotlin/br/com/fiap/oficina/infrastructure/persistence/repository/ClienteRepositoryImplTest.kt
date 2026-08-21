@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.adapter
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
@@ -6,7 +6,7 @@ import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.ClienteJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.ClienteJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.ClienteJpaRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -19,18 +19,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
-class ClienteRepositoryAdapterTest {
+class ClienteRepositoryImplTest {
     @Mock
     lateinit var jpaRepository: ClienteJpaRepository
 
     private val mapper = ClientePersistenceMapper()
-    private lateinit var adapter: ClienteRepositoryAdapter
+    private lateinit var adapter: ClienteRepositoryImpl
     private lateinit var cliente: Cliente
     private lateinit var jpa: ClienteJpaEntity
 
     @BeforeEach
     fun setup() {
-        adapter = ClienteRepositoryAdapter(jpaRepository, mapper)
+        adapter = ClienteRepositoryImpl(jpaRepository, mapper)
         cliente =
             Cliente(
                 id = Id.generate(),

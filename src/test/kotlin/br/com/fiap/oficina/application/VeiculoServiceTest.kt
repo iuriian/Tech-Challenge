@@ -5,7 +5,7 @@ import br.com.fiap.oficina.application.service.VeiculoComando
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.application.port.out.ClienteRepository
+import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id

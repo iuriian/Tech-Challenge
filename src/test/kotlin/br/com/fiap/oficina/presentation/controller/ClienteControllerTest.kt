@@ -1,12 +1,12 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.usecase.cliente.AtualizarClienteUseCase
-import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorDocumentoUseCase
-import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorIdUseCase
-import br.com.fiap.oficina.application.usecase.cliente.BuscarClientePorNomeUseCase
-import br.com.fiap.oficina.application.usecase.cliente.CriarClienteUseCase
-import br.com.fiap.oficina.application.usecase.cliente.ListarClientesUseCase
-import br.com.fiap.oficina.application.usecase.cliente.RemoverClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.AtualizarClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorIdUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorNomeUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.CriarClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.ListarClientesUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.RemoverClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
