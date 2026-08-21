@@ -1,14 +1,14 @@
-package br.com.fiap.oficina.infrastructure.persistence.adapter
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.application.port.out.ClienteRepository
+import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.ClienteJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.ClienteJpaRepository
 import org.springframework.stereotype.Component
 
 @Component
-class ClienteRepositoryAdapter(
+class ClienteRepositoryImpl(
     private val jpaRepository: ClienteJpaRepository,
     private val mapper: ClientePersistenceMapper,
 ) : ClienteRepository {
