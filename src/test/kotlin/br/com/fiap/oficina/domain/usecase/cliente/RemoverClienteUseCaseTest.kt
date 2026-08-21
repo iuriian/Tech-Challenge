@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.usecase.cliente.RemoverClienteUseCase

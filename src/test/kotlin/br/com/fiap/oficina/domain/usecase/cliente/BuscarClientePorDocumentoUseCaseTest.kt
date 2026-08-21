@@ -1,7 +1,7 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.ListarClientesUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -15,35 +15,38 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class ListarClientesUseCaseTest {
+class BuscarClientePorDocumentoUseCaseTest {
 
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
     @InjectMocks
-    lateinit var useCase: ListarClientesUseCase
+    lateinit var useCase: BuscarClientePorDocumentoUseCase
 
     private lateinit var cliente: Cliente
+    private val numeroDocumento = "12345678909"
 
     @BeforeEach
     fun setUp() {
         cliente = Cliente(
             id = Id.generate(),
             nome = "Joao",
-            documento = Documento.cpf("12345678909"),
+            documento = Documento.cpf(numeroDocumento),
             email = "joao@email.com",
         )
     }
 
     @Test
-    fun `deve listar todos os clientes`() {
-        `when`(clienteRepository.listarTodos()).thenReturn(listOf(cliente))
+    fun `deve buscar cliente por documento com sucesso`() {
+        `when`(clienteRepository.buscarPorDocumento(numeroDocumento)).thenReturn(cliente)
 
-        val resultado = useCase.executar()
+        val resultado = useCase.executar(numeroDocumento)
 
-        assertEquals(listOf(cliente), resultado)
-        verify(clienteRepository, times(1)).listarTodos()
+        assertNotNull(resultado)
+        assertEquals(cliente.nome, resultado.nome)
+        verify(clienteRepository, times(1)).buscarPorDocumento(numeroDocumento)
     }
 }

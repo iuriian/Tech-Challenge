@@ -1,12 +1,12 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.CriarClienteUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -18,18 +18,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class CriarClienteUseCaseTest {
+class AtualizarClienteUseCaseTest {
 
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
     @InjectMocks
-    lateinit var useCase: CriarClienteUseCase
+    lateinit var useCase: AtualizarClienteUseCase
 
     private lateinit var cliente: Cliente
 
     @BeforeEach
-    fun setUp(){
+    fun setUp() {
         cliente = Cliente(
             id = Id.generate(),
             nome = "Joao",
@@ -39,7 +39,8 @@ class CriarClienteUseCaseTest {
     }
 
     @Test
-    fun `deve cadastrar uma cliente com sucesso`() {
+    fun `deve atualizar um cliente com sucesso`() {
+        `when`(clienteRepository.buscarPorId(cliente.id)).thenReturn(cliente)
         `when`(clienteRepository.salvar(cliente)).thenReturn(cliente)
 
         val resultado = useCase.executar(cliente)
@@ -50,9 +51,20 @@ class CriarClienteUseCaseTest {
         assertEquals(cliente.documento, resultado.documento)
         assertEquals(cliente.email, resultado.email)
 
-        verify(
-            clienteRepository,
-            times(1)
-        ).salvar(cliente)
+        verify(clienteRepository, times(1)).buscarPorId(cliente.id)
+        verify(clienteRepository, times(1)).salvar(cliente)
+    }
+
+    @Test
+    fun `deve lancar excecao quando cliente nao encontrado`() {
+        `when`(clienteRepository.buscarPorId(cliente.id)).thenReturn(null)
+
+        val exception = assertThrows<IllegalArgumentException> {
+            useCase.executar(cliente)
+        }
+
+        assertEquals("Cliente não encontrado com o ID: ${cliente.id}", exception.message)
+        verify(clienteRepository, times(1)).buscarPorId(cliente.id)
+        verify(clienteRepository, times(0)).salvar(cliente)
     }
 }

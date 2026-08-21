@@ -1,7 +1,7 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorNomeUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.ListarClientesUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -15,38 +15,35 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class BuscarClientePorNomeUseCaseTest {
+class ListarClientesUseCaseTest {
 
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
     @InjectMocks
-    lateinit var useCase: BuscarClientePorNomeUseCase
+    lateinit var useCase: ListarClientesUseCase
 
     private lateinit var cliente: Cliente
-    private val nome = "Joao"
 
     @BeforeEach
     fun setUp() {
         cliente = Cliente(
             id = Id.generate(),
-            nome = nome,
+            nome = "Joao",
             documento = Documento.cpf("12345678909"),
             email = "joao@email.com",
         )
     }
 
     @Test
-    fun `deve buscar cliente por nome com sucesso`() {
-        `when`(clienteRepository.buscarPorNome(nome)).thenReturn(cliente)
+    fun `deve listar todos os clientes`() {
+        `when`(clienteRepository.listarTodos()).thenReturn(listOf(cliente))
 
-        val resultado = useCase.executar(nome)
+        val resultado = useCase.executar()
 
-        assertNotNull(resultado)
-        assertEquals(nome, resultado.nome)
-        verify(clienteRepository, times(1)).buscarPorNome(nome)
+        assertEquals(listOf(cliente), resultado)
+        verify(clienteRepository, times(1)).listarTodos()
     }
 }

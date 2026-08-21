@@ -1,7 +1,7 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorNomeUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -18,35 +18,35 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class BuscarClientePorDocumentoUseCaseTest {
+class BuscarClientePorNomeUseCaseTest {
 
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
     @InjectMocks
-    lateinit var useCase: BuscarClientePorDocumentoUseCase
+    lateinit var useCase: BuscarClientePorNomeUseCase
 
     private lateinit var cliente: Cliente
-    private val numeroDocumento = "12345678909"
+    private val nome = "Joao"
 
     @BeforeEach
     fun setUp() {
         cliente = Cliente(
             id = Id.generate(),
-            nome = "Joao",
-            documento = Documento.cpf(numeroDocumento),
+            nome = nome,
+            documento = Documento.cpf("12345678909"),
             email = "joao@email.com",
         )
     }
 
     @Test
-    fun `deve buscar cliente por documento com sucesso`() {
-        `when`(clienteRepository.buscarPorDocumento(numeroDocumento)).thenReturn(cliente)
+    fun `deve buscar cliente por nome com sucesso`() {
+        `when`(clienteRepository.buscarPorNome(nome)).thenReturn(cliente)
 
-        val resultado = useCase.executar(numeroDocumento)
+        val resultado = useCase.executar(nome)
 
         assertNotNull(resultado)
-        assertEquals(cliente.nome, resultado.nome)
-        verify(clienteRepository, times(1)).buscarPorDocumento(numeroDocumento)
+        assertEquals(nome, resultado.nome)
+        verify(clienteRepository, times(1)).buscarPorNome(nome)
     }
 }

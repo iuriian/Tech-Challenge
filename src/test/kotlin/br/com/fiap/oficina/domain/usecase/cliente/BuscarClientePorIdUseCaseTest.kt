@@ -1,7 +1,7 @@
-package br.com.fiap.oficina.application.usecase.cliente
+package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.AtualizarClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorIdUseCase
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -18,20 +18,22 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class AtualizarClienteUseCaseTest {
+class BuscarClientePorIdUseCaseTest {
 
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
     @InjectMocks
-    lateinit var useCase: AtualizarClienteUseCase
+    lateinit var useCase: BuscarClientePorIdUseCase
 
     private lateinit var cliente: Cliente
+    private lateinit var clienteId: Id
 
     @BeforeEach
     fun setUp() {
+        clienteId = Id.generate()
         cliente = Cliente(
-            id = Id.generate(),
+            id = clienteId,
             nome = "Joao",
             documento = Documento.cpf("12345678909"),
             email = "joao@email.com",
@@ -39,17 +41,13 @@ class AtualizarClienteUseCaseTest {
     }
 
     @Test
-    fun `deve atualizar um cliente com sucesso`() {
-        `when`(clienteRepository.salvar(cliente)).thenReturn(cliente)
+    fun `deve buscar cliente por id com sucesso`() {
+        `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
 
-        val resultado = useCase.executar(cliente)
+        val resultado = useCase.executar(clienteId)
 
         assertNotNull(resultado)
         assertEquals(cliente.id, resultado.id)
-        assertEquals(cliente.nome, resultado.nome)
-        assertEquals(cliente.documento, resultado.documento)
-        assertEquals(cliente.email, resultado.email)
-
-        verify(clienteRepository, times(1)).salvar(cliente)
+        verify(clienteRepository, times(1)).buscarPorId(clienteId)
     }
 }
