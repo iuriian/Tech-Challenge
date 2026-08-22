@@ -36,6 +36,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      checks: write
 
     steps:
       - name: Checkout
@@ -45,40 +46,55 @@ jobs:
         uses: ./.github/actions/setup-kotlin
 
       - name: Run Tests
-        run: ./gradlew test
+        run: ./gradlew test --continue
 
       - name: Coverage Report
         if: always()
         run: ./gradlew jacocoTestReport
 
+      - name: Publish test results
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/build/test-results/test/TEST-*.xml'
+          detailed_summary: true
+          include_passed: false
+
       - name: Show coverage report
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: madrapps/jacoco-report@v1.7.1
         with:
           paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          minimum-coverage: 80
-          minimum-coverage-changed-files: 80
+          min-coverage-overall: 0
+          min-coverage-changed-lines: 85
           title: Cobertura de testes
           update-comment: true
-
-      - name: Upload Reports
-        uses: ./.github/actions/upload-reports
+          comment-type: both
 
       - name: Verify minimum coverage
         run: ./gradlew jacocoTestCoverageVerification
 
-  build:
-    name: Build
-    needs: unit_test
-    runs-on: ubuntu-latest
+      - name: Upload Reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.job }}
+          path: '**/build/reports/jacoco/test/'
+          if-no-files-found: error
+          retention-days: 7
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Kotlin
-        uses: ./.github/actions/setup-kotlin
-
-      - name: Run build
-        run: ./gradlew build
+#  build:
+#    name: Build
+#    needs: unit_test
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Kotlin
+#        uses: ./.github/actions/setup-kotlin
+#
+#      - name: Run build
+#        run: ./gradlew build

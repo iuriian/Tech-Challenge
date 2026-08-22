@@ -122,7 +122,7 @@ tasks.named<Test>("test") {
     finalizedBy(jacocoTestReport)
 }
 
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+tasks.jacocoTestCoverageVerification {
     dependsOn(jacocoTestReport)
     violationRules {
         rule {
@@ -144,10 +144,6 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
         }
     }
 }
-
-// tasks.named("check") {
-//    dependsOn("jacocoTestCoverageVerification")
-// }
 
 val dokkaVisibility =
     setOf(
