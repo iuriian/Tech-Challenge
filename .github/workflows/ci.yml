@@ -19,15 +19,48 @@ jobs:
         uses: ./.github/actions/setup-kotlin
 
       - name: Spotless
+        id: spotless
+        uses: ./.github/actions/spotless
         with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
-        uses: ./.github/actions/spotless
+            fail-on-violation: 'false'
 
       - name: Detekt
-        with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            max-issues: ${{ inputs.max-issues }}
+        id: detekt
+        if: always()
         uses: ./.github/actions/detekt
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          max-issues: ${{ inputs.max-issues }}
+          fail-on-violation: 'false'
+
+      - name: Quality gate
+        if: always()
+        run: |
+          fail=0
+          
+          check() {
+            local nome="$1" saida="$2" step="$3"
+            if [ "$saida" = "failure" ] || [ "$step" = "failure" ]; then
+              echo "| $nome | ❌ |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::error title=$nome::reprovado — veja o comentário no PR"
+              fail=1
+            else
+              echo "| $nome | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+          
+          {
+            echo "## Quality gate"
+            echo
+            echo "| Análise | Resultado |"
+            echo "|:--|:-:|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          
+          check "Spotless" "${{ steps.spotless.outputs.outcome }}" "${{ steps.spotless.outcome }}"
+          check "Detekt"   "${{ steps.detekt.outputs.outcome }}"   "${{ steps.detekt.outcome }}"
+          
+          exit $fail
 
   unit_test:
     name: Unit Test
