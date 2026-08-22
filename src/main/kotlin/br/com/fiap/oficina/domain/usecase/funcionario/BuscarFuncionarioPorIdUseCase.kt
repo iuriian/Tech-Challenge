@@ -6,8 +6,6 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class BuscarFuncionarioPorIdUseCase(
-    private val funcionarioRepository: FuncionarioRepository,
-) {
+class BuscarFuncionarioPorIdUseCase(private val funcionarioRepository: FuncionarioRepository) {
     fun executar(id: Id): Funcionario? = funcionarioRepository.buscarPorId(id)
 }

@@ -1,14 +1,14 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorNomeUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.CriarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.ListarFuncionariosUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.RemoverFuncionarioUseCase
-import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
 import org.junit.jupiter.api.Test

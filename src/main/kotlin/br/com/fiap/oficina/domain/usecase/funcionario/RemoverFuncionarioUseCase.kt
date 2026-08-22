@@ -5,8 +5,6 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class RemoverFuncionarioUseCase(
-    private val funcionarioRepository: FuncionarioRepository,
-) {
+class RemoverFuncionarioUseCase(private val funcionarioRepository: FuncionarioRepository) {
     fun executar(id: Id) = funcionarioRepository.deletar(id)
 }

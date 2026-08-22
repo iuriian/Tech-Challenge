@@ -36,9 +36,7 @@ class FuncionarioController(
 ) {
     @PostMapping
     @Operation(summary = "Criar um novo funcionário", description = "Cadastra um novo funcionário no sistema")
-    fun cadastrar(
-        @Valid @RequestBody funcionarioDto: FuncionarioDto,
-    ): FuncionarioDto {
+    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto {
         val entity = mapper.toEntity(funcionarioDto)
         return mapper.toResponse(criarFuncionarioUseCase.executar(entity))
     }
@@ -48,17 +46,15 @@ class FuncionarioController(
         summary = "ListarListar todos os funcionários",
         description = "Retorna uma lista com todos os funcionários cadastrados",
     )
-    fun listarTodos(): List<FuncionarioDto> =
-        listarFuncionariosUseCase.executar().map { mapper.toResponse(it) }
+    fun listarTodos(): List<FuncionarioDto> = listarFuncionariosUseCase.executar().map { mapper.toResponse(it) }
 
     @GetMapping("/id/{id}")
     @Operation(
         summary = "Buscar funcionário por ID",
         description = "Busca um funcionário através do seu identificador único",
     )
-    fun buscarPorId(
-        @PathVariable id: String,
-    ): FuncionarioDto? = buscarFuncionarioPorIdUseCase.executar(Id.fromString(id))?.let { mapper.toResponse(it) }
+    fun buscarPorId(@PathVariable id: String): FuncionarioDto? =
+        buscarFuncionarioPorIdUseCase.executar(Id.fromString(id))?.let { mapper.toResponse(it) }
 
     @GetMapping("/nome/{nome}")
     @Operation(summary = "Buscar funcionário por nome", description = "Busca um funcionário através do seu nome")
@@ -72,10 +68,7 @@ class FuncionarioController(
         summary = "Alterar dados de um funcionário",
         description = "Atualiza as informações de um funcionário existente",
     )
-    fun alterar(
-        @PathVariable id: String,
-        @Valid @RequestBody funcionarioDto: FuncionarioDto,
-    ): FuncionarioDto {
+    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto {
         val entity = mapper.toEntityComId(id, funcionarioDto)
         return mapper.toResponse(atualizarFuncionarioUseCase.executar(entity))
     }
@@ -85,7 +78,5 @@ class FuncionarioController(
         summary = "Deletar um funcionário",
         description = "Remove um funcionário do sistema através do seu identificador único",
     )
-    fun deletar(
-        @PathVariable id: String,
-    ) = removerFuncionarioUseCase.executar(Id.fromString(id))
+    fun deletar(@PathVariable id: String) = removerFuncionarioUseCase.executar(Id.fromString(id))
 }
