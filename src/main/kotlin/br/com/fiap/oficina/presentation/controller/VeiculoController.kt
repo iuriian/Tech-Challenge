@@ -1,12 +1,12 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.usecase.veiculo.AtualizarVeiculoUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.BuscarVeiculoPorIdUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.BuscarVeiculosPorMotoristaUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.CriarVeiculoUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.ListarVeiculosUseCase
-import br.com.fiap.oficina.application.usecase.veiculo.RemoverVeiculoUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculosPorMotoristaUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.CriarVeiculoUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper

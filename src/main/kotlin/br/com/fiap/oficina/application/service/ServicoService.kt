@@ -10,7 +10,7 @@ import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.Orcamento
 import org.springframework.stereotype.Service
