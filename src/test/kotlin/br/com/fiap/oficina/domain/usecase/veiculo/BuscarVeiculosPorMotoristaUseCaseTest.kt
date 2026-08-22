@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.application.usecase.veiculo
+package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
@@ -17,18 +17,19 @@ import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
 
 @ExtendWith(MockitoExtension::class)
-class ListarVeiculosUseCaseTest {
+class BuscarVeiculosPorMotoristaUseCaseTest {
     @Mock
     lateinit var veiculoRepository: VeiculoRepository
 
     @InjectMocks
-    lateinit var useCase: ListarVeiculosUseCase
+    lateinit var useCase: BuscarVeiculosPorMotoristaUseCase
 
+    private lateinit var motorista: Cliente
     private lateinit var veiculo: Veiculo
 
     @BeforeEach
     fun setUp() {
-        val motorista =
+        motorista =
             Cliente(
                 id = Id.generate(),
                 nome = "Dono",
@@ -48,12 +49,12 @@ class ListarVeiculosUseCaseTest {
     }
 
     @Test
-    fun `deve listar todos os veiculos`() {
-        `when`(veiculoRepository.listarTodos()).thenReturn(listOf(veiculo))
+    fun `deve buscar veiculos por motorista`() {
+        `when`(veiculoRepository.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
 
-        val resultado = useCase.executar()
+        val resultado = useCase.executar(motorista.id)
 
         assertEquals(listOf(veiculo), resultado)
-        verify(veiculoRepository, times(1)).listarTodos()
+        verify(veiculoRepository, times(1)).buscarPorMotorista(motorista.id)
     }
 }

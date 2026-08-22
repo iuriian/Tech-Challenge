@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.application.usecase.veiculo
+package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
@@ -15,21 +15,21 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class BuscarVeiculosPorMotoristaUseCaseTest {
+class BuscarVeiculoPorPlacaUseCaseTest {
     @Mock
     lateinit var veiculoRepository: VeiculoRepository
 
     @InjectMocks
-    lateinit var useCase: BuscarVeiculosPorMotoristaUseCase
+    lateinit var useCase: BuscarVeiculoPorPlacaUseCase
 
-    private lateinit var motorista: Cliente
     private lateinit var veiculo: Veiculo
 
     @BeforeEach
     fun setUp() {
-        motorista =
+        val motorista =
             Cliente(
                 id = Id.generate(),
                 nome = "Dono",
@@ -49,12 +49,13 @@ class BuscarVeiculosPorMotoristaUseCaseTest {
     }
 
     @Test
-    fun `deve buscar veiculos por motorista`() {
-        `when`(veiculoRepository.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
+    fun `deve buscar veiculo por placa com sucesso`() {
+        `when`(veiculoRepository.buscarPorPlaca("ABC1D23")).thenReturn(veiculo)
 
-        val resultado = useCase.executar(motorista.id)
+        val resultado = useCase.executar("ABC1D23")
 
-        assertEquals(listOf(veiculo), resultado)
-        verify(veiculoRepository, times(1)).buscarPorMotorista(motorista.id)
+        assertNotNull(resultado)
+        assertEquals(veiculo.placa, resultado.placa)
+        verify(veiculoRepository, times(1)).buscarPorPlaca("ABC1D23")
     }
 }

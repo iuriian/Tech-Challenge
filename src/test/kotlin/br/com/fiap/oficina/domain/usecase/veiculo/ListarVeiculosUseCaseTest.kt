@@ -1,27 +1,28 @@
-package br.com.fiap.oficina.application.usecase.veiculo
+package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import kotlin.test.assertEquals
 
 @ExtendWith(MockitoExtension::class)
-class RemoverVeiculoUseCaseTest {
+class ListarVeiculosUseCaseTest {
     @Mock
     lateinit var veiculoRepository: VeiculoRepository
 
     @InjectMocks
-    lateinit var useCase: RemoverVeiculoUseCase
+    lateinit var useCase: ListarVeiculosUseCase
 
     private lateinit var veiculo: Veiculo
 
@@ -47,25 +48,12 @@ class RemoverVeiculoUseCaseTest {
     }
 
     @Test
-    fun `deve remover veiculo existente`() {
-        `when`(veiculoRepository.buscarPorId(veiculo.id)).thenReturn(veiculo)
+    fun `deve listar todos os veiculos`() {
+        `when`(veiculoRepository.listarTodos()).thenReturn(listOf(veiculo))
 
-        useCase.executar(veiculo.id)
+        val resultado = useCase.executar()
 
-        verify(veiculoRepository).remover(veiculo.id)
-    }
-
-    @Test
-    fun `deve lancar excecao ao remover veiculo inexistente`() {
-        val idInexistente = Id.generate()
-        `when`(veiculoRepository.buscarPorId(idInexistente)).thenReturn(null)
-
-        val exception =
-            assertThrows(IllegalArgumentException::class.java) {
-                useCase.executar(idInexistente)
-            }
-
-        assertTrue(exception.message!!.contains("não encontrado"))
-        verify(veiculoRepository, never()).remover(anyObject())
+        assertEquals(listOf(veiculo), resultado)
+        verify(veiculoRepository, times(1)).listarTodos()
     }
 }

@@ -1,36 +1,32 @@
-package br.com.fiap.oficina.application.usecase.veiculo
+package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
-class BuscarVeiculoPorIdUseCaseTest {
+class RemoverVeiculoUseCaseTest {
     @Mock
     lateinit var veiculoRepository: VeiculoRepository
 
     @InjectMocks
-    lateinit var useCase: BuscarVeiculoPorIdUseCase
+    lateinit var useCase: RemoverVeiculoUseCase
 
     private lateinit var veiculo: Veiculo
-    private lateinit var veiculoId: Id
 
     @BeforeEach
     fun setUp() {
-        veiculoId = Id.generate()
         val motorista =
             Cliente(
                 id = Id.generate(),
@@ -40,7 +36,7 @@ class BuscarVeiculoPorIdUseCaseTest {
             )
         veiculo =
             Veiculo(
-                id = veiculoId,
+                id = Id.generate(),
                 marca = "Volkswagen",
                 nome = "Gol",
                 modelo = "Gol 1.6",
@@ -51,13 +47,25 @@ class BuscarVeiculoPorIdUseCaseTest {
     }
 
     @Test
-    fun `deve buscar veiculo por id com sucesso`() {
-        `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
+    fun `deve remover veiculo existente`() {
+        `when`(veiculoRepository.buscarPorId(veiculo.id)).thenReturn(veiculo)
 
-        val resultado = useCase.executar(veiculoId)
+        useCase.executar(veiculo.id)
 
-        assertNotNull(resultado)
-        assertEquals(veiculo.id, resultado.id)
-        verify(veiculoRepository, times(1)).buscarPorId(veiculoId)
+        verify(veiculoRepository).remover(veiculo.id)
+    }
+
+    @Test
+    fun `deve lancar excecao ao remover veiculo inexistente`() {
+        val idInexistente = Id.generate()
+        `when`(veiculoRepository.buscarPorId(idInexistente)).thenReturn(null)
+
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                useCase.executar(idInexistente)
+            }
+
+        assertTrue(exception.message!!.contains("não encontrado"))
+        verify(veiculoRepository, never()).remover(anyObject())
     }
 }
