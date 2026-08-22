@@ -72,6 +72,8 @@ jobs:
           title: Cobertura de testes
           update-comment: true
           comment-type: both
+          show-all-modules: true
+          coverage-counter-type: BRANCH
 
       - name: Verify minimum coverage
         run: ./gradlew jacocoTestCoverageVerification
