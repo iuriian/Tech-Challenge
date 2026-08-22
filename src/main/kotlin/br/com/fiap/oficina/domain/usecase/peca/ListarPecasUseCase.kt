@@ -5,8 +5,6 @@ import br.com.fiap.oficina.domain.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
-class ListarPecasUseCase(
-    private val repository: PecaRepository,
-) {
+class ListarPecasUseCase(private val repository: PecaRepository) {
     fun executar(): List<Peca> = repository.listarAtivos()
 }

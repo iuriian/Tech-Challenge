@@ -5,13 +5,8 @@ import br.com.fiap.oficina.domain.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
-class ReporPecasUseCase(
-    private val repository: PecaRepository,
-) {
-    fun executar(
-        codigo: String,
-        qtd: Int,
-    ): Peca? {
+class ReporPecasUseCase(private val repository: PecaRepository) {
+    fun executar(codigo: String, qtd: Int): Peca? {
         val peca =
             repository.buscarAtivoPorCodigo(codigo)
                 ?: throw IllegalArgumentException("Peça não encontrada")

@@ -6,8 +6,6 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
-class BuscarPecaPorIdUseCase(
-    private val repository: PecaRepository,
-) {
+class BuscarPecaPorIdUseCase(private val repository: PecaRepository) {
     fun executar(id: Id): Peca? = repository.buscarPorId(id)
 }

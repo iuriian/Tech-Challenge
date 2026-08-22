@@ -5,8 +5,6 @@ import br.com.fiap.oficina.domain.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
-class BuscarPecaPorNomeUseCase(
-    private val repository: PecaRepository,
-) {
+class BuscarPecaPorNomeUseCase(private val repository: PecaRepository) {
     fun executar(nome: String): Peca? = repository.buscarAtivoPorNome(nome)
 }

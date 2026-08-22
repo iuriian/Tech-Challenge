@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
@@ -10,14 +11,17 @@ import br.com.fiap.oficina.domain.usecase.peca.ListarPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.ReativarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
-import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
 import br.com.fiap.oficina.presentation.mapper.PecaMapper
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import java.math.BigDecimal
@@ -55,13 +59,12 @@ class PecaControllerUnitTest {
             qtdEstoque = 10,
         )
 
-    private fun pecaDto() =
-        PecaDto(
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 10,
-        )
+    private fun pecaDto() = PecaDto(
+        codigo = "PEC001",
+        nome = "Filtro de Óleo",
+        precoDeVenda = BigDecimal("45.00"),
+        qtdEstoque = 10,
+    )
 
     @Test
     fun `criar deve retornar dto da peca salva`() {

@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
@@ -10,7 +11,6 @@ import br.com.fiap.oficina.domain.usecase.peca.ListarPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.ReativarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
-import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import org.junit.jupiter.api.Test
@@ -23,8 +23,12 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 
 @WebMvcTest(PecaController::class)

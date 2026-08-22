@@ -4,9 +4,7 @@ import br.com.fiap.oficina.domain.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
-class ReativarPecaUseCase(
-    private val repository: PecaRepository,
-) {
+class ReativarPecaUseCase(private val repository: PecaRepository) {
     fun executar(codigo: String): Boolean {
         val peca = repository.buscarPorCodigo(codigo) ?: return false
 

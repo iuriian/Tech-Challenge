@@ -90,12 +90,11 @@ class PecaController(
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser retirada do estoque", required = true, example = "5")
         @RequestParam qtd: Int,
-    ): PecaDto? =
-        try {
-            retirarPecasUseCase.executar(codigo, qtd)?.let { mapper.toDto(it) }
-        } catch (exception: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-        }
+    ): PecaDto? = try {
+        retirarPecasUseCase.executar(codigo, qtd)?.let { mapper.toDto(it) }
+    } catch (exception: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
+    }
 
     @PatchMapping("/{codigo}/estoque/repor")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -108,12 +107,11 @@ class PecaController(
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser reposta no estoque", required = true, example = "10")
         @RequestParam qtd: Int,
-    ): PecaDto? =
-        try {
-            reporPecasUseCase.executar(codigo, qtd)?.let { mapper.toDto(it) }
-        } catch (exception: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-        }
+    ): PecaDto? = try {
+        reporPecasUseCase.executar(codigo, qtd)?.let { mapper.toDto(it) }
+    } catch (exception: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
+    }
 
     @PatchMapping("/{codigo}/reativar")
     @RolesAllowed("ADMIN")

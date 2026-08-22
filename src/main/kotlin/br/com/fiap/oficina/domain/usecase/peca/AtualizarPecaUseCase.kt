@@ -5,13 +5,8 @@ import br.com.fiap.oficina.domain.repository.PecaRepository
 import org.springframework.stereotype.Service
 
 @Service
-class AtualizarPecaUseCase(
-    private val repository: PecaRepository,
-) {
-    fun executar(
-        codigo: String,
-        dadosAtualizados: Peca,
-    ): Peca {
+class AtualizarPecaUseCase(private val repository: PecaRepository) {
+    fun executar(codigo: String, dadosAtualizados: Peca): Peca {
         val peca =
             repository.buscarAtivoPorCodigo(codigo)
                 ?: throw IllegalArgumentException("Peça não encontrada")
