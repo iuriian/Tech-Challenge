@@ -37,6 +37,7 @@ runs:
         DETEKT_OUTCOME: ${{ steps.detekt.outputs.outcome }}
         MAX_ISSUES: ${{ inputs.max-issues }}
       with:
+        update-comment: false
         github-token: ${{ inputs.github-token }}
         script: |
           const fs = require('fs');

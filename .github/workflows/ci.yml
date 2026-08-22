@@ -70,7 +70,7 @@ jobs:
           min-coverage-overall: 0
           min-coverage-changed-files: 85
           title: Cobertura de testes
-          update-comment: true
+          update-comment: false
           comment-type: both
           show-all-modules: true
           coverage-counter-type: BRANCH
