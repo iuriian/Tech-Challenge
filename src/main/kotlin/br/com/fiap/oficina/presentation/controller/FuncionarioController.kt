@@ -18,25 +18,26 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/funcionarios")
 @Tag(name = "Funcionários", description = "Operações relacionadas ao gerenciamento de funcionários")
-class FuncionarioController(private val service: FuncionarioService) {
+class FuncionarioController(
+    private val service: FuncionarioService,
+) {
     @PostMapping
     @Operation(summary = "Criar um novo funcionário", description = "Cadastra um novo funcionário no sistema")
-    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
-        service.cadastrar(funcionarioDto)
+    fun cadastrar(
+        @Valid @RequestBody funcionarioDto: FuncionarioDto,
+    ): FuncionarioDto = service.cadastrar(funcionarioDto)
 
     @GetMapping
-    @Operation(
-        summary = "ListarListar todos os funcionários",
-        description = "Retorna uma lista com todos os funcionários cadastrados",
-    )
+    @Operation(summary = "ListarListar todos os funcionários",
+               description = "Retorna uma lista com todos os funcionários cadastrados")
     fun listarTodos(): List<FuncionarioDto> = service.listarTodos()
 
     @GetMapping("/id/{id}")
-    @Operation(
-        summary = "Buscar funcionário por ID",
-        description = "Busca um funcionário através do seu identificador único",
-    )
-    fun buscarPorId(@PathVariable id: String): FuncionarioDto? = service.buscarPorId(id)
+    @Operation(summary = "Buscar funcionário por ID",
+               description = "Busca um funcionário através do seu identificador único")
+    fun buscarPorId(
+        @PathVariable id: String,
+    ): FuncionarioDto? = service.buscarPorId(id)
 
     @GetMapping("/nome/{nome}")
     @Operation(summary = "Buscar funcionário por nome", description = "Busca um funcionário através do seu nome")
@@ -46,17 +47,17 @@ class FuncionarioController(private val service: FuncionarioService) {
     ): FuncionarioDto? = service.buscarPorNome(nome)
 
     @PutMapping("/{id}")
-    @Operation(
-        summary = "Alterar dados de um funcionário",
-        description = "Atualiza as informações de um funcionário existente",
-    )
-    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
-        service.editar(id, funcionarioDto)
+    @Operation(summary = "Alterar dados de um funcionário",
+               description = "Atualiza as informações de um funcionário existente")
+    fun alterar(
+        @PathVariable id: String,
+        @Valid @RequestBody funcionarioDto: FuncionarioDto,
+    ): FuncionarioDto = service.editar(id, funcionarioDto)
 
     @DeleteMapping("/{id}")
-    @Operation(
-        summary = "Deletar um funcionário",
-        description = "Remove um funcionário do sistema através do seu identificador único",
-    )
-    fun deletar(@PathVariable id: String) = service.deletar(id)
+    @Operation(summary = "Deletar um funcionário",
+               description = "Remove um funcionário do sistema através do seu identificador único")
+    fun deletar(
+        @PathVariable id: String,
+    ) = service.deletar(id)
 }

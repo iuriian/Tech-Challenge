@@ -11,41 +11,39 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/veiculos")
 @Tag(name = "Veículos", description = "Operações relacionadas ao gerenciamento de veículos")
-class VeiculoController(private val service: VeiculoService, private val mapper: VeiculoMapper) {
+class VeiculoController(
+    private val service: VeiculoService,
+    private val mapper: VeiculoMapper,
+) {
     @PostMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo veículo", description = "Cadastra um novo veículo no sistema")
-    fun criar(@Valid @RequestBody dto: VeiculoDTO): VeiculoDTO = try {
-        mapper.toResponse(
-            service.salvarVeiculo(
-                VeiculoComando(
-                    marca = dto.marca,
-                    nome = dto.nome,
-                    modelo = dto.modelo,
-                    ano = dto.ano,
-                    placa = dto.placa,
-                    motoristaId = Id.fromString(dto.motoristaId),
+    fun criar(
+        @Valid @RequestBody dto: VeiculoDTO,
+    ): VeiculoDTO =
+        try {
+            mapper.toResponse(
+                service.salvarVeiculo(
+                    VeiculoComando(
+                        marca = dto.marca,
+                        nome = dto.nome,
+                        modelo = dto.modelo,
+                        ano = dto.ano,
+                        placa = dto.placa,
+                        motoristaId = Id.fromString(dto.motoristaId),
+                    ),
                 ),
-            ),
-        )
-    } catch (e: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
-    }
+            )
+        } catch (e: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+        }
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -83,23 +81,24 @@ class VeiculoController(private val service: VeiculoService, private val mapper:
         @Parameter(description = "ID do veículo a ser atualizado", required = true)
         @PathVariable id: String,
         @Valid @RequestBody dto: VeiculoDTO,
-    ): VeiculoDTO = try {
-        mapper.toResponse(
-            service.atualizarVeiculo(
-                Id.fromString(id),
-                VeiculoComando(
-                    marca = dto.marca,
-                    nome = dto.nome,
-                    modelo = dto.modelo,
-                    ano = dto.ano,
-                    placa = dto.placa,
-                    motoristaId = Id.fromString(dto.motoristaId),
+    ): VeiculoDTO =
+        try {
+            mapper.toResponse(
+                service.atualizarVeiculo(
+                    Id.fromString(id),
+                    VeiculoComando(
+                        marca = dto.marca,
+                        nome = dto.nome,
+                        modelo = dto.modelo,
+                        ano = dto.ano,
+                        placa = dto.placa,
+                        motoristaId = Id.fromString(dto.motoristaId),
+                    ),
                 ),
-            ),
-        )
-    } catch (e: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
-    }
+            )
+        } catch (e: IllegalArgumentException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+        }
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")

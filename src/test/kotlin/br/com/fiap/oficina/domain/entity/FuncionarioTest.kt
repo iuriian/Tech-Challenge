@@ -1,14 +1,12 @@
 package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.enum.Cargo
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class FuncionarioTest {
+
     @Test
     fun `deve criar funcionario com dados validos`() {
         val funcionario = Funcionario.criar(nome = "João", cargo = "ATENDENTE")

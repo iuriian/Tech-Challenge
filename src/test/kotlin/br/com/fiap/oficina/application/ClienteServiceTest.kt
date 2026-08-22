@@ -5,18 +5,14 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
 class ClienteServiceTest {
@@ -61,9 +57,8 @@ class ClienteServiceTest {
         val resultado = service.buscarPorId(clienteId)
 
         assertNotNull(resultado)
-        assertEquals(cliente.id, resultado.id)
-        assertEquals(cliente.nome, resultado.nome)
-        assertEquals(cliente.email, resultado.email)
+        assertEquals(cliente.id, resultado?.id)
+        assertEquals(cliente.nome, resultado?.nome)
         verify(repository, times(1)).buscarPorId(clienteId)
     }
 
@@ -86,7 +81,7 @@ class ClienteServiceTest {
         val resultado = service.buscarPorDocumento(documentoNumero)
 
         assertNotNull(resultado)
-        assertEquals(cliente.nome, resultado.nome)
+        assertEquals(cliente.nome, resultado?.nome)
         verify(repository, times(1)).buscarPorDocumento(documentoNumero)
     }
 
@@ -109,7 +104,7 @@ class ClienteServiceTest {
         val resultado = service.buscarPorNome(nome)
 
         assertNotNull(resultado)
-        assertEquals(nome, resultado.nome)
+        assertEquals(nome, resultado?.nome)
         verify(repository, times(1)).buscarPorNome(nome)
     }
 

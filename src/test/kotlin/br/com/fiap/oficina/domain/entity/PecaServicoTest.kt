@@ -1,8 +1,7 @@
 package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 

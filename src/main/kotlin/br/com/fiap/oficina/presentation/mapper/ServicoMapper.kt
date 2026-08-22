@@ -12,50 +12,53 @@ import org.springframework.stereotype.Component
 
 @Component
 class ServicoMapper {
-    fun toResponse(servico: Servico): ServicoDto = ServicoDto(
-        id = servico.id.valor,
-        descricao = servico.descricao,
-        status = servico.status,
-        funcionarioId =
-        servico.funcionario.id.valor
-            .toString(),
-        clienteId =
-        servico.cliente.id.valor
-            .toString(),
-        veiculoId =
-        servico.veiculo.id.valor
-            .toString(),
-        pecas =
-        servico.pecas.map {
-            PecaServicoDto(
-                it.peca.id.valor
+    fun toResponse(servico: Servico): ServicoDto =
+        ServicoDto(
+            id = servico.id.valor,
+            descricao = servico.descricao,
+            status = servico.status,
+            funcionarioId =
+                servico.funcionario.id.valor
                     .toString(),
-                it.quantidade,
-            )
-        },
-        dataAbertura = servico.dataAbertura,
-        dataInicioExecucao = servico.dataInicioExecucao,
-        dataFinalizacao = servico.dataFinalizacao,
-    )
+            clienteId =
+                servico.cliente.id.valor
+                    .toString(),
+            veiculoId =
+                servico.veiculo.id.valor
+                    .toString(),
+            pecas =
+                servico.pecas.map {
+                    PecaServicoDto(
+                        it.peca.id.valor
+                            .toString(),
+                        it.quantidade,
+                    )
+                },
+            dataAbertura = servico.dataAbertura,
+            dataInicioExecucao = servico.dataInicioExecucao,
+            dataFinalizacao = servico.dataFinalizacao,
+        )
 
-    fun toResponse(tempo: TempoMedioExecucao): TempoMedioExecucaoDto = TempoMedioExecucaoDto(
-        totalServicosFinalizados = tempo.totalServicosFinalizados,
-        tempoMedioMinutos = tempo.tempoMedioMinutos,
-    )
+    fun toResponse(tempo: TempoMedioExecucao): TempoMedioExecucaoDto =
+        TempoMedioExecucaoDto(
+            totalServicosFinalizados = tempo.totalServicosFinalizados,
+            tempoMedioMinutos = tempo.tempoMedioMinutos,
+        )
 
-    fun toResponse(orcamento: Orcamento): OrcamentoDto = OrcamentoDto(
-        servicoId = orcamento.servicoId.valor,
-        itens =
-        orcamento.itens.map { item ->
-            ItemOrcamentoDto(
-                pecaId = item.pecaId.valor,
-                codigo = item.codigo,
-                nome = item.nome,
-                precoUnitario = item.precoUnitario,
-                quantidade = item.quantidade,
-                subtotal = item.subtotal,
-            )
-        },
-        valorTotal = orcamento.valorTotal,
-    )
+    fun toResponse(orcamento: Orcamento): OrcamentoDto =
+        OrcamentoDto(
+            servicoId = orcamento.servicoId.valor,
+            itens =
+                orcamento.itens.map { item ->
+                    ItemOrcamentoDto(
+                        pecaId = item.pecaId.valor,
+                        codigo = item.codigo,
+                        nome = item.nome,
+                        precoUnitario = item.precoUnitario,
+                        quantidade = item.quantidade,
+                        subtotal = item.subtotal,
+                    )
+                },
+            valorTotal = orcamento.valorTotal,
+        )
 }

@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated
 
 @Embeddable
 class DocumentoEmbeddable {
+
     @Column(name = "documento_numero", nullable = false, unique = true)
     lateinit var numero: String
 

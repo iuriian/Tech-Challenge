@@ -15,6 +15,7 @@ import java.util.UUID
 @Entity
 @Table(name = "servico_pecas")
 class PecaServicoJpaEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     lateinit var id: UUID

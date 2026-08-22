@@ -6,15 +6,16 @@ import org.springframework.stereotype.Component
 
 @Component
 class VeiculoMapper {
-    fun toResponse(veiculo: Veiculo): VeiculoDTO = VeiculoDTO(
-        id = veiculo.id.valor,
-        nome = veiculo.nome,
-        marca = veiculo.marca,
-        modelo = veiculo.modelo,
-        ano = veiculo.ano,
-        placa = veiculo.placa,
-        motoristaId =
-        veiculo.motorista.id.valor
-            .toString(),
-    )
+    fun toResponse(veiculo: Veiculo): VeiculoDTO =
+        VeiculoDTO(
+            id = veiculo.id.valor,
+            nome = veiculo.nome,
+            marca = veiculo.marca,
+            modelo = veiculo.modelo,
+            ano = veiculo.ano,
+            placa = veiculo.placa,
+            motoristaId =
+                veiculo.motorista.id.valor
+                    .toString(),
+        )
 }

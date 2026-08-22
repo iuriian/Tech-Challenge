@@ -14,16 +14,12 @@ import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
-import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.application.port.out.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -32,11 +28,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
@@ -144,10 +136,10 @@ class ServicoServiceTest {
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
-                    listOf(
-                        PecaServicoComando(pecaId1, quantidade1),
-                        PecaServicoComando(pecaId2, quantidade2),
-                    ),
+                        listOf(
+                            PecaServicoComando(pecaId1, quantidade1),
+                            PecaServicoComando(pecaId2, quantidade2),
+                        ),
                 ),
             )
 
@@ -172,10 +164,10 @@ class ServicoServiceTest {
                         clienteId = clienteId,
                         veiculoId = veiculoId,
                         pecas =
-                        listOf(
-                            PecaServicoComando(pecaId1, BigDecimal("2")),
-                            PecaServicoComando(pecaId2, BigDecimal("3")),
-                        ),
+                            listOf(
+                                PecaServicoComando(pecaId1, BigDecimal("2")),
+                                PecaServicoComando(pecaId2, BigDecimal("3")),
+                            ),
                     ),
                 )
             }
@@ -213,10 +205,10 @@ class ServicoServiceTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                listOf(
-                    PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
-                    PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
-                ),
+                    listOf(
+                        PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
+                        PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
+                    ),
             )
         `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
@@ -269,7 +261,10 @@ class ServicoServiceTest {
         "EM_EXECUCAO, FINALIZADA",
         "FINALIZADA, ENTREGUE",
     )
-    fun `avancarStatus deve seguir a ordem de declaracao do enum`(de: ServicoStatus, esperado: ServicoStatus) {
+    fun `avancarStatus deve seguir a ordem de declaracao do enum`(
+        de: ServicoStatus,
+        esperado: ServicoStatus,
+    ) {
         val atual = servicoComStatus(de)
         `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
         `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
@@ -322,7 +317,10 @@ class ServicoServiceTest {
         "EM_EXECUCAO, CANCELADA",
         "ENTREGUE, CANCELADA",
     )
-    fun `alterarStatus deve rejeitar transicoes invalidas`(de: ServicoStatus, alvo: ServicoStatus) {
+    fun `alterarStatus deve rejeitar transicoes invalidas`(
+        de: ServicoStatus,
+        alvo: ServicoStatus,
+    ) {
         `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
 
         assertThrows(IllegalStateException::class.java) {
@@ -408,19 +406,24 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun servicoComStatus(status: ServicoStatus): Servico = Servico(
-        id = servicoId,
-        descricao = "Troca de Óleo",
-        status = status,
-        funcionario = funcionario,
-        cliente = cliente,
-        veiculo = veiculo,
-    )
+    private fun servicoComStatus(status: ServicoStatus): Servico =
+        Servico(
+            id = servicoId,
+            descricao = "Troca de Óleo",
+            status = status,
+            funcionario = funcionario,
+            cliente = cliente,
+            veiculo = veiculo,
+        )
 
-    private fun criarPeca(id: Id, codigo: String): Peca = Peca(
-        id = id,
-        codigo = codigo,
-        nome = "Peça Teste",
-        precoDeVenda = BigDecimal.TEN,
-    )
+    private fun criarPeca(
+        id: Id,
+        codigo: String,
+    ): Peca =
+        Peca(
+            id = id,
+            codigo = codigo,
+            nome = "Peça Teste",
+            precoDeVenda = BigDecimal.TEN,
+        )
 }

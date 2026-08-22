@@ -4,11 +4,9 @@ import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class PecaMapperTest {
     private val mapper = PecaMapper()

@@ -4,8 +4,8 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
 class VeiculoPersistenceMapperTest {
     private val mapper = VeiculoPersistenceMapper(ClientePersistenceMapper())
@@ -21,12 +21,12 @@ class VeiculoPersistenceMapperTest {
                 ano = "2020",
                 placa = "ABC1D23",
                 motorista =
-                Cliente(
-                    id = Id.generate(),
-                    nome = "Dono",
-                    documento = Documento.cpf("39053344705"),
-                    email = "dono@example.com",
-                ),
+                    Cliente(
+                        id = Id.generate(),
+                        nome = "Dono",
+                        documento = Documento.cpf("39053344705"),
+                        email = "dono@example.com",
+                    ),
             )
 
         val jpa = mapper.toJpa(veiculo)

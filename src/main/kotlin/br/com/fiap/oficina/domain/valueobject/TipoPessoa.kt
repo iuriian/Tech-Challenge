@@ -1,5 +1,6 @@
 package br.com.fiap.oficina.domain.valueobject
 
+
 interface ValidadorDocumento {
     fun valida(documento: Documento): Boolean
 }
@@ -10,15 +11,15 @@ interface FormatadorDocumento {
 
 enum class TipoPessoa(
     private val validadorDocumento: ValidadorDocumento,
-    private val formatadorDocumento: FormatadorDocumento,
+    private val formatadorDocumento: FormatadorDocumento
 ) {
+
     PESSOA_JURIDICA(ValidadorCnpj(), FormatadorCnpj()),
-    PESSOA_FISICA(ValidadorCpf(), FormatadorCpf()),
-    ;
+    PESSOA_FISICA(ValidadorCpf(), FormatadorCpf());
 
     fun valida(documento: Documento) = this.validadorDocumento.valida(documento)
-
     fun formata(numero: String): String = this.formatadorDocumento.formata(numero)
+
 }
 
 private const val CPF_LENGTH = 11
@@ -39,39 +40,35 @@ abstract class ValidadorComDigitoVerificador(
     private val primeiroDigitoIndex: Int,
     private val segundoDigitoIndex: Int,
     private val pesosPrimeiroDigito: IntArray,
-    private val pesosSegundoDigito: IntArray,
+    private val pesosSegundoDigito: IntArray
 ) : ValidadorDocumento {
+
     override fun valida(documento: Documento): Boolean {
         val numeroLimpo = documento.numero.replace(CARACTERES_NAO_NUMERICOS, "")
 
         if ((numeroLimpo.length != tamanho) || (numeroLimpo.all { it == numeroLimpo[0] })) return false
 
         // Validação do primeiro dígito verificador
-        val primeiroDigito =
-            calcularDigitoVerificador(
-                numeroLimpo.substring(0, primeiroDigitoIndex),
-                pesosPrimeiroDigito,
-            )
+        val primeiroDigito = calcularDigitoVerificador(
+            numeroLimpo.substring(0, primeiroDigitoIndex), pesosPrimeiroDigito
+        )
         if (primeiroDigito != numeroLimpo[primeiroDigitoIndex].digitToInt()) return false
 
         // Validação do segundo dígito verificador
-        val segundoDigito =
-            calcularDigitoVerificador(
-                numeroLimpo.substring(0, segundoDigitoIndex),
-                pesosSegundoDigito,
-            )
+        val segundoDigito = calcularDigitoVerificador(
+            numeroLimpo.substring(0, segundoDigitoIndex), pesosSegundoDigito
+        )
         return segundoDigito == numeroLimpo[segundoDigitoIndex].digitToInt()
     }
 }
 
-class ValidadorCpf :
-    ValidadorComDigitoVerificador(
-        tamanho = CPF_LENGTH,
-        primeiroDigitoIndex = PRIMEIRO_DIGITO_INDEX,
-        segundoDigitoIndex = SEGUNDO_DIGITO_INDEX,
-        pesosPrimeiroDigito = PESOS_PRIMEIRO_DIGITO,
-        pesosSegundoDigito = PESOS_SEGUNDO_DIGITO,
-    ) {
+class ValidadorCpf : ValidadorComDigitoVerificador(
+    tamanho = CPF_LENGTH,
+    primeiroDigitoIndex = PRIMEIRO_DIGITO_INDEX,
+    segundoDigitoIndex = SEGUNDO_DIGITO_INDEX,
+    pesosPrimeiroDigito = PESOS_PRIMEIRO_DIGITO,
+    pesosSegundoDigito = PESOS_SEGUNDO_DIGITO
+) {
     private companion object {
         const val PRIMEIRO_DIGITO_INDEX = 9
         const val SEGUNDO_DIGITO_INDEX = 10
@@ -80,14 +77,13 @@ class ValidadorCpf :
     }
 }
 
-class ValidadorCnpj :
-    ValidadorComDigitoVerificador(
-        tamanho = CNPJ_LENGTH,
-        primeiroDigitoIndex = PRIMEIRO_DIGITO_INDEX,
-        segundoDigitoIndex = SEGUNDO_DIGITO_INDEX,
-        pesosPrimeiroDigito = PESOS_PRIMEIRO_DIGITO,
-        pesosSegundoDigito = PESOS_SEGUNDO_DIGITO,
-    ) {
+class ValidadorCnpj : ValidadorComDigitoVerificador(
+    tamanho = CNPJ_LENGTH,
+    primeiroDigitoIndex = PRIMEIRO_DIGITO_INDEX,
+    segundoDigitoIndex = SEGUNDO_DIGITO_INDEX,
+    pesosPrimeiroDigito = PESOS_PRIMEIRO_DIGITO,
+    pesosSegundoDigito = PESOS_SEGUNDO_DIGITO
+) {
     private companion object {
         const val PRIMEIRO_DIGITO_INDEX = 12
         const val SEGUNDO_DIGITO_INDEX = 13
@@ -95,6 +91,7 @@ class ValidadorCnpj :
         val PESOS_SEGUNDO_DIGITO = intArrayOf(6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2)
     }
 }
+
 
 class FormatadorCnpj : FormatadorDocumento {
     override fun formata(numero: String): String {

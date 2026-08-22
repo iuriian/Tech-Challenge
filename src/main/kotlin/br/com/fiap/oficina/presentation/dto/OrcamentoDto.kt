@@ -9,7 +9,11 @@ data class ItemOrcamentoDto(
     val nome: String,
     val precoUnitario: BigDecimal,
     val quantidade: BigDecimal,
-    val subtotal: BigDecimal,
+    val subtotal: BigDecimal
 )
 
-data class OrcamentoDto(val servicoId: UUID, val itens: List<ItemOrcamentoDto>, val valorTotal: BigDecimal)
+data class OrcamentoDto(
+    val servicoId: UUID,
+    val itens: List<ItemOrcamentoDto>,
+    val valorTotal: BigDecimal
+)

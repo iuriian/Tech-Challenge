@@ -1,9 +1,14 @@
 package br.com.fiap.oficina.domain.valueobject
 
-class Documento(val numero: String, val tipoPessoa: TipoPessoa) {
+class Documento(
+    val numero: String,
+    val tipoPessoa: TipoPessoa
+) {
+
     fun isFormatoValido(): Boolean = this.tipoPessoa.valida(this)
 
     fun getNumeroFormatado(): String = this.tipoPessoa.formata(numero)
+
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -18,13 +23,13 @@ class Documento(val numero: String, val tipoPessoa: TipoPessoa) {
         return 31 * limpo.hashCode() + tipoPessoa.hashCode()
     }
 
-    override fun toString(): String = "Documento(numero='${getNumeroFormatado()}', tipoPessoa=$tipoPessoa)"
+    override fun toString(): String {
+        return "Documento(numero='${getNumeroFormatado()}', tipoPessoa=$tipoPessoa)"
+    }
 
     companion object {
         private const val NUMBER_PATTERN = "[^0-9]"
-
         fun cpf(numero: String) = Documento(numero, TipoPessoa.PESSOA_FISICA)
-
         fun cnpj(numero: String) = Documento(numero, TipoPessoa.PESSOA_JURIDICA)
     }
 }

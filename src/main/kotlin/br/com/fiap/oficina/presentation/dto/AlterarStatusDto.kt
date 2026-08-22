@@ -5,5 +5,5 @@ import jakarta.validation.constraints.NotNull
 
 data class AlterarStatusDto(
     @field:NotNull
-    val status: ServicoStatus,
+    val status: ServicoStatus
 )

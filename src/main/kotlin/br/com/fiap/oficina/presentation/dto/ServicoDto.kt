@@ -36,4 +36,7 @@ data class ServicoDto(
     val dataFinalizacao: Instant? = null,
 )
 
-data class TempoMedioExecucaoDto(val totalServicosFinalizados: Int, val tempoMedioMinutos: Double?)
+data class TempoMedioExecucaoDto(
+    val totalServicosFinalizados: Int,
+    val tempoMedioMinutos: Double?,
+)

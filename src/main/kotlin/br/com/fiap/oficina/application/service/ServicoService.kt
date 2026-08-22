@@ -8,7 +8,7 @@ import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
-import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.application.port.out.PecaRepository
 import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -18,9 +18,15 @@ import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.Duration
 
-data class TempoMedioExecucao(val totalServicosFinalizados: Int, val tempoMedioMinutos: Double?)
+data class TempoMedioExecucao(
+    val totalServicosFinalizados: Int,
+    val tempoMedioMinutos: Double?,
+)
 
-data class PecaServicoComando(val pecaId: Id, val quantidade: BigDecimal)
+data class PecaServicoComando(
+    val pecaId: Id,
+    val quantidade: BigDecimal,
+)
 
 data class ServicoComando(
     val id: Id? = null,
@@ -137,7 +143,10 @@ class ServicoService(
      * para um status alcançável a partir do atual (ver [transicoesPermitidas]).
      */
     @Transactional
-    fun alterarStatus(id: Id, novoStatus: ServicoStatus): Servico {
+    fun alterarStatus(
+        id: Id,
+        novoStatus: ServicoStatus,
+    ): Servico {
         val servico = buscarObrigatorio(id)
         val permitidas = transicoesPermitidas(servico.status)
         check(novoStatus in permitidas) {
@@ -163,8 +172,9 @@ class ServicoService(
         return TempoMedioExecucao(finalizados.size, tempoMedio)
     }
 
-    private fun buscarObrigatorio(id: Id): Servico = repository.buscarPorId(id)
-        ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
+    private fun buscarObrigatorio(id: Id): Servico =
+        repository.buscarPorId(id)
+            ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
 
     /**
      * Define a máquina de estados: a partir de cada status, o fluxo segue para
@@ -172,15 +182,16 @@ class ServicoService(
      * [ServicoStatus.AGUARDANDO_APROVACAO], de onde pode ir para
      * [ServicoStatus.EM_EXECUCAO] ou [ServicoStatus.CANCELADA].
      */
-    private fun transicoesPermitidas(atual: ServicoStatus): Set<ServicoStatus> = when (atual) {
-        ServicoStatus.AGUARDANDO_APROVACAO -> {
-            setOf(ServicoStatus.EM_EXECUCAO, ServicoStatus.CANCELADA)
-        }
+    private fun transicoesPermitidas(atual: ServicoStatus): Set<ServicoStatus> =
+        when (atual) {
+            ServicoStatus.AGUARDANDO_APROVACAO -> {
+                setOf(ServicoStatus.EM_EXECUCAO, ServicoStatus.CANCELADA)
+            }
 
-        else -> {
-            setOfNotNull(proximoNaOrdem(atual))
+            else -> {
+                setOfNotNull(proximoNaOrdem(atual))
+            }
         }
-    }
 
     /**
      * Próximo status no fluxo linear (ordem de declaração do enum). Retorna
@@ -188,7 +199,8 @@ class ServicoService(
      * [ServicoStatus.CANCELADA]); CANCELADA é ignorada por não fazer parte do
      * fluxo linear, sendo alcançável apenas a partir de AGUARDANDO_APROVACAO.
      */
-    private fun proximoNaOrdem(atual: ServicoStatus): ServicoStatus? = ServicoStatus.entries
-        .getOrNull(atual.ordinal + 1)
-        ?.takeIf { it != ServicoStatus.CANCELADA }
+    private fun proximoNaOrdem(atual: ServicoStatus): ServicoStatus? =
+        ServicoStatus.entries
+            .getOrNull(atual.ordinal + 1)
+            ?.takeIf { it != ServicoStatus.CANCELADA }
 }

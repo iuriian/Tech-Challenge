@@ -2,18 +2,17 @@ package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class VeiculoTest {
-    private fun motorista(): Cliente = Cliente(
-        id = Id.generate(),
-        nome = "Dono",
-        documento = Documento.cpf("39053344705"),
-        email = "dono@example.com",
-    )
+    private fun motorista(): Cliente =
+        Cliente(
+            id = Id.generate(),
+            nome = "Dono",
+            documento = Documento.cpf("39053344705"),
+            email = "dono@example.com",
+        )
 
     @Test
     fun `deve criar um veiculo valido`() {

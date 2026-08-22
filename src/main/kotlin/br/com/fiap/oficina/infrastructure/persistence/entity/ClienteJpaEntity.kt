@@ -1,19 +1,12 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Embedded
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.OneToMany
-import jakarta.persistence.OneToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.util.UUID
 
 @Entity
 @Table(name = "clientes")
 class ClienteJpaEntity {
+
     @Id
     lateinit var id: UUID
 

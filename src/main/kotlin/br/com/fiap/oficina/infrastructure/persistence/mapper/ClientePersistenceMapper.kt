@@ -13,14 +13,15 @@ import org.springframework.stereotype.Component
 
 @Component
 class ClientePersistenceMapper {
-    fun toDomain(entity: ClienteJpaEntity): Cliente = Cliente(
-        id = Id(entity.id),
-        nome = entity.nome,
-        documento = toDocumentoDomain(entity.documento),
-        email = entity.email,
-        endereco = entity.endereco?.let(::toEnderecoDomain),
-        contatos = entity.contatos.map(::toContatoDomain),
-    )
+    fun toDomain(entity: ClienteJpaEntity): Cliente =
+        Cliente(
+            id = Id(entity.id),
+            nome = entity.nome,
+            documento = toDocumentoDomain(entity.documento),
+            email = entity.email,
+            endereco = entity.endereco?.let(::toEnderecoDomain),
+            contatos = entity.contatos.map(::toContatoDomain),
+        )
 
     fun toJpa(domain: Cliente): ClienteJpaEntity {
         val entity =
@@ -38,47 +39,52 @@ class ClientePersistenceMapper {
         return entity
     }
 
-    fun toEnderecoDomain(entity: EnderecoJpaEntity): Endereco = Endereco(
-        id = Id(entity.id),
-        logradouro = entity.logradouro,
-        numero = entity.numero,
-        complemento = entity.complemento,
-        bairro = entity.bairro,
-        cidade = entity.cidade,
-        estado = entity.estado,
-        cep = entity.cep,
-    )
+    fun toEnderecoDomain(entity: EnderecoJpaEntity): Endereco =
+        Endereco(
+            id = Id(entity.id),
+            logradouro = entity.logradouro,
+            numero = entity.numero,
+            complemento = entity.complemento,
+            bairro = entity.bairro,
+            cidade = entity.cidade,
+            estado = entity.estado,
+            cep = entity.cep,
+        )
 
-    fun toEnderecoJpa(domain: Endereco): EnderecoJpaEntity = EnderecoJpaEntity().apply {
-        id = domain.id.valor
-        logradouro = domain.logradouro
-        numero = domain.numero
-        complemento = domain.complemento
-        bairro = domain.bairro
-        cidade = domain.cidade
-        estado = domain.estado
-        cep = domain.cep
-    }
+    fun toEnderecoJpa(domain: Endereco): EnderecoJpaEntity =
+        EnderecoJpaEntity().apply {
+            id = domain.id.valor
+            logradouro = domain.logradouro
+            numero = domain.numero
+            complemento = domain.complemento
+            bairro = domain.bairro
+            cidade = domain.cidade
+            estado = domain.estado
+            cep = domain.cep
+        }
 
-    fun toContatoDomain(entity: ContatoJpaEntity): Contato = Contato(
-        id = Id(entity.id),
-        tipo = entity.tipo,
-        nome = entity.nome,
-        telefone = entity.telefone,
-    )
+    fun toContatoDomain(entity: ContatoJpaEntity): Contato =
+        Contato(
+            id = Id(entity.id),
+            tipo = entity.tipo,
+            nome = entity.nome,
+            telefone = entity.telefone,
+        )
 
-    fun toContatoJpa(domain: Contato): ContatoJpaEntity = ContatoJpaEntity().apply {
-        id = domain.id.valor
-        tipo = domain.tipo
-        nome = domain.nome
-        telefone = domain.telefone
-    }
+    fun toContatoJpa(domain: Contato): ContatoJpaEntity =
+        ContatoJpaEntity().apply {
+            id = domain.id.valor
+            tipo = domain.tipo
+            nome = domain.nome
+            telefone = domain.telefone
+        }
 
     private fun toDocumentoDomain(embeddable: DocumentoEmbeddable): Documento =
         Documento(embeddable.numero, embeddable.tipoPessoa)
 
-    private fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable = DocumentoEmbeddable().apply {
-        numero = documento.numero
-        tipoPessoa = documento.tipoPessoa
-    }
+    private fun toDocumentoEmbeddable(documento: Documento): DocumentoEmbeddable =
+        DocumentoEmbeddable().apply {
+            numero = documento.numero
+            tipoPessoa = documento.tipoPessoa
+        }
 }
