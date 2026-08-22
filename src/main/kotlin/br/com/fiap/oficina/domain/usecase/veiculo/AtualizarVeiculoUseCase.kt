@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import org.springframework.stereotype.Service
 
 @Service

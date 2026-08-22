@@ -44,14 +44,11 @@ class VeiculoController(
     @RolesAllowed("ATENDENTE", "ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo veículo", description = "Cadastra um novo veículo no sistema")
-    fun criar(
-        @Valid @RequestBody dto: VeiculoDTO,
-    ): VeiculoDTO =
-        try {
-            mapper.toResponse(criarVeiculoUseCase.executar(mapper.toEntity(dto)))
-        } catch (e: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
-        }
+    fun criar(@Valid @RequestBody dto: VeiculoDTO): VeiculoDTO = try {
+        mapper.toResponse(criarVeiculoUseCase.executar(mapper.toEntity(dto)))
+    } catch (e: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+    }
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -90,12 +87,11 @@ class VeiculoController(
         @Parameter(description = "ID do veículo a ser atualizado", required = true)
         @PathVariable id: String,
         @Valid @RequestBody dto: VeiculoDTO,
-    ): VeiculoDTO =
-        try {
-            mapper.toResponse(atualizarVeiculoUseCase.executar(mapper.toEntityComId(id, dto)))
-        } catch (e: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
-        }
+    ): VeiculoDTO = try {
+        mapper.toResponse(atualizarVeiculoUseCase.executar(mapper.toEntityComId(id, dto)))
+    } catch (e: IllegalArgumentException) {
+        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+    }
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")

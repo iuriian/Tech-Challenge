@@ -1,6 +1,8 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
@@ -8,8 +10,6 @@ import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculosPorMotoristaUseC
 import br.com.fiap.oficina.domain.usecase.veiculo.CriarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
@@ -59,15 +59,14 @@ class VeiculoControllerUnitTest {
             motorista = motorista,
         )
 
-    private fun veiculoDto() =
-        VeiculoDTO(
-            nome = "Gol",
-            marca = "Volkswagen",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motoristaId = motorista.id.valor.toString(),
-        )
+    private fun veiculoDto() = VeiculoDTO(
+        nome = "Gol",
+        marca = "Volkswagen",
+        modelo = "Gol 1.6",
+        ano = "2020",
+        placa = "ABC1D23",
+        motoristaId = motorista.id.valor.toString(),
+    )
 
     @Test
     fun `criar deve retornar dto do veiculo salvo`() {

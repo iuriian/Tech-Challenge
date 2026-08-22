@@ -1,6 +1,8 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
@@ -8,8 +10,6 @@ import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculosPorMotoristaUseC
 import br.com.fiap.oficina.domain.usecase.veiculo.CriarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
@@ -23,8 +23,12 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(VeiculoController::class)
 @Import(VeiculoMapper::class)
