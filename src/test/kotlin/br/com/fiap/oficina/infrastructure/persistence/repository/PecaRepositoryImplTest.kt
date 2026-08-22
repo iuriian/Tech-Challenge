@@ -19,18 +19,18 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
-class PecaRepositoryAdapterTest {
+class PecaRepositoryImplTest {
     @Mock
     lateinit var jpaRepository: PecaJpaRepository
 
     private val mapper = PecaPersistenceMapper()
-    private lateinit var adapter: PecaRepositoryAdapter
+    private lateinit var repository: PecaRepositoryImpl
     private lateinit var peca: Peca
     private lateinit var jpa: PecaJpaEntity
 
     @BeforeEach
     fun setup() {
-        adapter = PecaRepositoryAdapter(jpaRepository, mapper)
+        repository = PecaRepositoryImpl(jpaRepository, mapper)
         peca =
             Peca(
                 id = Id.generate(),
@@ -46,56 +46,56 @@ class PecaRepositoryAdapterTest {
     fun `salvar deve persistir e mapear de volta`() {
         `when`(jpaRepository.save(anyObject())).thenAnswer { it.getArgument<PecaJpaEntity>(0) }
 
-        assertEquals(peca, adapter.salvar(peca))
+        assertEquals(peca, repository.salvar(peca))
     }
 
     @Test
     fun `listarAtivos deve mapear lista`() {
         `when`(jpaRepository.findAllByAtivoTrue()).thenReturn(listOf(jpa))
 
-        assertEquals(listOf(peca), adapter.listarAtivos())
+        assertEquals(listOf(peca), repository.listarAtivos())
     }
 
     @Test
     fun `buscarAtivoPorCodigo deve mapear resultado`() {
         `when`(jpaRepository.findByCodigoAndAtivoTrue("PEC001")).thenReturn(jpa)
 
-        assertEquals(peca, adapter.buscarAtivoPorCodigo("PEC001"))
+        assertEquals(peca, repository.buscarAtivoPorCodigo("PEC001"))
     }
 
     @Test
     fun `buscarAtivoPorNome deve mapear resultado`() {
         `when`(jpaRepository.findByNomeIgnoreCaseAndAtivoTrue("Filtro")).thenReturn(jpa)
 
-        assertEquals(peca, adapter.buscarAtivoPorNome("Filtro"))
+        assertEquals(peca, repository.buscarAtivoPorNome("Filtro"))
     }
 
     @Test
     fun `existeAtivoPorCodigo deve delegar ao jpa`() {
         `when`(jpaRepository.existsByCodigoAndAtivoTrue("PEC001")).thenReturn(true)
 
-        assertTrue(adapter.existeAtivoPorCodigo("PEC001"))
+        assertTrue(repository.existeAtivoPorCodigo("PEC001"))
     }
 
     @Test
     fun `buscarPorCodigo deve mapear resultado`() {
         `when`(jpaRepository.findByCodigo("PEC001")).thenReturn(jpa)
 
-        assertEquals(peca, adapter.buscarPorCodigo("PEC001"))
+        assertEquals(peca, repository.buscarPorCodigo("PEC001"))
     }
 
     @Test
     fun `existePorCodigo deve delegar ao jpa`() {
         `when`(jpaRepository.existsByCodigo("PEC001")).thenReturn(true)
 
-        assertTrue(adapter.existePorCodigo("PEC001"))
+        assertTrue(repository.existePorCodigo("PEC001"))
     }
 
     @Test
     fun `buscarPorId deve mapear quando presente`() {
         `when`(jpaRepository.findById(peca.id.valor)).thenReturn(Optional.of(jpa))
 
-        assertEquals(peca, adapter.buscarPorId(peca.id))
+        assertEquals(peca, repository.buscarPorId(peca.id))
     }
 
     @Test
@@ -103,6 +103,6 @@ class PecaRepositoryAdapterTest {
         val id = Id.generate()
         `when`(jpaRepository.findById(id.valor)).thenReturn(Optional.empty())
 
-        assertNull(adapter.buscarPorId(id))
+        assertNull(repository.buscarPorId(id))
     }
 }

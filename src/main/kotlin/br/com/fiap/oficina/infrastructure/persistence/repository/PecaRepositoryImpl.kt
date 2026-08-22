@@ -8,8 +8,10 @@ import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapp
 import org.springframework.stereotype.Component
 
 @Component
-class PecaRepositoryAdapter(private val jpaRepository: PecaJpaRepository, private val mapper: PecaPersistenceMapper) :
-    PecaRepository {
+class PecaRepositoryImpl(
+    private val jpaRepository: PecaJpaRepository,
+    private val mapper: PecaPersistenceMapper,
+) : PecaRepository {
     override fun salvar(peca: Peca): Peca = mapper.toDomain(jpaRepository.save(mapper.toJpa(peca)))
 
     override fun listarAtivos(): List<Peca> = jpaRepository.findAllByAtivoTrue().map(mapper::toDomain)

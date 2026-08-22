@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
 interface PecaJpaRepository : JpaRepository<PecaJpaEntity, UUID> {
+
     fun findAllByAtivoTrue(): List<PecaJpaEntity>
 
     fun findByCodigoAndAtivoTrue(codigo: String): PecaJpaEntity?
