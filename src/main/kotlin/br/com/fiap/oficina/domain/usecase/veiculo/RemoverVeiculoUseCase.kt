@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.application.usecase.veiculo
+package br.com.fiap.oficina.domain.usecase.veiculo
 
-import br.com.fiap.oficina.application.port.out.VeiculoRepository
+import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
