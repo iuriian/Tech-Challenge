@@ -73,6 +73,7 @@ jobs:
           update-comment: false
           comment-type: both
           show-all-modules: true
+          show-missing-lines: true
           coverage-counter-type: BRANCH
 
       - name: Verify minimum coverage
