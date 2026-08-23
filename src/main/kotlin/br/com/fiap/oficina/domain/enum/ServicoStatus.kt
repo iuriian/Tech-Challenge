@@ -1,11 +1,7 @@
 package br.com.fiap.oficina.domain.enum
 
-enum class ServicoStatus(val descricao: String) {
-    RECEBIDA("Recebida"),
-    EM_DIAGNOSTICO("Em Diagnostico"),
-    AGUARDANDO_APROVACAO("Aguardando aprovação"),
-    EM_EXECUCAO("Em Execução"),
-    FINALIZADA("Finalizada"),
-    ENTREGUE("Entregue"),
-    CANCELADA("Cancelada pelo cliente"),
-}
+@Deprecated(
+    "Use OrdemServicoStatus",
+    replaceWith = ReplaceWith("OrdemServicoStatus"),
+)
+typealias ServicoStatus = OrdemServicoStatus

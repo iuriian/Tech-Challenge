@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.adapter
 
-import br.com.fiap.oficina.domain.entity.Servico
-import br.com.fiap.oficina.domain.repository.ServicoRepository
+import br.com.fiap.oficina.domain.entity.OrdemServico
+import br.com.fiap.oficina.domain.repository.OrdemServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoJpaRepository
@@ -11,17 +11,22 @@ import org.springframework.stereotype.Component
 class ServicoRepositoryAdapter(
     private val jpaRepository: ServicoJpaRepository,
     private val mapper: ServicoPersistenceMapper,
-) : ServicoRepository {
-    override fun salvar(servico: Servico): Servico = mapper.toDomain(jpaRepository.save(mapper.toJpa(servico)))
+) : OrdemServicoRepository {
+    override fun salvar(ordemServico: OrdemServico): OrdemServico =
+        mapper.toDomain(jpaRepository.save(mapper.toJpa(ordemServico)))
 
-    override fun buscarPorId(id: Id): Servico? = jpaRepository.findById(id.valor).map(mapper::toDomain).orElse(null)
+    override fun buscarPorId(id: Id): OrdemServico? =
+        jpaRepository.findById(id.valor).map(mapper::toDomain).orElse(null)
 
-    override fun listarTodos(): List<Servico> = jpaRepository.findAll().map(mapper::toDomain)
+    override fun listarTodos(): List<OrdemServico> =
+        jpaRepository.findAll().map(mapper::toDomain)
 
-    override fun listarPorCliente(clienteId: Id): List<Servico> =
+    override fun listarPorCliente(clienteId: Id): List<OrdemServico> =
         jpaRepository.findByClienteId(clienteId.valor).map(mapper::toDomain)
 
-    override fun existePorId(id: Id): Boolean = jpaRepository.existsById(id.valor)
+    override fun existePorId(id: Id): Boolean =
+        jpaRepository.existsById(id.valor)
 
-    override fun deletarPorId(id: Id) = jpaRepository.deleteById(id.valor)
+    override fun deletarPorId(id: Id) =
+        jpaRepository.deleteById(id.valor)
 }
