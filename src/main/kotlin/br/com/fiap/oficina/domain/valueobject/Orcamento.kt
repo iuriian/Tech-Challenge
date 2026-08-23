@@ -110,28 +110,4 @@ data class Orcamento(
             itens.fold(BigDecimal.ZERO) { total, item ->
                 total + item.subtotal
             }
-
-    @Deprecated(
-        "Use ordemServicoId",
-        replaceWith = ReplaceWith("ordemServicoId"),
-    )
-    val servicoId: Id
-        get() = ordemServicoId
-
-    @Deprecated(
-        "O valor total agora é calculado a partir dos itens",
-        replaceWith = ReplaceWith("Orcamento(ordemServicoId = servicoId, itens = itens)"),
-    )
-    constructor(
-        servicoId: Id,
-        itens: List<ItemOrcamento>,
-        valorTotal: BigDecimal,
-    ) : this(
-        ordemServicoId = servicoId,
-        itens = itens,
-    ) {
-        require(valorTotal.compareTo(this.valorTotal) == 0) {
-            "Valor total informado é incompatível com os itens do orçamento"
-        }
-    }
 }

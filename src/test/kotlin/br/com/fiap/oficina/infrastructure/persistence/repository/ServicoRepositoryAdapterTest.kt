@@ -2,9 +2,9 @@ package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
@@ -36,13 +36,15 @@ class ServicoRepositoryAdapterTest {
             VeiculoPersistenceMapper(clienteMapper),
             PecaPersistenceMapper(),
         )
+
     private lateinit var adapter: ServicoRepositoryAdapter
-    private lateinit var servico: Servico
+    private lateinit var ordemServico: OrdemServico
     private lateinit var jpa: ServicoJpaEntity
 
     @BeforeEach
     fun setup() {
         adapter = ServicoRepositoryAdapter(jpaRepository, mapper)
+
         val cliente =
             Cliente(
                 id = Id.generate(),
@@ -50,6 +52,7 @@ class ServicoRepositoryAdapterTest {
                 documento = Documento.cpf("39053344705"),
                 email = "cliente@example.com",
             )
+
         val veiculo =
             Veiculo(
                 id = Id.generate(),
@@ -60,56 +63,59 @@ class ServicoRepositoryAdapterTest {
                 placa = "ABC1D23",
                 motorista = cliente,
             )
+
         val funcionario =
             br.com.fiap.oficina.domain.entity.Funcionario(
                 id = Id.generate(),
                 nome = "Funcionario Teste",
                 cargo = br.com.fiap.oficina.domain.enum.Cargo.MECANICO,
             )
-        servico =
-            Servico(
+
+        ordemServico =
+            OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
-        jpa = mapper.toJpa(servico)
+
+        jpa = mapper.toJpa(ordemServico)
     }
 
     @Test
     fun `salvar deve persistir e mapear de volta`() {
         `when`(jpaRepository.save(anyObject())).thenAnswer { it.getArgument<ServicoJpaEntity>(0) }
 
-        assertEquals(servico, adapter.salvar(servico))
+        assertEquals(ordemServico, adapter.salvar(ordemServico))
     }
 
     @Test
     fun `buscarPorId deve mapear quando presente`() {
-        `when`(jpaRepository.findById(servico.id.valor)).thenReturn(Optional.of(jpa))
+        `when`(jpaRepository.findById(ordemServico.id.valor)).thenReturn(Optional.of(jpa))
 
-        assertEquals(servico, adapter.buscarPorId(servico.id))
+        assertEquals(ordemServico, adapter.buscarPorId(ordemServico.id))
     }
 
     @Test
     fun `listarTodos deve mapear lista`() {
         `when`(jpaRepository.findAll()).thenReturn(listOf(jpa))
 
-        assertEquals(listOf(servico), adapter.listarTodos())
+        assertEquals(listOf(ordemServico), adapter.listarTodos())
     }
 
     @Test
     fun `existePorId deve delegar ao jpa`() {
-        `when`(jpaRepository.existsById(servico.id.valor)).thenReturn(true)
+        `when`(jpaRepository.existsById(ordemServico.id.valor)).thenReturn(true)
 
-        assertTrue(adapter.existePorId(servico.id))
+        assertTrue(adapter.existePorId(ordemServico.id))
     }
 
     @Test
     fun `deletarPorId deve delegar deleteById`() {
-        adapter.deletarPorId(servico.id)
+        adapter.deletarPorId(ordemServico.id)
 
-        verify(jpaRepository).deleteById(servico.id.valor)
+        verify(jpaRepository).deleteById(ordemServico.id.valor)
     }
 }
