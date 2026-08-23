@@ -3,7 +3,7 @@ package br.com.fiap.oficina.presentation.controller
 import br.com.fiap.oficina.application.service.PecaServicoComando
 import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
 import br.com.fiap.oficina.presentation.dto.OrcamentoDto
@@ -191,7 +191,7 @@ class ServicoController(private val service: ServicoService, private val mapper:
         id = id,
         descricao = dto.descricao,
         funcionarioId = Id.fromString(dto.funcionarioId),
-        status = dto.status ?: ServicoStatus.RECEBIDA,
+        status = dto.status ?: OrdemServicoStatus.RECEBIDA,
         clienteId = Id.fromString(dto.clienteId),
         veiculoId = Id.fromString(dto.veiculoId),
         pecas = dto.pecas.map { PecaServicoComando(Id.fromString(it.pecaId), it.quantidade) },

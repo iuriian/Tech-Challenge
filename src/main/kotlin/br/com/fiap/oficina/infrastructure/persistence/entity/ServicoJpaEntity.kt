@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -24,7 +24,7 @@ class ServicoJpaEntity(
     var descricao: String,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: ServicoStatus? = null,
+    var status: OrdemServicoStatus? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "funcionario_id", referencedColumnName = "id", nullable = false)
     var funcionario: FuncionarioEntity,
