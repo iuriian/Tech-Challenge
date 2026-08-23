@@ -61,7 +61,7 @@ class ServicoService(
                 }
             }
 
-        val servico =
+        val ordemServico =
             comando.id
                 ?.let { id -> atualizarExistente(id, comando, funcionario, cliente, veiculo, pecas) }
                 ?: OrdemServico.criar(
@@ -73,7 +73,7 @@ class ServicoService(
                     pecas = pecas,
                 )
 
-        return repository.salvar(servico)
+        return repository.salvar(ordemServico)
     }
 
     private fun atualizarExistente(
@@ -114,7 +114,7 @@ class ServicoService(
         require(repository.existePorId(id)) { "Serviço não encontrado para deletar." }
         repository.deletarPorId(id)
 
-        return "Servico deletado."
+        return "Serviço deletado."
     }
 
     /**
@@ -125,12 +125,12 @@ class ServicoService(
      */
     @Transactional
     fun avancarStatus(id: Id): OrdemServico {
-        val servico = buscarObrigatorio(id)
+        val ordemServico = buscarObrigatorio(id)
         val proximo =
-            proximoNaOrdem(servico.status)
-                ?: error("Serviço no status '${servico.status}' é um estado final e não pode avançar.")
+            proximoNaOrdem(ordemServico.status)
+                ?: error("Serviço no status '${ordemServico.status}' é um estado final e não pode avançar.")
 
-        return repository.salvar(servico.alterarStatus(proximo))
+        return repository.salvar(ordemServico.alterarStatus(proximo))
     }
 
     /**
@@ -142,15 +142,15 @@ class ServicoService(
         id: Id,
         novoStatus: OrdemServicoStatus,
     ): OrdemServico {
-        val servico = buscarObrigatorio(id)
-        val permitidas = transicoesPermitidas(servico.status)
+        val ordemServico = buscarObrigatorio(id)
+        val permitidas = transicoesPermitidas(ordemServico.status)
 
         check(novoStatus in permitidas) {
-            "Transição inválida de '${servico.status}' para '$novoStatus'. " +
-                "Transições permitidas a partir de '${servico.status}': $permitidas."
+            "Transição inválida de '${ordemServico.status}' para '$novoStatus'. " +
+                "Transições permitidas a partir de '${ordemServico.status}': $permitidas."
         }
 
-        return repository.salvar(servico.alterarStatus(novoStatus))
+        return repository.salvar(ordemServico.alterarStatus(novoStatus))
     }
 
     fun calcularTempoMedioExecucao(): TempoMedioExecucao {

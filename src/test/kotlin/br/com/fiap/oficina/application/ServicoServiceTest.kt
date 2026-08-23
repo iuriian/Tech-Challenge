@@ -6,16 +6,16 @@ import br.com.fiap.oficina.application.service.ServicoComando
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
+import br.com.fiap.oficina.domain.repository.OrdemServicoRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
-import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -43,19 +43,25 @@ import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class ServicoServiceTest {
-    @Mock lateinit var repository: ServicoRepository
+    @Mock
+    lateinit var repository: OrdemServicoRepository
 
-    @Mock lateinit var clienteRepository: ClienteRepository
+    @Mock
+    lateinit var clienteRepository: ClienteRepository
 
-    @Mock lateinit var veiculoRepository: VeiculoRepository
+    @Mock
+    lateinit var veiculoRepository: VeiculoRepository
 
-    @Mock lateinit var pecaRepository: PecaRepository
+    @Mock
+    lateinit var pecaRepository: PecaRepository
 
-    @Mock lateinit var funcionarioRepository: FuncionarioRepository
+    @Mock
+    lateinit var funcionarioRepository: FuncionarioRepository
 
-    @InjectMocks lateinit var service: ServicoService
+    @InjectMocks
+    lateinit var service: ServicoService
 
-    private lateinit var servicoId: Id
+    private lateinit var ordemServicoId: Id
     private lateinit var clienteId: Id
     private lateinit var veiculoId: Id
     private lateinit var cliente: Cliente
@@ -69,7 +75,7 @@ class ServicoServiceTest {
 
     @BeforeEach
     fun setup() {
-        servicoId = Id.generate()
+        ordemServicoId = Id.generate()
         clienteId = Id.generate()
         veiculoId = Id.generate()
 
@@ -107,7 +113,7 @@ class ServicoServiceTest {
     }
 
     @Test
-    fun `deve salvar servico com sucesso`() {
+    fun `deve salvar ordem de servico com sucesso`() {
         val quantidade1 = BigDecimal("2")
         val quantidade2 = BigDecimal("3")
         val pecasEsperadas =
@@ -115,18 +121,19 @@ class ServicoServiceTest {
                 PecaServico.criar(peca1, quantidade1),
                 PecaServico.criar(peca2, quantidade2),
             )
+
         val esperado =
-            Servico(
-                id = servicoId,
+            OrdemServico(
+                id = ordemServicoId,
                 descricao = "Troca de Óleo",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas = pecasEsperadas,
             )
 
-        `when`(repository.buscarPorId(servicoId)).thenReturn(esperado)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(esperado)
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
         `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
         `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
@@ -137,45 +144,45 @@ class ServicoServiceTest {
         val resultado =
             service.salvar(
                 ServicoComando(
-                    id = servicoId,
+                    id = ordemServicoId,
                     descricao = "Troca de Óleo",
                     funcionarioId = funcionarioId,
-                    status = ServicoStatus.RECEBIDA,
+                    status = OrdemServicoStatus.RECEBIDA,
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
-                    listOf(
-                        PecaServicoComando(pecaId1, quantidade1),
-                        PecaServicoComando(pecaId2, quantidade2),
-                    ),
+                        listOf(
+                            PecaServicoComando(pecaId1, quantidade1),
+                            PecaServicoComando(pecaId2, quantidade2),
+                        ),
                 ),
             )
 
         assertNotNull(resultado)
-        assertEquals(servicoId, resultado.id)
+        assertEquals(ordemServicoId, resultado.id)
         assertEquals(cliente, resultado.cliente)
         assertEquals(pecasEsperadas, resultado.pecas)
         verify(repository, times(1)).salvar(esperado)
     }
 
     @Test
-    fun `deve lancar excecao ao salvar servico com cliente inexistente`() {
+    fun `deve lancar excecao ao salvar ordem de servico com cliente inexistente`() {
         `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(null)
 
         val exception =
             assertThrows(IllegalArgumentException::class.java) {
                 service.salvar(
                     ServicoComando(
-                        id = servicoId,
+                        id = ordemServicoId,
                         descricao = "Troca de Óleo",
                         funcionarioId = funcionarioId,
                         clienteId = clienteId,
                         veiculoId = veiculoId,
                         pecas =
-                        listOf(
-                            PecaServicoComando(pecaId1, BigDecimal("2")),
-                            PecaServicoComando(pecaId2, BigDecimal("3")),
-                        ),
+                            listOf(
+                                PecaServicoComando(pecaId1, BigDecimal("2")),
+                                PecaServicoComando(pecaId2, BigDecimal("3")),
+                            ),
                     ),
                 )
             }
@@ -185,77 +192,81 @@ class ServicoServiceTest {
     }
 
     @Test
-    fun `deve buscar servico por id com sucesso`() {
-        val servico =
-            Servico(
-                id = servicoId,
+    fun `deve buscar ordem de servico por id com sucesso`() {
+        val ordemServico =
+            OrdemServico(
+                id = ordemServicoId,
                 descricao = "Troca de Óleo",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
-        val resultado = service.listarPorId(servicoId)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(ordemServico)
+
+        val resultado = service.listarPorId(ordemServicoId)
 
         assertNotNull(resultado)
-        assertEquals(servico.id, resultado?.id)
-        verify(repository, times(1)).buscarPorId(servicoId)
+        assertEquals(ordemServico.id, resultado?.id)
+        verify(repository, times(1)).buscarPorId(ordemServicoId)
     }
 
     @Test
     fun `deve obter orcamento totalizando valor das pecas`() {
-        val servico =
-            Servico(
-                id = servicoId,
+        val ordemServico =
+            OrdemServico(
+                id = ordemServicoId,
                 descricao = "Troca de Óleo",
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                listOf(
-                    PecaServico.criar(peca1, BigDecimal("2")), // 10 * 2 = 20
-                    PecaServico.criar(peca2, BigDecimal("3")), // 10 * 3 = 30
-                ),
+                    listOf(
+                        PecaServico.criar(peca1, BigDecimal("2")),
+                        PecaServico.criar(peca2, BigDecimal("3")),
+                    ),
             )
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servico)
 
-        val orcamento = service.obterOrcamento(servicoId)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(ordemServico)
 
-        assertEquals(servicoId, orcamento.servicoId)
+        val orcamento = service.obterOrcamento(ordemServicoId)
+
+        assertEquals(ordemServicoId, orcamento.ordemServicoId)
         assertEquals(2, orcamento.itens.size)
         assertEquals(0, BigDecimal("50").compareTo(orcamento.valorTotal))
-        verify(repository, times(1)).buscarPorId(servicoId)
+        verify(repository, times(1)).buscarPorId(ordemServicoId)
     }
 
     @Test
-    fun `deve lancar excecao ao obter orcamento de servico inexistente`() {
-        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+    fun `deve lancar excecao ao obter orcamento de ordem de servico inexistente`() {
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(null)
 
         val exception =
             assertThrows(IllegalArgumentException::class.java) {
-                service.obterOrcamento(servicoId)
+                service.obterOrcamento(ordemServicoId)
             }
 
-        assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
+        assertEquals("Serviço não encontrado com o ID: $ordemServicoId", exception.message)
     }
 
     @Test
-    fun `deve remover servico com sucesso`() {
-        `when`(repository.existePorId(servicoId)).thenReturn(true)
+    fun `deve remover ordem de servico com sucesso`() {
+        `when`(repository.existePorId(ordemServicoId)).thenReturn(true)
 
-        service.deletarPorId(servicoId)
+        service.deletarPorId(ordemServicoId)
 
-        verify(repository, times(1)).deletarPorId(servicoId)
+        verify(repository, times(1)).deletarPorId(ordemServicoId)
     }
 
     @Test
-    fun `deve lancar excecao ao tentar remover servico inexistente`() {
+    fun `deve lancar excecao ao tentar remover ordem de servico inexistente`() {
         val idInexistente = Id.generate()
         `when`(repository.existePorId(idInexistente)).thenReturn(false)
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) { service.deletarPorId(idInexistente) }
+            assertThrows(IllegalArgumentException::class.java) {
+                service.deletarPorId(idInexistente)
+            }
 
         assertEquals("Serviço não encontrado para deletar.", exception.message)
         verify(repository, never()).deletarPorId(idInexistente)
@@ -269,47 +280,71 @@ class ServicoServiceTest {
         "EM_EXECUCAO, FINALIZADA",
         "FINALIZADA, ENTREGUE",
     )
-    fun `avancarStatus deve seguir a ordem de declaracao do enum`(de: ServicoStatus, esperado: ServicoStatus) {
-        val atual = servicoComStatus(de)
-        `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
+    fun `avancarStatus deve seguir a ordem de declaracao do enum`(
+        de: OrdemServicoStatus,
+        esperado: OrdemServicoStatus,
+    ) {
+        val atual = ordemServicoComStatus(de)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(atual)
+        `when`(repository.salvar(anyObject())).thenAnswer {
+            it.getArgument<OrdemServico>(0)
+        }
 
-        val resultado = service.avancarStatus(servicoId)
+        val resultado = service.avancarStatus(ordemServicoId)
 
         assertEquals(esperado, resultado.status)
         verify(repository, times(1)).salvar(anyObject())
     }
 
     @ParameterizedTest
-    @EnumSource(value = ServicoStatus::class, names = ["ENTREGUE", "CANCELADA"])
-    fun `avancarStatus deve falhar em estado final`(status: ServicoStatus) {
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(status))
+    @EnumSource(
+        value = OrdemServicoStatus::class,
+        names = ["ENTREGUE", "CANCELADA"],
+    )
+    fun `avancarStatus deve falhar em estado final`(status: OrdemServicoStatus) {
+        `when`(
+            repository.buscarPorId(ordemServicoId),
+        ).thenReturn(ordemServicoComStatus(status))
 
-        assertThrows(IllegalStateException::class.java) { service.avancarStatus(servicoId) }
+        assertThrows(IllegalStateException::class.java) {
+            service.avancarStatus(ordemServicoId)
+        }
+
         verify(repository, never()).salvar(anyObject())
     }
 
     @Test
-    fun `avancarStatus deve lancar excecao quando servico nao existe`() {
-        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+    fun `avancarStatus deve lancar excecao quando ordem de servico nao existe`() {
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(null)
 
         val exception =
             assertThrows(IllegalArgumentException::class.java) {
-                service.avancarStatus(servicoId)
+                service.avancarStatus(ordemServicoId)
             }
 
-        assertEquals("Serviço não encontrado com o ID: $servicoId", exception.message)
+        assertEquals("Serviço não encontrado com o ID: $ordemServicoId", exception.message)
         verify(repository, never()).salvar(anyObject())
     }
 
     @ParameterizedTest
-    @EnumSource(value = ServicoStatus::class, names = ["EM_EXECUCAO", "CANCELADA"])
-    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: ServicoStatus) {
-        val atual = servicoComStatus(ServicoStatus.AGUARDANDO_APROVACAO)
-        `when`(repository.buscarPorId(servicoId)).thenReturn(atual)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Servico>(0) }
+    @EnumSource(
+        value = OrdemServicoStatus::class,
+        names = ["EM_EXECUCAO", "CANCELADA"],
+    )
+    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(
+        alvo: OrdemServicoStatus,
+    ) {
+        val atual =
+            ordemServicoComStatus(
+                OrdemServicoStatus.AGUARDANDO_APROVACAO,
+            )
 
-        val resultado = service.alterarStatus(servicoId, alvo)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(atual)
+        `when`(repository.salvar(anyObject())).thenAnswer {
+            it.getArgument<OrdemServico>(0)
+        }
+
+        val resultado = service.alterarStatus(ordemServicoId, alvo)
 
         assertEquals(alvo, resultado.status)
     }
@@ -322,28 +357,44 @@ class ServicoServiceTest {
         "EM_EXECUCAO, CANCELADA",
         "ENTREGUE, CANCELADA",
     )
-    fun `alterarStatus deve rejeitar transicoes invalidas`(de: ServicoStatus, alvo: ServicoStatus) {
-        `when`(repository.buscarPorId(servicoId)).thenReturn(servicoComStatus(de))
+    fun `alterarStatus deve rejeitar transicoes invalidas`(
+        de: OrdemServicoStatus,
+        alvo: OrdemServicoStatus,
+    ) {
+        `when`(
+            repository.buscarPorId(ordemServicoId),
+        ).thenReturn(ordemServicoComStatus(de))
 
         assertThrows(IllegalStateException::class.java) {
-            service.alterarStatus(servicoId, alvo)
+            service.alterarStatus(ordemServicoId, alvo)
         }
+
         verify(repository, never()).salvar(anyObject())
     }
 
     @Test
-    fun `alterarStatus deve lancar excecao quando servico nao existe`() {
-        `when`(repository.buscarPorId(servicoId)).thenReturn(null)
+    fun `alterarStatus deve lancar excecao quando ordem de servico nao existe`() {
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(null)
 
         assertThrows(IllegalArgumentException::class.java) {
-            service.alterarStatus(servicoId, ServicoStatus.EM_DIAGNOSTICO)
+            service.alterarStatus(
+                ordemServicoId,
+                OrdemServicoStatus.EM_DIAGNOSTICO,
+            )
         }
+
         verify(repository, never()).salvar(anyObject())
     }
 
     @Test
-    fun `listarPorCliente deve retornar servicos do cliente`() {
-        `when`(repository.listarPorCliente(clienteId)).thenReturn(listOf(servicoComStatus(ServicoStatus.RECEBIDA)))
+    fun `listarPorCliente deve retornar ordens de servico do cliente`() {
+        `when`(
+            repository.listarPorCliente(clienteId),
+        ).thenReturn(
+            listOf(
+                ordemServicoComStatus(OrdemServicoStatus.RECEBIDA),
+            ),
+        )
 
         val resultado = service.listarPorCliente(clienteId)
 
@@ -353,7 +404,7 @@ class ServicoServiceTest {
     }
 
     @Test
-    fun `listarPorCliente deve retornar lista vazia quando cliente nao tem servicos`() {
+    fun `listarPorCliente deve retornar lista vazia quando cliente nao tem ordens de servico`() {
         `when`(repository.listarPorCliente(clienteId)).thenReturn(emptyList())
 
         val resultado = service.listarPorCliente(clienteId)
@@ -362,8 +413,14 @@ class ServicoServiceTest {
     }
 
     @Test
-    fun `calcularTempoMedioExecucao deve retornar null quando nao ha servicos finalizados`() {
-        `when`(repository.listarTodos()).thenReturn(listOf(servicoComStatus(ServicoStatus.EM_EXECUCAO)))
+    fun `calcularTempoMedioExecucao deve retornar null quando nao ha ordens finalizadas`() {
+        `when`(
+            repository.listarTodos(),
+        ).thenReturn(
+            listOf(
+                ordemServicoComStatus(OrdemServicoStatus.EM_EXECUCAO),
+            ),
+        )
 
         val resultado = service.calcularTempoMedioExecucao()
 
@@ -374,15 +431,26 @@ class ServicoServiceTest {
     @Test
     fun `calcularTempoMedioExecucao deve calcular media em minutos`() {
         val inicio = Instant.parse("2025-01-01T08:00:00Z")
-        val fim1 = Instant.parse("2025-01-01T10:00:00Z") // 120 min
-        val fim2 = Instant.parse("2025-01-01T11:00:00Z") // 180 min (inicio até fim2)
-        val s1 =
-            servicoComStatus(ServicoStatus.FINALIZADA)
-                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim1)
-        val s2 =
-            servicoComStatus(ServicoStatus.FINALIZADA)
-                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim2)
-        `when`(repository.listarTodos()).thenReturn(listOf(s1, s2))
+        val fim1 = Instant.parse("2025-01-01T10:00:00Z")
+        val fim2 = Instant.parse("2025-01-01T11:00:00Z")
+
+        val ordemServico1 =
+            ordemServicoComStatus(OrdemServicoStatus.FINALIZADA)
+                .copy(
+                    dataInicioExecucao = inicio,
+                    dataFinalizacao = fim1,
+                )
+
+        val ordemServico2 =
+            ordemServicoComStatus(OrdemServicoStatus.FINALIZADA)
+                .copy(
+                    dataInicioExecucao = inicio,
+                    dataFinalizacao = fim2,
+                )
+
+        `when`(
+            repository.listarTodos(),
+        ).thenReturn(listOf(ordemServico1, ordemServico2))
 
         val resultado = service.calcularTempoMedioExecucao()
 
@@ -391,16 +459,27 @@ class ServicoServiceTest {
     }
 
     @Test
-    fun `calcularTempoMedioExecucao deve ignorar servicos sem dataInicioExecucao`() {
+    fun `calcularTempoMedioExecucao deve ignorar ordens sem dataInicioExecucao`() {
         val inicio = Instant.parse("2025-01-01T08:00:00Z")
-        val fim = Instant.parse("2025-01-01T09:00:00Z") // 60 min
-        val completo =
-            servicoComStatus(ServicoStatus.FINALIZADA)
-                .copy(dataInicioExecucao = inicio, dataFinalizacao = fim)
+        val fim = Instant.parse("2025-01-01T09:00:00Z")
+
+        val completa =
+            ordemServicoComStatus(OrdemServicoStatus.FINALIZADA)
+                .copy(
+                    dataInicioExecucao = inicio,
+                    dataFinalizacao = fim,
+                )
+
         val semInicio =
-            servicoComStatus(ServicoStatus.FINALIZADA)
-                .copy(dataInicioExecucao = null, dataFinalizacao = fim)
-        `when`(repository.listarTodos()).thenReturn(listOf(completo, semInicio))
+            ordemServicoComStatus(OrdemServicoStatus.FINALIZADA)
+                .copy(
+                    dataInicioExecucao = null,
+                    dataFinalizacao = fim,
+                )
+
+        `when`(
+            repository.listarTodos(),
+        ).thenReturn(listOf(completa, semInicio))
 
         val resultado = service.calcularTempoMedioExecucao()
 
@@ -408,19 +487,26 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun servicoComStatus(status: ServicoStatus): Servico = Servico(
-        id = servicoId,
-        descricao = "Troca de Óleo",
-        status = status,
-        funcionario = funcionario,
-        cliente = cliente,
-        veiculo = veiculo,
-    )
+    private fun ordemServicoComStatus(
+        status: OrdemServicoStatus,
+    ): OrdemServico =
+        OrdemServico(
+            id = ordemServicoId,
+            descricao = "Troca de Óleo",
+            status = status,
+            funcionario = funcionario,
+            cliente = cliente,
+            veiculo = veiculo,
+        )
 
-    private fun criarPeca(id: Id, codigo: String): Peca = Peca(
-        id = id,
-        codigo = codigo,
-        nome = "Peça Teste",
-        precoDeVenda = BigDecimal.TEN,
-    )
+    private fun criarPeca(
+        id: Id,
+        codigo: String,
+    ): Peca =
+        Peca(
+            id = id,
+            codigo = codigo,
+            nome = "Peça Teste",
+            precoDeVenda = BigDecimal.TEN,
+        )
 }

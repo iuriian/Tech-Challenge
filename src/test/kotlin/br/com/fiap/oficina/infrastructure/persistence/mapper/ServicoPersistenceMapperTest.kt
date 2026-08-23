@@ -2,12 +2,12 @@ package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.entity.PecaServico
-import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Test
@@ -50,52 +50,58 @@ class ServicoPersistenceMapperTest {
         )
 
     @Test
-    fun `deve fazer round-trip de servico com pecas`() {
-        val servico =
-            Servico(
+    fun `deve fazer round-trip de ordem de servico com pecas`() {
+        val ordemServico =
+            OrdemServico(
                 id = Id.generate(),
                 descricao = "Troca de óleo",
-                status = ServicoStatus.EM_EXECUCAO,
+                status = OrdemServicoStatus.EM_EXECUCAO,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                listOf(
-                    PecaServico(
-                        Peca(Id.generate(), "PEC001", "Filtro", precoDeVenda = BigDecimal.TEN),
-                        BigDecimal("2"),
+                    listOf(
+                        PecaServico(
+                            Peca(
+                                Id.generate(),
+                                "PEC001",
+                                "Filtro",
+                                precoDeVenda = BigDecimal.TEN,
+                            ),
+                            BigDecimal("2"),
+                        ),
                     ),
-                ),
             )
 
-        val jpa = mapper.toJpa(servico)
+        val jpa = mapper.toJpa(ordemServico)
 
-        assertEquals(servico.id.valor, jpa.id)
-        assertEquals(ServicoStatus.EM_EXECUCAO, jpa.status)
+        assertEquals(ordemServico.id.valor, jpa.id)
+        assertEquals(OrdemServicoStatus.EM_EXECUCAO, jpa.status)
         assertEquals(funcionario.id.valor, jpa.funcionario.id)
         assertEquals(BigDecimal("2"), jpa.pecas.first().quantidade)
-        assertEquals(servico, mapper.toDomain(jpa))
+        assertEquals(ordemServico, mapper.toDomain(jpa))
     }
 
     @Test
     fun `deve usar status padrao e funcionario zero quando jpa possui nulos`() {
-        val servico =
-            Servico(
+        val ordemServico =
+            OrdemServico(
                 id = Id.generate(),
                 descricao = "Revisão",
-                status = ServicoStatus.RECEBIDA,
+                status = OrdemServicoStatus.RECEBIDA,
                 funcionario = funcionario,
                 cliente = cliente,
                 veiculo = veiculo,
             )
+
         val jpa =
-            mapper.toJpa(servico).apply {
+            mapper.toJpa(ordemServico).apply {
                 status = null
             }
 
         val resultado = mapper.toDomain(jpa)
 
-        assertEquals(ServicoStatus.RECEBIDA, resultado.status)
+        assertEquals(OrdemServicoStatus.RECEBIDA, resultado.status)
         assertEquals(funcionario.id.valor, resultado.funcionario.id.valor)
     }
 }

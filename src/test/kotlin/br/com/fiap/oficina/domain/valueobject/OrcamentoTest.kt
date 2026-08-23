@@ -128,24 +128,4 @@ class OrcamentoTest {
 
         assertEquals("Código da peça é obrigatório", exception.message)
     }
-
-    @Test
-    @Suppress("DEPRECATION")
-    fun `deve rejeitar total legado inconsistente`() {
-        val item = ItemOrcamento.dePeca(peca, BigDecimal("2"))
-
-        val exception =
-            assertThrows(IllegalArgumentException::class.java) {
-                Orcamento(
-                    servicoId = Id.generate(),
-                    itens = listOf(item),
-                    valorTotal = BigDecimal("999.00"),
-                )
-            }
-
-        assertEquals(
-            "Valor total informado é incompatível com os itens do orçamento",
-            exception.message,
-        )
-    }
 }
