@@ -3,10 +3,11 @@ package br.com.fiap.oficina.presentation.controller
 import br.com.fiap.oficina.application.service.ServicoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
+import br.com.fiap.oficina.domain.enum.TipoItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
@@ -30,11 +31,14 @@ import java.util.UUID
 
 @WebMvcTest(ServicoController::class)
 class ServicoControllerTest {
-    @Autowired lateinit var mockMvc: MockMvc
+    @Autowired
+    lateinit var mockMvc: MockMvc
 
-    @MockitoBean lateinit var service: ServicoService
+    @MockitoBean
+    lateinit var service: ServicoService
 
-    @MockitoBean lateinit var mapper: ServicoMapper
+    @MockitoBean
+    lateinit var mapper: ServicoMapper
 
     private val cliente =
         Cliente(
@@ -62,10 +66,10 @@ class ServicoControllerTest {
             cargo = Cargo.MECANICO,
         )
 
-    private fun buildServico(id: UUID) = Servico(
+    private fun buildOrdemServico(id: UUID) = OrdemServico(
         id = Id.fromString(id.toString()),
         descricao = "Revisao Geral",
-        status = ServicoStatus.RECEBIDA,
+        status = OrdemServicoStatus.RECEBIDA,
         funcionario = funcionario,
         cliente = cliente,
         veiculo = veiculo,
@@ -74,27 +78,27 @@ class ServicoControllerTest {
 
     @Test
     @WithMockUser
-    fun `deve buscar servico por id`() {
+    fun `deve buscar ordem de servico por id`() {
         val id = UUID.randomUUID()
-        `when`(service.listarPorId(Id.fromString(id.toString()))).thenReturn(buildServico(id))
+        `when`(service.listarPorId(Id.fromString(id.toString()))).thenReturn(buildOrdemServico(id))
 
         mockMvc.perform(get("/servicos/$id")).andExpect(status().isOk)
     }
 
     @Test
     @WithMockUser(roles = ["CLIENTE"])
-    fun `cliente pode consultar servico por id`() {
+    fun `cliente pode consultar ordem de servico por id`() {
         val id = UUID.randomUUID()
-        val servico = buildServico(id)
-        `when`(service.listarPorId(Id.fromString(id.toString()))).thenReturn(servico)
-        `when`(mapper.toResponse(servico)).thenReturn(
+        val ordemServico = buildOrdemServico(id)
+        `when`(service.listarPorId(Id.fromString(id.toString()))).thenReturn(ordemServico)
+        `when`(mapper.toResponse(ordemServico)).thenReturn(
             ServicoDto(
                 id = id,
-                descricao = servico.descricao,
-                status = servico.status,
+                descricao = ordemServico.descricao,
+                status = ordemServico.status,
                 funcionarioId =
-                servico.funcionario.id.valor
-                    .toString(),
+                    ordemServico.funcionario.id.valor
+                        .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -105,23 +109,22 @@ class ServicoControllerTest {
 
     @Test
     @WithMockUser(roles = ["CLIENTE"])
-    fun `cliente pode consultar orcamento do servico`() {
+    fun `cliente pode consultar orcamento da ordem de servico`() {
         val id = UUID.randomUUID()
         val orcamento =
             Orcamento(
-                servicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
+                ordemServicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
-                listOf(
-                    ItemOrcamento(
-                        pecaId = Id.generate(),
-                        codigo = "PEC001",
-                        nome = "Filtro",
-                        precoUnitario = BigDecimal.TEN,
-                        quantidade = BigDecimal.ONE,
-                        subtotal = BigDecimal.TEN,
+                    listOf(
+                        ItemOrcamento(
+                            tipo = TipoItemOrcamento.PECA,
+                            referenciaId = Id.generate(),
+                            descricao = "Filtro",
+                            valorUnitario = BigDecimal.TEN,
+                            quantidade = BigDecimal.ONE,
+                            codigoReferencia = "PEC001",
+                        ),
                     ),
-                ),
-                valorTotal = BigDecimal.TEN,
             )
         `when`(service.obterOrcamento(Id.fromString(id.toString()))).thenReturn(orcamento)
 
@@ -132,16 +135,16 @@ class ServicoControllerTest {
     @WithMockUser(roles = ["ATENDENTE"])
     fun `atendente pode avancar status da OS`() {
         val id = UUID.randomUUID()
-        val servicoAvancado = buildServico(id).copy(status = ServicoStatus.EM_DIAGNOSTICO)
-        `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(servicoAvancado)
-        `when`(mapper.toResponse(servicoAvancado)).thenReturn(
+        val ordemServicoAvancada = buildOrdemServico(id).copy(status = OrdemServicoStatus.EM_DIAGNOSTICO)
+        `when`(service.avancarStatus(Id.fromString(id.toString()))).thenReturn(ordemServicoAvancada)
+        `when`(mapper.toResponse(ordemServicoAvancada)).thenReturn(
             ServicoDto(
                 id = id,
-                descricao = servicoAvancado.descricao,
-                status = servicoAvancado.status,
+                descricao = ordemServicoAvancada.descricao,
+                status = ordemServicoAvancada.status,
                 funcionarioId =
-                servicoAvancado.funcionario.id.valor
-                    .toString(),
+                    ordemServicoAvancada.funcionario.id.valor
+                        .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -154,18 +157,18 @@ class ServicoControllerTest {
     @WithMockUser(roles = ["CLIENTE"])
     fun `cliente pode alterar status para cancelada via endpoint de status`() {
         val id = UUID.randomUUID()
-        val servicoCancelado = buildServico(id).copy(status = ServicoStatus.CANCELADA)
+        val ordemServicoCancelada = buildOrdemServico(id).copy(status = OrdemServicoStatus.CANCELADA)
         `when`(
-            service.alterarStatus(Id.fromString(id.toString()), ServicoStatus.CANCELADA),
-        ).thenReturn(servicoCancelado)
-        `when`(mapper.toResponse(servicoCancelado)).thenReturn(
+            service.alterarStatus(Id.fromString(id.toString()), OrdemServicoStatus.CANCELADA),
+        ).thenReturn(ordemServicoCancelada)
+        `when`(mapper.toResponse(ordemServicoCancelada)).thenReturn(
             ServicoDto(
                 id = id,
-                descricao = servicoCancelado.descricao,
-                status = servicoCancelado.status,
+                descricao = ordemServicoCancelada.descricao,
+                status = ordemServicoCancelada.status,
                 funcionarioId =
-                servicoCancelado.funcionario.id.valor
-                    .toString(),
+                    ordemServicoCancelada.funcionario.id.valor
+                        .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),

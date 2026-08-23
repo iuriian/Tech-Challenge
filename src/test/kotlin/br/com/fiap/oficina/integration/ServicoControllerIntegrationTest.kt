@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.integration
 
-import br.com.fiap.oficina.domain.enum.ServicoStatus
+import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
@@ -34,43 +34,56 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     @Autowired
     private lateinit var pecaRepository: PecaRepository
 
-    private fun clienteId(): UUID = clienteRepository.buscarPorDocumento("39053344705")!!.id.valor
+    private fun clienteId(): UUID =
+        clienteRepository.buscarPorDocumento("39053344705")!!.id.valor
 
-    private fun veiculoId(): UUID = veiculoRepository.buscarPorPlaca("ABC1D23")!!.id.valor
+    private fun veiculoId(): UUID =
+        veiculoRepository.buscarPorPlaca("ABC1D23")!!.id.valor
 
-    private fun pecaId(): UUID = pecaRepository.buscarAtivoPorCodigo("PEC001")!!.id.valor
+    private fun pecaId(): UUID =
+        pecaRepository.buscarAtivoPorCodigo("PEC001")!!.id.valor
 
-    private fun servicoJson(descricao: String = "Revisão completa", quantidadePeca: BigDecimal = BigDecimal("2")) =
+    private fun ordemServicoJson(
+        descricao: String = "Revisão completa",
+        quantidadePeca: BigDecimal = BigDecimal("2"),
+    ) =
         objectMapper.writeValueAsString(
             ServicoDto(
                 descricao = descricao,
                 funcionarioId = "3f5f33b0-4f1f-4a76-9ef8-1dc8b8d1a1b3",
                 clienteId = clienteId().toString(),
                 veiculoId = veiculoId().toString(),
-                pecas = listOf(PecaServicoDto(pecaId = pecaId().toString(), quantidade = quantidadePeca)),
+                pecas =
+                    listOf(
+                        PecaServicoDto(
+                            pecaId = pecaId().toString(),
+                            quantidade = quantidadePeca,
+                        ),
+                    ),
             ),
         )
 
-    private fun criarServico(): ServicoDto {
+    private fun criarOrdemServico(): ServicoDto {
         val response =
             mockMvc
                 .post("/servicos") {
                     contentType = MediaType.APPLICATION_JSON
-                    content = servicoJson()
-                }.andExpect { status { isCreated() } }
-                .andReturn()
+                    content = ordemServicoJson()
+                }.andExpect {
+                    status { isCreated() }
+                }.andReturn()
 
         return objectMapper.readValue(response.response.contentAsString)
     }
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
-    fun `deve criar servico com status inicial RECEBIDA e recupera-lo por id`() {
+    fun `deve criar ordem de servico com status inicial RECEBIDA e recupera-la por id`() {
         val response =
             mockMvc
                 .post("/servicos") {
                     contentType = MediaType.APPLICATION_JSON
-                    content = servicoJson()
+                    content = ordemServicoJson()
                 }.andExpect {
                     status { isCreated() }
                     jsonPath("$.id") { exists() }
@@ -78,13 +91,14 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
                     jsonPath("$.descricao") { value("Revisão completa") }
                 }.andReturn()
 
-        val criado: ServicoDto = objectMapper.readValue(response.response.contentAsString)
+        val ordemServicoCriada: ServicoDto =
+            objectMapper.readValue(response.response.contentAsString)
 
         mockMvc
-            .get("/servicos/${criado.id}")
+            .get("/servicos/${ordemServicoCriada.id}")
             .andExpect {
                 status { isOk() }
-                jsonPath("$.id") { value(criado.id.toString()) }
+                jsonPath("$.id") { value(ordemServicoCriada.id.toString()) }
                 jsonPath("$.pecas.length()") { value(1) }
             }
     }
@@ -92,14 +106,14 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve calcular o orcamento somando preco de venda vezes quantidade`() {
-        val criado = criarServico()
+        val ordemServicoCriada = criarOrdemServico()
 
         // PEC001 tem preço de venda 45.00 e quantidade 2 → total 90.00
         mockMvc
-            .get("/servicos/${criado.id}/orcamento")
+            .get("/servicos/${ordemServicoCriada.id}/orcamento")
             .andExpect {
                 status { isOk() }
-                jsonPath("$.servicoId") { value(criado.id.toString()) }
+                jsonPath("$.servicoId") { value(ordemServicoCriada.id.toString()) }
                 jsonPath("$.itens.length()") { value(1) }
                 jsonPath("$.itens[0].codigo") { value("PEC001") }
                 jsonPath("$.valorTotal") { value(90.0) }
@@ -109,17 +123,17 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve avancar o status seguindo o fluxo da maquina de estados`() {
-        val criado = criarServico()
+        val ordemServicoCriada = criarOrdemServico()
 
         mockMvc
-            .patch("/servicos/${criado.id}/avancar")
+            .patch("/servicos/${ordemServicoCriada.id}/avancar")
             .andExpect {
                 status { isOk() }
                 jsonPath("$.status") { value("EM_DIAGNOSTICO") }
             }
 
         mockMvc
-            .patch("/servicos/${criado.id}/avancar")
+            .patch("/servicos/${ordemServicoCriada.id}/avancar")
             .andExpect {
                 status { isOk() }
                 jsonPath("$.status") { value("AGUARDANDO_APROVACAO") }
@@ -129,36 +143,45 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve retornar 422 em transicao de status nao permitida`() {
-        val criado = criarServico()
+        val ordemServicoCriada = criarOrdemServico()
 
-        val dto = objectMapper.writeValueAsString(AlterarStatusDto(ServicoStatus.FINALIZADA))
+        val dto =
+            objectMapper.writeValueAsString(
+                AlterarStatusDto(OrdemServicoStatus.FINALIZADA),
+            )
 
         // De RECEBIDA só é permitido avançar para EM_DIAGNOSTICO.
         mockMvc
-            .patch("/servicos/${criado.id}/status") {
+            .patch("/servicos/${ordemServicoCriada.id}/status") {
                 contentType = MediaType.APPLICATION_JSON
                 content = dto
-            }.andExpect { status { isUnprocessableEntity() } }
+            }.andExpect {
+                status { isUnprocessableEntity() }
+            }
     }
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
-    fun `deve listar servicos por cliente`() {
-        val criado = criarServico()
+    fun `deve listar ordens de servico por cliente`() {
+        val ordemServicoCriada = criarOrdemServico()
 
         mockMvc
-            .get("/servicos/cliente/{clienteId}", clienteId())
-            .andExpect {
+            .get(
+                "/servicos/cliente/{clienteId}",
+                clienteId(),
+            ).andExpect {
                 status { isOk() }
                 jsonPath("$") { isArray() }
-                jsonPath("$[?(@.id == '${criado.id}')]") { isNotEmpty() }
+                jsonPath("$[?(@.id == '${ordemServicoCriada.id}')]") {
+                    isNotEmpty()
+                }
             }
     }
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve retornar metricas de tempo medio de execucao`() {
-        // No seed nenhum serviço possui dataInicioExecucao + dataFinalizacao,
+        // No seed nenhuma ordem de serviço possui dataInicioExecucao + dataFinalizacao,
         // portanto a média é nula e o total de finalizados é zero.
         mockMvc
             .get("/servicos/metricas/tempo-medio")
@@ -170,15 +193,17 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
-    fun `deve deletar servico retornando 204`() {
-        val criado = criarServico()
+    fun `deve deletar ordem de servico retornando 204`() {
+        val ordemServicoCriada = criarOrdemServico()
 
         mockMvc
-            .delete("/servicos/${criado.id}")
-            .andExpect { status { isNoContent() } }
+            .delete("/servicos/${ordemServicoCriada.id}")
+            .andExpect {
+                status { isNoContent() }
+            }
 
         mockMvc
-            .get("/servicos/${criado.id}")
+            .get("/servicos/${ordemServicoCriada.id}")
             .andExpect {
                 status { isOk() }
                 content { string("") }
@@ -187,18 +212,22 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["CLIENTE"])
-    fun `deve retornar 403 quando cliente tenta criar servico`() {
+    fun `deve retornar 403 quando cliente tenta criar ordem de servico`() {
         mockMvc
             .post("/servicos") {
                 contentType = MediaType.APPLICATION_JSON
-                content = servicoJson()
-            }.andExpect { status { isForbidden() } }
+                content = ordemServicoJson()
+            }.andExpect {
+                status { isForbidden() }
+            }
     }
 
     @Test
     fun `deve retornar 401 quando nao autenticado`() {
         mockMvc
             .get("/servicos")
-            .andExpect { status { isUnauthorized() } }
+            .andExpect {
+                status { isUnauthorized() }
+            }
     }
 }
