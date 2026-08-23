@@ -1,0 +1,16 @@
+apiVersion: v1
+data:
+  init.sql: "-- Este script é executado apenas na primeira inicialização do container\r\n--
+    O banco 'oficina' já é criado automaticamente pela variável POSTGRES_DB\r\n--
+    Este arquivo pode ser usado para criar tabelas, extensões ou dados iniciais\r\n\r\n--
+    Exemplo: garantir que o banco existe (redundante, mas seguro)\r\n-- SELECT 'CREATE
+    DATABASE oficina'\r\n-- WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname
+    = 'oficina')\\gexec\r\n\r\nSELECT 'CREATE DATABASE keycloak'\r\n    WHERE NOT
+    EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\\gexec\r\n\r\n\\c
+    keycloak\r\n\r\n\r\nSELECT 'CREATE DATABASE oficina'\r\n    WHERE NOT EXISTS (SELECT
+    FROM pg_database WHERE datname = 'oficina')\\gexec\r\n\r\n\\c oficina\r\n\r\nSELECT
+    'CREATE DATABASE sonarqube'\r\n    WHERE NOT EXISTS (SELECT FROM pg_database WHERE
+    datname = 'sonarqube')\\gexec\r\n\r\n\\c sonarqube\r\n"
+kind: ConfigMap
+metadata:
+  name: db-init-scripts

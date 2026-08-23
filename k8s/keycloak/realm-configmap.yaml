@@ -1,0 +1,36 @@
+apiVersion: v1
+data:
+  realm.json: "{\r\n  \"realm\": \"Fiap\",\r\n  \"enabled\": true,\r\n  \"clients\":
+    [\r\n    {\r\n      \"clientId\": \"oficina\",\r\n      \"publicClient\": true,\r\n
+    \     \"implicitFlowEnabled\": true,\r\n      \"directAccessGrantsEnabled\": true,\r\n
+    \     \"enabled\": true,\r\n      \"webOrigins\": [\"*\"]\r\n    }\r\n  ],\r\n
+    \ \"roles\": {\r\n    \"client\": {\r\n      \"oficina\": [\r\n        {\r\n          \"name\":
+    \"ADMIN\"\r\n        },\r\n        {\r\n          \"name\": \"CLIENTE\"\r\n        },\r\n
+    \       {\r\n          \"name\": \"MECANICO\"\r\n        },\r\n        {\r\n          \"name\":
+    \"ATENDENTE\"\r\n        }\r\n      ]\r\n    }\r\n  },\r\n  \"users\": [\r\n    {\r\n
+    \     \"username\": \"admin\",\r\n      \"firstName\": \"Admin\",\r\n      \"lastName\":
+    \"Fiap\",\r\n      \"email\": \"admin@fiap.com.br\",\r\n      \"enabled\": true,\r\n
+    \     \"credentials\": [\r\n        {\r\n          \"type\": \"password\",\r\n
+    \         \"value\": \"admin\",\r\n          \"temporary\": false\r\n        }\r\n
+    \     ],\r\n      \"clientRoles\": {\r\n        \"oficina\": [\r\n          \"ADMIN\"\r\n
+    \       ]\r\n      }\r\n    },\r\n    {\r\n      \"username\": \"mecanico\",\r\n
+    \     \"firstName\": \"Mecanico\",\r\n      \"lastName\": \"Fiap\",\r\n      \"email\":
+    \"mecanico@fiap.com.br\",\r\n      \"enabled\": true,\r\n      \"credentials\":
+    [\r\n        {\r\n          \"type\": \"password\",\r\n          \"value\": \"mecanico\",\r\n
+    \         \"temporary\": false\r\n        }\r\n      ],\r\n      \"clientRoles\":
+    {\r\n        \"oficina\": [\r\n          \"MECANICO\"\r\n        ]\r\n      }\r\n
+    \   },\r\n    {\r\n      \"username\": \"atendente\",\r\n      \"firstName\":
+    \"Atendente\",\r\n      \"lastName\": \"Fiap\",\r\n      \"email\": \"atendente@fiap.com.br\",\r\n
+    \     \"enabled\": true,\r\n      \"credentials\": [\r\n        {\r\n          \"type\":
+    \"password\",\r\n          \"value\": \"atendente\",\r\n          \"temporary\":
+    false\r\n        }\r\n      ],\r\n      \"clientRoles\": {\r\n        \"oficina\":
+    [\r\n          \"ATENDENTE\"\r\n        ]\r\n      }\r\n    },\r\n    {\r\n      \"username\":
+    \"clientepadrao\",\r\n      \"firstName\": \"Cliente\",\r\n      \"lastName\":
+    \"Padrao\",\r\n      \"email\": \"cliente@fiap.com.br\",\r\n      \"enabled\":
+    true,\r\n      \"credentials\": [\r\n        {\r\n          \"type\": \"password\",\r\n
+    \         \"value\": \"clientepadrao\",\r\n          \"temporary\": false\r\n
+    \       }\r\n      ],\r\n      \"clientRoles\": {\r\n        \"oficina\": [\r\n
+    \         \"CLIENTE\"\r\n        ]\r\n      }\r\n    }\r\n  ]\r\n}"
+kind: ConfigMap
+metadata:
+  name: keycloak-realm

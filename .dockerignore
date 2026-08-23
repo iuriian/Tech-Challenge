@@ -29,3 +29,8 @@ create-env.sh
 Dockerfile
 .dockerignore
 docker-compose.yaml
+
+# Terraform
+terraform/
+*.tfstate
+*.tfstate.backup

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  DB_URL: "jdbc:postgresql://db:5432/oficina"
+  KEYCLOAK_URL: "http://localhost:8081"
+  KEYCLOAK_REALM: "Fiap"
+  KEYCLOAK_CLIENT_ID: "oficina"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/Fiap/protocol/openid-connect/certs"

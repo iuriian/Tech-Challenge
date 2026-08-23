@@ -233,7 +233,7 @@ sonar {
 		property("sonar.projectName", "Tech-Challenge")
 		property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000")
 		property("sonar.login", System.getenv("SONAR_LOGIN") ?: "admin")
-		property("sonar.password", System.getenv("SONAR_PASSWORD") ?: "c0cada")
+		property("sonar.password", System.getenv("SONAR_PASSWORD") ?: "admin1")
 		property("sonar.sourceEncoding", "UTF-8")
 		property("sonar.sources", "src/main/kotlin")
 		property("sonar.tests", "src/test/kotlin")
