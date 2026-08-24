@@ -68,13 +68,12 @@ class ServicoControllerUnitTest {
             veiculo = veiculo,
         )
 
-    private fun ordemServicoDto() =
-        ServicoDto(
-            descricao = "Troca de óleo",
-            funcionarioId = funcionario.id.valor.toString(),
-            clienteId = cliente.id.valor.toString(),
-            veiculoId = veiculo.id.valor.toString(),
-        )
+    private fun ordemServicoDto() = ServicoDto(
+        descricao = "Troca de óleo",
+        funcionarioId = funcionario.id.valor.toString(),
+        clienteId = cliente.id.valor.toString(),
+        veiculoId = veiculo.id.valor.toString(),
+    )
 
     @Test
     fun `criar deve retornar dto da ordem de servico salva`() {
@@ -136,19 +135,19 @@ class ServicoControllerUnitTest {
             Orcamento(
                 ordemServicoId = id,
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            tipo = TipoItemOrcamento.PECA,
-                            referenciaId =
-                                Id.fromString(
-                                    "00000000-0000-0000-0000-000000000002",
-                                ),
-                            descricao = "Filtro",
-                            valorUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal("2"),
-                            codigoReferencia = "PEC001",
+                listOf(
+                    ItemOrcamento(
+                        tipo = TipoItemOrcamento.PECA,
+                        referenciaId =
+                        Id.fromString(
+                            "00000000-0000-0000-0000-000000000002",
                         ),
+                        descricao = "Filtro",
+                        valorUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        codigoReferencia = "PEC001",
                     ),
+                ),
             )
 
         `when`(service.obterOrcamento(Id(id.valor))).thenReturn(orcamento)

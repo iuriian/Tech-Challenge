@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class ServicoExceptionHandler {
     @ExceptionHandler(ServicoNaoEncontradoException::class)
-    fun handleServicoNaoEncontrado(
-        exception: ServicoNaoEncontradoException,
-    ): ProblemDetail =
+    fun handleServicoNaoEncontrado(exception: ServicoNaoEncontradoException): ProblemDetail =
         ProblemDetail.forStatusAndDetail(
             HttpStatus.NOT_FOUND,
             exception.message ?: "Serviço não encontrado",

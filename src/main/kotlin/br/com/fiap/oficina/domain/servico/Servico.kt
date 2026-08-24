@@ -3,12 +3,7 @@ package br.com.fiap.oficina.domain.servico
 import br.com.fiap.oficina.domain.valueobject.Id
 import java.math.BigDecimal
 
-data class Servico(
-    val id: Id,
-    val descricao: String,
-    val valor: BigDecimal,
-    val ativo: Boolean = true,
-) {
+data class Servico(val id: Id, val descricao: String, val valor: BigDecimal, val ativo: Boolean = true) {
     init {
         require(descricao.isNotBlank()) {
             "Descrição do serviço é obrigatória"
@@ -20,26 +15,18 @@ data class Servico(
     }
 
     companion object {
-        fun criar(
-            descricao: String,
-            valor: BigDecimal,
-        ): Servico =
-            Servico(
-                id = Id.generate(),
-                descricao = descricao,
-                valor = valor,
-            )
+        fun criar(descricao: String, valor: BigDecimal): Servico = Servico(
+            id = Id.generate(),
+            descricao = descricao,
+            valor = valor,
+        )
     }
 
-    fun alterarDescricao(novaDescricao: String): Servico =
-        copy(descricao = novaDescricao)
+    fun alterarDescricao(novaDescricao: String): Servico = copy(descricao = novaDescricao)
 
-    fun alterarValor(novoValor: BigDecimal): Servico =
-        copy(valor = novoValor)
+    fun alterarValor(novoValor: BigDecimal): Servico = copy(valor = novoValor)
 
-    fun desativar(): Servico =
-        copy(ativo = false)
+    fun desativar(): Servico = copy(ativo = false)
 
-    fun reativar(): Servico =
-        copy(ativo = true)
+    fun reativar(): Servico = copy(ativo = true)
 }
