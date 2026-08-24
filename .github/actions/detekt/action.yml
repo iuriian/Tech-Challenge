@@ -4,7 +4,8 @@ description: Run Detekt static code analysis for Kotlin projects
 inputs:
   github-token:
     description: 'GitHub token for authentication'
-    required: true
+    required: false
+    default: ''
   max-issues:
     description: 'Maximum number of issues to list in the comment'
     required: false
@@ -41,7 +42,7 @@ runs:
         DETEKT_OUTCOME: ${{ steps.detekt.outputs.outcome }}
         MAX_ISSUES: ${{ inputs.max-issues }}
       with:
-        github-token: ${{ inputs.github-token }}
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
         script: |
           const fs = require('fs');
           const path = require('path');
@@ -191,32 +192,51 @@ runs:
             );
           }
           
-          const body = lines.join('\n');
-          const marker = 'Detekt - ';
-          
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-            per_page: 100,
-          });
-          
-          const oldComment = comments.find(c => c.body && c.body.includes(marker));
+          const marker = '<!-- detekt-report -->';
+          const body = marker + '\n' + lines.join('\n');
 
-          if (oldComment) {
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: oldComment.id,
-              body,
-            });
-          } else {
-            await github.rest.issues.createComment({
+          await core.summary.addRaw(lines.join('\n')).write();
+
+          try {
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body,
+              per_page: 100,
             });
+
+            const oldComment = comments.find(
+              c => c.user && c.user.type === 'Bot' && c.body &&
+                   (c.body.includes(marker) || c.body.includes('Detekt - '))
+            );
+
+            if (oldComment) {
+              core.info('Atualizando comentário existente: ' + oldComment.id);
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: oldComment.id,
+                body,
+              });
+            } else {
+              core.info('Nenhum comentário anterior encontrado — criando um novo.');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          } catch (e) {
+            if (e.status === 403) {
+              core.warning(
+                'Sem permissão para comentar no PR (403). ' +
+                'Adicione "permissions: pull-requests: write" ao job no workflow. ' +
+                'O relatório foi gravado no resumo do job.'
+              );
+            } else {
+              core.warning('Falha ao publicar o comentário: ' + e.message);
+            }
           }
 
     - name: Check Detekt result

@@ -1,0 +1,136 @@
+name: Coverage
+description: Verifica a cobertura mínima (JaCoCo) e publica o resumo na timeline do PR
+
+inputs:
+  github-token:
+    description: 'GitHub token para publicar o comentário no PR'
+    required: false
+    default: ''
+  minimum:
+    description: 'Cobertura mínima exigida, em porcentagem'
+    required: false
+    default: '80'
+  metric:
+    description: 'Métrica avaliada: LINE | BRANCH | INSTRUCTION'
+    required: false
+    default: 'LINE'
+  gradle-task:
+    description: 'Task do Gradle que gera o relatório do JaCoCo'
+    required: false
+    default: 'jacocoTestReport'
+  reports-glob:
+    description: 'Padrão de busca dos XML do JaCoCo'
+    required: false
+    default: '**/build/reports/jacoco/**/*.xml'
+  fail-below-minimum:
+    description: 'Falha o job quando a cobertura ficar abaixo do mínimo'
+    required: false
+    default: 'true'
+
+outputs:
+  status:
+    description: 'success | failure'
+    value: ${{ steps.report.outputs.status }}
+  coverage:
+    description: 'Cobertura atual, em porcentagem'
+    value: ${{ steps.report.outputs.coverage }}
+  minimum:
+    description: 'Cobertura mínima exigida'
+    value: ${{ steps.report.outputs.minimum }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate coverage report
+      id: jacoco
+      shell: bash
+      run: |
+        set -o pipefail
+        ./gradlew ${{ inputs.gradle-task }} --continue 2>&1 | tee coverage-output.log || true
+
+    - name: Setup Python
+      if: always()
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Build report
+      id: report
+      if: always()
+      shell: bash
+      env:
+        REPORTS_GLOB: ${{ inputs.reports-glob }}
+        MINIMUM: ${{ inputs.minimum }}
+        METRIC: ${{ inputs.metric }}
+        REPORT_FILE: coverage-report.md
+      run: |
+        SCRIPT_DIR="$(cd "${GITHUB_ACTION_PATH}/../.." && pwd)/scripts"
+        for candidate in coverage-report.py coverage_report.py; do
+          if [ -f "${SCRIPT_DIR}/${candidate}" ]; then
+            python3 "${SCRIPT_DIR}/${candidate}"
+            exit $?
+          fi
+        done
+        echo "::error::Script do relatório não encontrado em ${SCRIPT_DIR}"
+        exit 1
+
+    - name: Publish on PR
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      continue-on-error: true
+      with:
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+        script: |
+          const fs = require('fs');
+          const marker = '<!-- coverage-report -->';
+          const report = fs.readFileSync('coverage-report.md', 'utf8');
+          const body = marker + '\n' + report;
+
+          // O resumo do job sempre é gravado, mesmo que o comentário falhe
+          await core.summary.addRaw(report).write();
+
+          try {
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const old = comments.find(
+              c => c.body && (c.body.includes(marker) || c.body.includes('Cobertura de Testes'))
+            );
+
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: old.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          } catch (e) {
+            if (e.status === 403) {
+              core.warning(
+                'Sem permissão para comentar no PR (403). ' +
+                'Adicione "permissions: pull-requests: write" ao job no workflow. ' +
+                'O relatório foi gravado no resumo do job.'
+              );
+            } else {
+              core.warning('Falha ao publicar o comentário: ' + e.message);
+            }
+          }
+
+    - name: Check coverage
+      if: always() && inputs.fail-below-minimum == 'true' && steps.report.outputs.status != 'success'
+      shell: bash
+      run: |
+        echo "::error title=Cobertura::Cobertura de ${{ steps.report.outputs.coverage }}% está abaixo do mínimo de ${{ steps.report.outputs.minimum }}%."
+        exit 1

@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""Gera o relatorio de testes unitarios (Markdown) a partir dos JUnit XML.
-
-Entrada  : arquivos JUnit XML gerados pelo Gradle (build/test-results/**/*.xml)
-Saida    : arquivo Markdown (REPORT_FILE) + variaveis no GITHUB_OUTPUT
-
-Sem dependencias externas: usa apenas a biblioteca padrao do Python 3.
-"""
 
 from __future__ import annotations
 
@@ -14,9 +7,6 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-# --------------------------------------------------------------------------- #
-# Configuracao (vem do action.yml via variaveis de ambiente)
-# --------------------------------------------------------------------------- #
 RESULTS_GLOB = os.environ.get("RESULTS_GLOB", "**/build/test-results/**/*.xml")
 REPORT_FILE = os.environ.get("REPORT_FILE", "unit-test-report.md")
 MAX_FAILURES = int(os.environ.get("MAX_FAILURES", "15"))
@@ -26,10 +16,6 @@ WORKSPACE = Path(os.environ.get("GITHUB_WORKSPACE", ".")).resolve()
 
 SOURCE_SUFFIXES = (".kt", ".java", ".kts")
 
-
-# --------------------------------------------------------------------------- #
-# Localiza o arquivo-fonte de uma classe de teste
-# --------------------------------------------------------------------------- #
 def index_sources() -> dict[str, str]:
     """Mapeia 'NomeDaClasse' -> caminho relativo do arquivo no repositorio."""
     index: dict[str, str] = {}
@@ -69,10 +55,6 @@ def short(text: str, limit: int = 160) -> str:
     one_line = " ".join((text or "").split())
     return one_line[: limit - 1] + "…" if len(one_line) > limit else one_line
 
-
-# --------------------------------------------------------------------------- #
-# Leitura dos JUnit XML
-# --------------------------------------------------------------------------- #
 total = passed = failed = skipped = 0
 failures: list[dict] = []
 files_seen = 0
@@ -118,9 +100,6 @@ executed = passed + failed  # testes ignorados nao entram no percentual
 rate = (passed / executed * 100) if executed else 0.0
 status = "success" if failed == 0 and total > 0 else "failure"
 
-# --------------------------------------------------------------------------- #
-# Montagem do Markdown
-# --------------------------------------------------------------------------- #
 md: list[str] = []
 
 if files_seen == 0 or total == 0:
