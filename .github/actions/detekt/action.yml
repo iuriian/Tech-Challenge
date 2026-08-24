@@ -1,0 +1,247 @@
+name: Detekt
+description: Run Detekt static code analysis for Kotlin projects
+
+inputs:
+  github-token:
+    description: 'GitHub token for authentication'
+    required: false
+    default: ''
+  max-issues:
+    description: 'Maximum number of issues to list in the comment'
+    required: false
+    default: '10'
+  fail-on-violation:
+    description: 'Falha o job quando o Detekt encontrar problemas'
+    required: false
+    default: 'true'
+
+outputs:
+  outcome:
+    description: 'success | failure'
+    value: ${{ steps.detekt.outputs.outcome }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detekt Check
+      id: detekt
+      shell: bash
+      run: |
+        set -o pipefail
+        if ./gradlew detekt 2>&1 | tee detekt-output.log; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Detekt Results
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      continue-on-error: true
+      env:
+        DETEKT_OUTCOME: ${{ steps.detekt.outputs.outcome }}
+        MAX_ISSUES: ${{ inputs.max-issues }}
+      with:
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          const detektOk = process.env.DETEKT_OUTCOME === 'success';
+          const maxIssues = parseInt(process.env.MAX_ISSUES || '10', 10);
+          const workspace = process.env.GITHUB_WORKSPACE || process.cwd();
+          const lines = [];
+          
+          function unescapeXml(value) {
+            return value
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&apos;/g, "'")
+              .replace(/&amp;/g, '&');
+          }
+          
+          function toRelative(filePath) {
+            const relative = path.relative(workspace, filePath);
+            return relative && !relative.startsWith('..') ? relative : filePath;
+          }
+          
+          function readXmlReport() {
+            const found = [];
+            const reportPath = path.join(workspace, 'build/reports/detekt/detekt.xml');
+          
+            if (!fs.existsSync(reportPath)) {
+              return found;
+            }
+          
+            const xml = fs.readFileSync(reportPath, 'utf8');
+            const fileBlocks = xml.split('<file ').slice(1);
+          
+            for (const block of fileBlocks) {
+              const nameMatch = block.match(/name="([^"]*)"/);
+              if (!nameMatch) {
+                continue;
+              }
+              const file = toRelative(unescapeXml(nameMatch[1]));
+              const errorRegex = /<error\b([^>]*)\/?>/g;
+              let errorMatch;
+          
+              while ((errorMatch = errorRegex.exec(block)) !== null) {
+                const attrs = errorMatch[1];
+                const line = (attrs.match(/line="([^"]*)"/) || [])[1] || '?';
+                const message = unescapeXml((attrs.match(/message="([^"]*)"/) || [])[1] || '');
+                const source = (attrs.match(/source="([^"]*)"/) || [])[1] || '';
+                const rule = source.split('.').pop() || 'Detekt';
+                found.push({ file, line, rule, message });
+              }
+            }
+          
+            return found;
+          }
+          
+          function readConsoleLog() {
+            const found = [];
+            const logPath = path.join(workspace, 'detekt-output.log');
+          
+            if (!fs.existsSync(logPath)) {
+              return found;
+            }
+          
+            const log = fs.readFileSync(logPath, 'utf8');
+          
+            const detailed = /^\s*(\w+)\s+-\s+\[(.*?)\]\s+at\s+(\S+\.kt):(\d+):\d+/gm;
+            let match;
+          
+            while ((match = detailed.exec(log)) !== null) {
+              found.push({
+                file: toRelative(match[3]),
+                line: match[4],
+                rule: match[1],
+                message: match[2],
+              });
+            }
+          
+            if (found.length === 0) {
+              const simple = /(\S+\.kt):(\d+):\d+:\s*(.+?)(?:\s*\[(\w+)\])?\s*$/gm;
+          
+              while ((match = simple.exec(log)) !== null) {
+                found.push({
+                  file: toRelative(match[1]),
+                  line: match[2],
+                  rule: match[4] || 'Detekt',
+                  message: match[3] || '',
+                });
+              }
+            }
+          
+            return found;
+          }
+          
+          if (detektOk) {
+            lines.push(
+              '## ✅ Detekt - Análise Estática de Código',
+              '',
+              'Muito bem! Seu código passou em todas as verificações de análise estática.'
+            );
+          } else {
+            lines.push(
+              '## ⚠️ Detekt - Problemas na Análise Estática',
+              '',
+              'Foram encontrados problemas de qualidade que precisam ser corrigidos.',
+              '',
+              '**Problemas encontrados:**'
+            );
+          
+            let issues = [];
+          
+            try {
+              issues = readXmlReport();
+              if (issues.length === 0) {
+                issues = readConsoleLog();
+              }
+            } catch (error) {
+              core.warning('Não foi possível analisar o relatório do Detekt: ' + error.message);
+            }
+          
+            if (issues.length > 0) {
+              for (const issue of issues.slice(0, maxIssues)) {
+                lines.push('- **' + issue.rule + '** em `' + issue.file + ':' + issue.line + '`');
+                if (issue.message) {
+                  lines.push('  > ' + issue.message);
+                }
+              }
+              if (issues.length > maxIssues) {
+                lines.push('- ... e mais ' + (issues.length - maxIssues) + ' problema(s)');
+              }
+            } else {
+              lines.push('- Problemas detectados, mas não foi possível identificar os arquivos no relatório.');
+            }
+          
+            lines.push(
+              '',
+              '**Correções comuns:**',
+              '- **Complexidade ciclomática**: divida o método em funções menores e focadas',
+              '- **Números mágicos**: substitua por constantes nomeadas (`const val TAMANHO_MAXIMO = 256`)',
+              '- **Método longo**: extraia a lógica para métodos separados',
+              '- **Nomenclatura**: siga as convenções do Kotlin (camelCase para funções e variáveis)',
+              '- **Código não utilizado**: remova imports, variáveis e funções sem uso',
+              '- **Aninhamento profundo**: reduza os níveis com retornos antecipados ou extração de método',
+              '',
+              '[📊 Ver relatório completo](' + context.serverUrl + '/' + context.repo.owner + '/' +
+                context.repo.repo + '/actions/runs/' + context.runId + ')'
+            );
+          }
+          
+          const marker = '<!-- detekt-report -->';
+          const body = marker + '\n' + lines.join('\n');
+
+          await core.summary.addRaw(lines.join('\n')).write();
+
+          try {
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const oldComment = comments.find(
+              c => c.user && c.user.type === 'Bot' && c.body &&
+                   (c.body.includes(marker) || c.body.includes('Detekt - '))
+            );
+
+            if (oldComment) {
+              core.info('Atualizando comentário existente: ' + oldComment.id);
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: oldComment.id,
+                body,
+              });
+            } else {
+              core.info('Nenhum comentário anterior encontrado — criando um novo.');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          } catch (e) {
+            if (e.status === 403) {
+              core.warning(
+                'Sem permissão para comentar no PR (403). ' +
+                'Adicione "permissions: pull-requests: write" ao job no workflow. ' +
+                'O relatório foi gravado no resumo do job.'
+              );
+            } else {
+              core.warning('Falha ao publicar o comentário: ' + e.message);
+            }
+          }
+
+    - name: Check Detekt result
+      if: always() && inputs.fail-on-violation == 'true' && steps.detekt.outputs.outcome != 'success'
+      shell: bash
+      run: |
+        echo "::error title=Detekt::Foram encontrados problemas na análise estática. Veja o comentário no PR."
+        exit 1

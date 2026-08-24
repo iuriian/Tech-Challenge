@@ -1,0 +1,132 @@
+name: Unit Test
+description: Executa os testes unitários e publica um resumo simples na timeline do PR
+
+inputs:
+  github-token:
+    description: 'GitHub token para publicar o comentário no PR'
+    required: false
+    default: ''
+  gradle-task:
+    description: 'Task do Gradle que executa os testes'
+    required: false
+    default: 'test'
+  results-glob:
+    description: 'Padrão de busca dos arquivos JUnit XML'
+    required: false
+    default: '**/build/test-results/**/*.xml'
+  max-failures:
+    description: 'Máximo de testes falhando listados no comentário'
+    required: false
+    default: '15'
+  fail-on-failure:
+    description: 'Falha o job quando houver teste quebrado'
+    required: false
+    default: 'true'
+
+outputs:
+  status:
+    description: 'success | failure'
+    value: ${{ steps.report.outputs.status }}
+  total:
+    description: 'Total de testes executados'
+    value: ${{ steps.report.outputs.total }}
+  failed:
+    description: 'Total de testes falhando'
+    value: ${{ steps.report.outputs.failed }}
+  rate:
+    description: 'Percentual de testes aprovados'
+    value: ${{ steps.report.outputs.rate }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run tests
+      id: tests
+      shell: bash
+      run: |
+        set -o pipefail
+        if ./gradlew ${{ inputs.gradle-task }} --continue 2>&1 | tee unit-test-output.log; then
+          echo "outcome=success" >> "$GITHUB_OUTPUT"
+        else
+          echo "outcome=failure" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Setup Python
+      if: always()
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Build report
+      id: report
+      if: always()
+      shell: bash
+      env:
+        RESULTS_GLOB: ${{ inputs.results-glob }}
+        MAX_FAILURES: ${{ inputs.max-failures }}
+        REPORT_FILE: unit-test-report.md
+        HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: python3 "${GITHUB_ACTION_PATH}/../../scripts/unit-test-report.py"
+
+    - name: Publish on PR
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      continue-on-error: true
+      with:
+        github-token: ${{ inputs.github-token != '' && inputs.github-token || github.token }}
+        script: |
+          const fs = require('fs');
+          const marker = '<!-- unit-test-report -->';
+          const report = fs.readFileSync('unit-test-report.md', 'utf8');
+          const body = marker + '\n' + report;
+
+          await core.summary.addRaw(report).write();
+
+          try {
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const old = comments.find(
+              c => c.body && (c.body.includes(marker) || c.body.includes('Testes Unitários'))
+            );
+
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: old.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+          } catch (e) {
+            if (e.status === 403) {
+              core.warning(
+                'Sem permissão para comentar no PR (403). ' +
+                'Adicione "permissions: pull-requests: write" ao job no workflow. ' +
+                'O relatório foi gravado no resumo do job.'
+              );
+            } else {
+              core.warning('Falha ao publicar o comentário: ' + e.message);
+            }
+          }
+
+    - name: Check result
+      if: always() && inputs.fail-on-failure == 'true'
+      shell: bash
+      run: |
+        if [ "${{ steps.report.outputs.status }}" != "success" ]; then
+          echo "::error::${{ steps.report.outputs.failed }} teste(s) falhando de ${{ steps.report.outputs.total }}."
+          exit 1
+        fi
+        echo "Todos os ${{ steps.report.outputs.total }} testes passaram."
