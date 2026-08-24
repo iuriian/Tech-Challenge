@@ -56,12 +56,11 @@ class ServicoCatalogoController(
         @Valid
         @RequestBody
         request: CriarServicoRequest,
-    ): ServicoResponse =
-        mapper.toResponse(
-            criarServicoUseCase.executar(
-                mapper.fromRequest(request),
-            ),
-        )
+    ): ServicoResponse = mapper.toResponse(
+        criarServicoUseCase.executar(
+            mapper.fromRequest(request),
+        ),
+    )
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -69,10 +68,9 @@ class ServicoCatalogoController(
         summary = "Listar serviços ativos",
         description = "Lista os serviços ativos disponíveis no catálogo",
     )
-    fun listarAtivos(): List<ServicoResponse> =
-        listarServicosAtivosUseCase
-            .executar()
-            .map(mapper::toResponse)
+    fun listarAtivos(): List<ServicoResponse> = listarServicosAtivosUseCase
+        .executar()
+        .map(mapper::toResponse)
 
     @GetMapping("/todos")
     @RolesAllowed("ADMIN")
@@ -80,10 +78,9 @@ class ServicoCatalogoController(
         summary = "Listar todos os serviços",
         description = "Lista serviços ativos e inativos para administração do catálogo",
     )
-    fun listarTodos(): List<ServicoResponse> =
-        listarTodosServicosUseCase
-            .executar()
-            .map(mapper::toResponse)
+    fun listarTodos(): List<ServicoResponse> = listarTodosServicosUseCase
+        .executar()
+        .map(mapper::toResponse)
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -91,14 +88,11 @@ class ServicoCatalogoController(
         summary = "Buscar serviço",
         description = "Busca um serviço do catálogo pelo identificador",
     )
-    fun buscar(
-        @PathVariable id: UUID,
-    ): ServicoResponse =
-        mapper.toResponse(
-            buscarServicoUseCase.executar(
-                Id(id),
-            ),
-        )
+    fun buscar(@PathVariable id: UUID): ServicoResponse = mapper.toResponse(
+        buscarServicoUseCase.executar(
+            Id(id),
+        ),
+    )
 
     @PutMapping("/{id}")
     @RolesAllowed("ADMIN")
@@ -111,13 +105,12 @@ class ServicoCatalogoController(
         @Valid
         @RequestBody
         request: AtualizarServicoRequest,
-    ): ServicoResponse =
-        mapper.toResponse(
-            atualizarServicoUseCase.executar(
-                id = Id(id),
-                input = mapper.fromRequest(request),
-            ),
-        )
+    ): ServicoResponse = mapper.toResponse(
+        atualizarServicoUseCase.executar(
+            id = Id(id),
+            input = mapper.fromRequest(request),
+        ),
+    )
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
@@ -126,9 +119,7 @@ class ServicoCatalogoController(
         summary = "Desativar serviço",
         description = "Desativa logicamente um serviço do catálogo",
     )
-    fun desativar(
-        @PathVariable id: UUID,
-    ) {
+    fun desativar(@PathVariable id: UUID) {
         desativarServicoUseCase.executar(Id(id))
     }
 
@@ -138,12 +129,9 @@ class ServicoCatalogoController(
         summary = "Reativar serviço",
         description = "Reativa um serviço previamente desativado",
     )
-    fun reativar(
-        @PathVariable id: UUID,
-    ): ServicoResponse =
-        mapper.toResponse(
-            reativarServicoUseCase.executar(
-                Id(id),
-            ),
-        )
+    fun reativar(@PathVariable id: UUID): ServicoResponse = mapper.toResponse(
+        reativarServicoUseCase.executar(
+            Id(id),
+        ),
+    )
 }

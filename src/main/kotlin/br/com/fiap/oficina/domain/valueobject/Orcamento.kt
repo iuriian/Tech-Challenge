@@ -31,18 +31,14 @@ data class ItemOrcamento(
         get() = valorUnitario.multiply(quantidade)
 
     companion object {
-        fun dePeca(
-            peca: Peca,
-            quantidade: BigDecimal,
-        ): ItemOrcamento =
-            ItemOrcamento(
-                tipo = TipoItemOrcamento.PECA,
-                referenciaId = peca.id,
-                descricao = peca.nome,
-                valorUnitario = peca.precoDeVenda,
-                quantidade = quantidade,
-                codigoReferencia = peca.codigo,
-            )
+        fun dePeca(peca: Peca, quantidade: BigDecimal): ItemOrcamento = ItemOrcamento(
+            tipo = TipoItemOrcamento.PECA,
+            referenciaId = peca.id,
+            descricao = peca.nome,
+            valorUnitario = peca.precoDeVenda,
+            quantidade = quantidade,
+            codigoReferencia = peca.codigo,
+        )
     }
 
     @Deprecated(
@@ -101,10 +97,7 @@ data class ItemOrcamento(
         get() = valorUnitario
 }
 
-data class Orcamento(
-    val ordemServicoId: Id,
-    val itens: List<ItemOrcamento>,
-) {
+data class Orcamento(val ordemServicoId: Id, val itens: List<ItemOrcamento>) {
     val valorTotal: BigDecimal
         get() =
             itens.fold(BigDecimal.ZERO) { total, item ->

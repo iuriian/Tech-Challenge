@@ -58,16 +58,16 @@ class ServicoMapperTest {
             Orcamento(
                 ordemServicoId = ordemServicoId,
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            tipo = TipoItemOrcamento.PECA,
-                            referenciaId = pecaId,
-                            descricao = "Filtro",
-                            valorUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal("2"),
-                            codigoReferencia = "PEC001",
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        tipo = TipoItemOrcamento.PECA,
+                        referenciaId = pecaId,
+                        descricao = "Filtro",
+                        valorUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        codigoReferencia = "PEC001",
                     ),
+                ),
             )
 
         val dto = mapper.toResponse(orcamento)

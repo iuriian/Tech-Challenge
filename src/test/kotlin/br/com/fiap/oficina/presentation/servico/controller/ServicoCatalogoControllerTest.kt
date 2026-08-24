@@ -132,10 +132,10 @@ class ServicoCatalogoControllerTest {
             controller.atualizar(
                 id = id,
                 request =
-                    AtualizarServicoRequest(
-                        descricao = "Alinhamento completo",
-                        valor = BigDecimal("150.00"),
-                    ),
+                AtualizarServicoRequest(
+                    descricao = "Alinhamento completo",
+                    valor = BigDecimal("150.00"),
+                ),
             )
 
         assertEquals(id, response.id)

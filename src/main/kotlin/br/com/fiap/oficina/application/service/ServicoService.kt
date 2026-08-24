@@ -138,10 +138,7 @@ class ServicoService(
      * para um status alcançável a partir do atual (ver [transicoesPermitidas]).
      */
     @Transactional
-    fun alterarStatus(
-        id: Id,
-        novoStatus: OrdemServicoStatus,
-    ): OrdemServico {
+    fun alterarStatus(id: Id, novoStatus: OrdemServicoStatus): OrdemServico {
         val ordemServico = buscarObrigatorio(id)
         val permitidas = transicoesPermitidas(ordemServico.status)
 
@@ -168,9 +165,8 @@ class ServicoService(
         return TempoMedioExecucao(finalizados.size, tempoMedio)
     }
 
-    private fun buscarObrigatorio(id: Id): OrdemServico =
-        repository.buscarPorId(id)
-            ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
+    private fun buscarObrigatorio(id: Id): OrdemServico = repository.buscarPorId(id)
+        ?: throw IllegalArgumentException("Serviço não encontrado com o ID: $id")
 
     /**
      * Define a máquina de estados: a partir de cada status, o fluxo segue para
@@ -178,16 +174,15 @@ class ServicoService(
      * [OrdemServicoStatus.AGUARDANDO_APROVACAO], de onde pode ir para
      * [OrdemServicoStatus.EM_EXECUCAO] ou [OrdemServicoStatus.CANCELADA].
      */
-    private fun transicoesPermitidas(atual: OrdemServicoStatus): Set<OrdemServicoStatus> =
-        when (atual) {
-            OrdemServicoStatus.AGUARDANDO_APROVACAO -> {
-                setOf(OrdemServicoStatus.EM_EXECUCAO, OrdemServicoStatus.CANCELADA)
-            }
-
-            else -> {
-                setOfNotNull(proximoNaOrdem(atual))
-            }
+    private fun transicoesPermitidas(atual: OrdemServicoStatus): Set<OrdemServicoStatus> = when (atual) {
+        OrdemServicoStatus.AGUARDANDO_APROVACAO -> {
+            setOf(OrdemServicoStatus.EM_EXECUCAO, OrdemServicoStatus.CANCELADA)
         }
+
+        else -> {
+            setOfNotNull(proximoNaOrdem(atual))
+        }
+    }
 
     /**
      * Próximo status no fluxo linear (ordem de declaração do enum). Retorna
@@ -195,8 +190,7 @@ class ServicoService(
      * [OrdemServicoStatus.CANCELADA]); CANCELADA é ignorada por não fazer parte
      * do fluxo linear, sendo alcançável apenas a partir de AGUARDANDO_APROVACAO.
      */
-    private fun proximoNaOrdem(atual: OrdemServicoStatus): OrdemServicoStatus? =
-        OrdemServicoStatus.entries
-            .getOrNull(atual.ordinal + 1)
-            ?.takeIf { it != OrdemServicoStatus.CANCELADA }
+    private fun proximoNaOrdem(atual: OrdemServicoStatus): OrdemServicoStatus? = OrdemServicoStatus.entries
+        .getOrNull(atual.ordinal + 1)
+        ?.takeIf { it != OrdemServicoStatus.CANCELADA }
 }

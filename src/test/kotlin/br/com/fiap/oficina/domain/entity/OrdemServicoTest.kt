@@ -213,10 +213,10 @@ class OrdemServicoTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                    listOf(
-                        PecaServico.criar(peca, BigDecimal("2")),
-                        PecaServico.criar(outraPeca, BigDecimal("1.5")),
-                    ),
+                listOf(
+                    PecaServico.criar(peca, BigDecimal("2")),
+                    PecaServico.criar(outraPeca, BigDecimal("1.5")),
+                ),
             )
 
         val orcamento = ordemServico.gerarOrcamento()

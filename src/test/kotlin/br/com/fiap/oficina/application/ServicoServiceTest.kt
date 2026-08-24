@@ -151,10 +151,10 @@ class ServicoServiceTest {
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
-                        listOf(
-                            PecaServicoComando(pecaId1, quantidade1),
-                            PecaServicoComando(pecaId2, quantidade2),
-                        ),
+                    listOf(
+                        PecaServicoComando(pecaId1, quantidade1),
+                        PecaServicoComando(pecaId2, quantidade2),
+                    ),
                 ),
             )
 
@@ -179,10 +179,10 @@ class ServicoServiceTest {
                         clienteId = clienteId,
                         veiculoId = veiculoId,
                         pecas =
-                            listOf(
-                                PecaServicoComando(pecaId1, BigDecimal("2")),
-                                PecaServicoComando(pecaId2, BigDecimal("3")),
-                            ),
+                        listOf(
+                            PecaServicoComando(pecaId1, BigDecimal("2")),
+                            PecaServicoComando(pecaId2, BigDecimal("3")),
+                        ),
                     ),
                 )
             }
@@ -221,10 +221,10 @@ class ServicoServiceTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                    listOf(
-                        PecaServico.criar(peca1, BigDecimal("2")),
-                        PecaServico.criar(peca2, BigDecimal("3")),
-                    ),
+                listOf(
+                    PecaServico.criar(peca1, BigDecimal("2")),
+                    PecaServico.criar(peca2, BigDecimal("3")),
+                ),
             )
 
         `when`(repository.buscarPorId(ordemServicoId)).thenReturn(ordemServico)
@@ -331,9 +331,7 @@ class ServicoServiceTest {
         value = OrdemServicoStatus::class,
         names = ["EM_EXECUCAO", "CANCELADA"],
     )
-    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(
-        alvo: OrdemServicoStatus,
-    ) {
+    fun `alterarStatus deve permitir saidas de AGUARDANDO_APROVACAO`(alvo: OrdemServicoStatus) {
         val atual =
             ordemServicoComStatus(
                 OrdemServicoStatus.AGUARDANDO_APROVACAO,
@@ -357,10 +355,7 @@ class ServicoServiceTest {
         "EM_EXECUCAO, CANCELADA",
         "ENTREGUE, CANCELADA",
     )
-    fun `alterarStatus deve rejeitar transicoes invalidas`(
-        de: OrdemServicoStatus,
-        alvo: OrdemServicoStatus,
-    ) {
+    fun `alterarStatus deve rejeitar transicoes invalidas`(de: OrdemServicoStatus, alvo: OrdemServicoStatus) {
         `when`(
             repository.buscarPorId(ordemServicoId),
         ).thenReturn(ordemServicoComStatus(de))
@@ -487,26 +482,19 @@ class ServicoServiceTest {
         assertEquals(60.0, resultado.tempoMedioMinutos)
     }
 
-    private fun ordemServicoComStatus(
-        status: OrdemServicoStatus,
-    ): OrdemServico =
-        OrdemServico(
-            id = ordemServicoId,
-            descricao = "Troca de Óleo",
-            status = status,
-            funcionario = funcionario,
-            cliente = cliente,
-            veiculo = veiculo,
-        )
+    private fun ordemServicoComStatus(status: OrdemServicoStatus): OrdemServico = OrdemServico(
+        id = ordemServicoId,
+        descricao = "Troca de Óleo",
+        status = status,
+        funcionario = funcionario,
+        cliente = cliente,
+        veiculo = veiculo,
+    )
 
-    private fun criarPeca(
-        id: Id,
-        codigo: String,
-    ): Peca =
-        Peca(
-            id = id,
-            codigo = codigo,
-            nome = "Peça Teste",
-            precoDeVenda = BigDecimal.TEN,
-        )
+    private fun criarPeca(id: Id, codigo: String): Peca = Peca(
+        id = id,
+        codigo = codigo,
+        nome = "Peça Teste",
+        precoDeVenda = BigDecimal.TEN,
+    )
 }

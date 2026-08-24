@@ -7,19 +7,17 @@ import org.springframework.stereotype.Component
 
 @Component
 class ServicoCatalogoPersistenceMapper {
-    fun toDomain(entity: ServicoCatalogoJpaEntity): Servico =
-        Servico(
-            id = Id(entity.id),
-            descricao = entity.descricao,
-            valor = entity.valor,
-            ativo = entity.ativo,
-        )
+    fun toDomain(entity: ServicoCatalogoJpaEntity): Servico = Servico(
+        id = Id(entity.id),
+        descricao = entity.descricao,
+        valor = entity.valor,
+        ativo = entity.ativo,
+    )
 
-    fun toJpaEntity(domain: Servico): ServicoCatalogoJpaEntity =
-        ServicoCatalogoJpaEntity(
-            id = domain.id.valor,
-            descricao = domain.descricao,
-            valor = domain.valor,
-            ativo = domain.ativo,
-        )
+    fun toJpaEntity(domain: Servico): ServicoCatalogoJpaEntity = ServicoCatalogoJpaEntity(
+        id = domain.id.valor,
+        descricao = domain.descricao,
+        valor = domain.valor,
+        ativo = domain.ativo,
+    )
 }

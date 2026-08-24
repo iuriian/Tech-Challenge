@@ -4,14 +4,9 @@ import br.com.fiap.oficina.application.servico.repository.ServicoRepository
 import br.com.fiap.oficina.domain.servico.Servico
 import java.math.BigDecimal
 
-data class CriarServicoInput(
-    val descricao: String,
-    val valor: BigDecimal,
-)
+data class CriarServicoInput(val descricao: String, val valor: BigDecimal)
 
-class CriarServicoUseCase(
-    private val repository: ServicoRepository,
-) {
+class CriarServicoUseCase(private val repository: ServicoRepository) {
     fun executar(input: CriarServicoInput): Servico {
         val servico =
             Servico.criar(
