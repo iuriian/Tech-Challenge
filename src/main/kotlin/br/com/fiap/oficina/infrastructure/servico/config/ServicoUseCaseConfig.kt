@@ -14,44 +14,28 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ServicoUseCaseConfig {
     @Bean
-    fun criarServicoUseCase(
-        repository: ServicoRepository,
-    ): CriarServicoUseCase =
-        CriarServicoUseCase(repository)
+    fun criarServicoUseCase(repository: ServicoRepository): CriarServicoUseCase = CriarServicoUseCase(repository)
 
     @Bean
-    fun buscarServicoUseCase(
-        repository: ServicoRepository,
-    ): BuscarServicoUseCase =
-        BuscarServicoUseCase(repository)
+    fun buscarServicoUseCase(repository: ServicoRepository): BuscarServicoUseCase = BuscarServicoUseCase(repository)
 
     @Bean
-    fun atualizarServicoUseCase(
-        repository: ServicoRepository,
-    ): AtualizarServicoUseCase =
+    fun atualizarServicoUseCase(repository: ServicoRepository): AtualizarServicoUseCase =
         AtualizarServicoUseCase(repository)
 
     @Bean
-    fun listarServicosAtivosUseCase(
-        repository: ServicoRepository,
-    ): ListarServicosAtivosUseCase =
+    fun listarServicosAtivosUseCase(repository: ServicoRepository): ListarServicosAtivosUseCase =
         ListarServicosAtivosUseCase(repository)
 
     @Bean
-    fun listarTodosServicosUseCase(
-        repository: ServicoRepository,
-    ): ListarTodosServicosUseCase =
+    fun listarTodosServicosUseCase(repository: ServicoRepository): ListarTodosServicosUseCase =
         ListarTodosServicosUseCase(repository)
 
     @Bean
-    fun desativarServicoUseCase(
-        repository: ServicoRepository,
-    ): DesativarServicoUseCase =
+    fun desativarServicoUseCase(repository: ServicoRepository): DesativarServicoUseCase =
         DesativarServicoUseCase(repository)
 
     @Bean
-    fun reativarServicoUseCase(
-        repository: ServicoRepository,
-    ): ReativarServicoUseCase =
+    fun reativarServicoUseCase(repository: ServicoRepository): ReativarServicoUseCase =
         ReativarServicoUseCase(repository)
 }

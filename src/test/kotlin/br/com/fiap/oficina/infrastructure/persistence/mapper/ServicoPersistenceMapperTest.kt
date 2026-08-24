@@ -60,17 +60,17 @@ class ServicoPersistenceMapperTest {
                 cliente = cliente,
                 veiculo = veiculo,
                 pecas =
-                    listOf(
-                        PecaServico(
-                            Peca(
-                                Id.generate(),
-                                "PEC001",
-                                "Filtro",
-                                precoDeVenda = BigDecimal.TEN,
-                            ),
-                            BigDecimal("2"),
+                listOf(
+                    PecaServico(
+                        Peca(
+                            Id.generate(),
+                            "PEC001",
+                            "Filtro",
+                            precoDeVenda = BigDecimal.TEN,
                         ),
+                        BigDecimal("2"),
                     ),
+                ),
             )
 
         val jpa = mapper.toJpa(ordemServico)

@@ -97,8 +97,8 @@ class ServicoControllerTest {
                 descricao = ordemServico.descricao,
                 status = ordemServico.status,
                 funcionarioId =
-                    ordemServico.funcionario.id.valor
-                        .toString(),
+                ordemServico.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -115,16 +115,16 @@ class ServicoControllerTest {
             Orcamento(
                 ordemServicoId = Id.fromString("00000000-0000-0000-0000-000000000001"),
                 itens =
-                    listOf(
-                        ItemOrcamento(
-                            tipo = TipoItemOrcamento.PECA,
-                            referenciaId = Id.generate(),
-                            descricao = "Filtro",
-                            valorUnitario = BigDecimal.TEN,
-                            quantidade = BigDecimal.ONE,
-                            codigoReferencia = "PEC001",
-                        ),
+                listOf(
+                    ItemOrcamento(
+                        tipo = TipoItemOrcamento.PECA,
+                        referenciaId = Id.generate(),
+                        descricao = "Filtro",
+                        valorUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal.ONE,
+                        codigoReferencia = "PEC001",
                     ),
+                ),
             )
         `when`(service.obterOrcamento(Id.fromString(id.toString()))).thenReturn(orcamento)
 
@@ -143,8 +143,8 @@ class ServicoControllerTest {
                 descricao = ordemServicoAvancada.descricao,
                 status = ordemServicoAvancada.status,
                 funcionarioId =
-                    ordemServicoAvancada.funcionario.id.valor
-                        .toString(),
+                ordemServicoAvancada.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),
@@ -167,8 +167,8 @@ class ServicoControllerTest {
                 descricao = ordemServicoCancelada.descricao,
                 status = ordemServicoCancelada.status,
                 funcionarioId =
-                    ordemServicoCancelada.funcionario.id.valor
-                        .toString(),
+                ordemServicoCancelada.funcionario.id.valor
+                    .toString(),
                 clienteId = cliente.id.valor.toString(),
                 veiculoId = veiculo.id.valor.toString(),
             ),

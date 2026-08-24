@@ -43,19 +43,12 @@ data class OrdemServico(
         }
     }
 
-    fun adicionarPeca(pecaServico: PecaServico): OrdemServico =
-        copy(pecas = pecas + pecaServico)
+    fun adicionarPeca(pecaServico: PecaServico): OrdemServico = copy(pecas = pecas + pecaServico)
 
-    fun adicionarPeca(
-        peca: Peca,
-        quantidade: BigDecimal,
-    ): OrdemServico =
+    fun adicionarPeca(peca: Peca, quantidade: BigDecimal): OrdemServico =
         adicionarPeca(PecaServico.criar(peca, quantidade))
 
-    fun alterarStatus(
-        novoStatus: OrdemServicoStatus,
-        agora: Instant = Instant.now(),
-    ): OrdemServico =
+    fun alterarStatus(novoStatus: OrdemServicoStatus, agora: Instant = Instant.now()): OrdemServico =
         when (novoStatus) {
             OrdemServicoStatus.EM_EXECUCAO ->
                 copy(
