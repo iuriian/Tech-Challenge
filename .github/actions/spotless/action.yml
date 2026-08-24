@@ -10,6 +10,10 @@ inputs:
     description: 'Maximum number of files listed in the PR comment'
     required: false
     default: '15'
+  fail-on-violation:
+    description: 'Falha o job quando o Spotless encontrar problemas de formatação'
+    required: false
+    default: 'true'
 
 outputs:
   outcome:
@@ -156,7 +160,6 @@ runs:
           const marker = '<!-- spotless-report -->';
           const body = marker + '\n' + lines.join('\n');
 
-          // O resumo do job sempre é gravado, mesmo que o comentário falhe
           await core.summary.addRaw(lines.join('\n')).write();
 
           try {
@@ -197,3 +200,10 @@ runs:
               core.warning('Falha ao publicar o comentário: ' + e.message);
             }
           }
+
+    - name: Check Spotless result
+      if: always() && inputs.fail-on-violation == 'true' && steps.spotless.outputs.outcome != 'success'
+      shell: bash
+      run: |
+        echo "::error title=Spotless::Há problemas de formatação. Rode './gradlew spotlessApply' e faça commit."
+        exit 1

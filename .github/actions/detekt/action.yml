@@ -9,6 +9,10 @@ inputs:
     description: 'Maximum number of issues to list in the comment'
     required: false
     default: '10'
+  fail-on-violation:
+    description: 'Falha o job quando o Detekt encontrar problemas'
+    required: false
+    default: 'true'
 
 outputs:
   outcome:
@@ -198,7 +202,7 @@ runs:
           });
           
           const oldComment = comments.find(c => c.body && c.body.includes(marker));
-          
+
           if (oldComment) {
             await github.rest.issues.updateComment({
               owner: context.repo.owner,
@@ -214,3 +218,10 @@ runs:
               body,
             });
           }
+
+    - name: Check Detekt result
+      if: always() && inputs.fail-on-violation == 'true' && steps.detekt.outputs.outcome != 'success'
+      shell: bash
+      run: |
+        echo "::error title=Detekt::Foram encontrados problemas na análise estática. Veja o comentário no PR."
+        exit 1
