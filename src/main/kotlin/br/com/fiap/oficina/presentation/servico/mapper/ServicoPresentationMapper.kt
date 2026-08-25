@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.presentation.servico.mapper
 
-import br.com.fiap.oficina.application.servico.usecase.AtualizarServicoInput
-import br.com.fiap.oficina.application.servico.usecase.CriarServicoInput
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.usecase.servico.AtualizarServicoInput
+import br.com.fiap.oficina.domain.usecase.servico.CriarServicoInput
 import br.com.fiap.oficina.presentation.servico.request.AtualizarServicoRequest
 import br.com.fiap.oficina.presentation.servico.request.CriarServicoRequest
 import br.com.fiap.oficina.presentation.servico.response.ServicoResponse

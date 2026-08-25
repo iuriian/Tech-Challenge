@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.application.servico.exception
+package br.com.fiap.oficina.domain.exception
 
 import br.com.fiap.oficina.domain.valueobject.Id
 

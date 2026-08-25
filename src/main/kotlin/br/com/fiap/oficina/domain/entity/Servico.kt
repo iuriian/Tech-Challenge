@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.domain.servico
+package br.com.fiap.oficina.domain.entity
 
 import br.com.fiap.oficina.domain.valueobject.Id
 import java.math.BigDecimal

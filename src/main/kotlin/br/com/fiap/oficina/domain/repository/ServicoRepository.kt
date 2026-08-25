@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.application.servico.repository
+package br.com.fiap.oficina.domain.repository
 
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.valueobject.Id
 
 interface ServicoRepository {

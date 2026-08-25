@@ -1,9 +1,9 @@
-package br.com.fiap.oficina.application.servico.usecase
+package br.com.fiap.oficina.domain.usecase.servico
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.servico.exception.ServicoNaoEncontradoException
-import br.com.fiap.oficina.application.servico.repository.ServicoRepository
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.exception.ServicoNaoEncontradoException
+import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -17,28 +17,28 @@ import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 
 @ExtendWith(MockitoExtension::class)
-class DesativarServicoUseCaseTest {
+class ReativarServicoUseCaseTest {
     @Mock
     private lateinit var repository: ServicoRepository
 
     @Test
-    fun `deve desativar servico`() {
+    fun `deve reativar servico`() {
         val servico =
             Servico.criar(
                 descricao = "Balanceamento",
                 valor = BigDecimal("80.00"),
-            )
+            ).desativar()
 
         `when`(repository.buscarPorId(servico.id)).thenReturn(servico)
         `when`(repository.salvar(anyObject()))
             .thenAnswer { it.getArgument<Servico>(0) }
 
-        val useCase = DesativarServicoUseCase(repository)
+        val useCase = ReativarServicoUseCase(repository)
 
         val resultado = useCase.executar(servico.id)
 
-        assertTrue(servico.ativo)
-        assertFalse(resultado.ativo)
+        assertFalse(servico.ativo)
+        assertTrue(resultado.ativo)
 
         verify(repository).salvar(resultado)
     }
@@ -49,7 +49,7 @@ class DesativarServicoUseCaseTest {
 
         `when`(repository.buscarPorId(id)).thenReturn(null)
 
-        val useCase = DesativarServicoUseCase(repository)
+        val useCase = ReativarServicoUseCase(repository)
 
         assertThrows(ServicoNaoEncontradoException::class.java) {
             useCase.executar(id)

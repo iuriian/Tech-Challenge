@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.servico.exception
 
-import br.com.fiap.oficina.application.servico.exception.ServicoNaoEncontradoException
+import br.com.fiap.oficina.domain.exception.ServicoNaoEncontradoException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.annotation.ExceptionHandler
