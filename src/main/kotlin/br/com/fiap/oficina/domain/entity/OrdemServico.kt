@@ -28,7 +28,9 @@ data class OrdemServico(
             status: OrdemServicoStatus = OrdemServicoStatus.RECEBIDA,
             pecas: List<PecaServico> = emptyList(),
         ): OrdemServico {
-            require(descricao.isNotBlank()) { "Descrição do serviço é obrigatória" }
+            require(descricao.isNotBlank()) {
+                "Descrição do serviço é obrigatória"
+            }
 
             return OrdemServico(
                 id = Id.generate(),
@@ -48,8 +50,23 @@ data class OrdemServico(
     fun adicionarPeca(peca: Peca, quantidade: BigDecimal): OrdemServico =
         adicionarPeca(PecaServico.criar(peca, quantidade))
 
-    fun alterarStatus(novoStatus: OrdemServicoStatus, agora: Instant = Instant.now()): OrdemServico =
-        when (novoStatus) {
+    fun avancarStatus(agora: Instant = Instant.now()): OrdemServico {
+        val proximoStatus =
+            status.proximoStatus()
+                ?: error(
+                    "Ordem de serviço no status '$status' é um estado final e não pode ser alterada.",
+                )
+        return alterarStatus(proximoStatus, agora)
+    }
+
+    fun alterarStatus(novoStatus: OrdemServicoStatus, agora: Instant = Instant.now()): OrdemServico {
+        val permitidas = status.transicoesPermitidas()
+
+        check(novoStatus in permitidas) {
+            "Transição inválida de '$status' para '$novoStatus'. " +
+                "Transições permitidas a partir de '$status': $permitidas"
+        }
+        return when (novoStatus) {
             OrdemServicoStatus.EM_EXECUCAO ->
                 copy(
                     status = novoStatus,
@@ -64,6 +81,7 @@ data class OrdemServico(
 
             else -> copy(status = novoStatus)
         }
+    }
 
     fun gerarOrcamento(): Orcamento {
         val itens =
