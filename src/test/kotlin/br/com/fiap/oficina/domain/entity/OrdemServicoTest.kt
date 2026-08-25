@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -133,6 +136,98 @@ class OrdemServicoTest {
         assertEquals(listOf(pecaServico), comPeca.pecas)
     }
 
+    @ParameterizedTest
+    @CsvSource(
+        "RECEBIDA, EM_DIAGNOSTICO",
+        "EM_DIAGNOSTICO, AGUARDANDO_APROVACAO",
+        "AGUARDANDO_APROVACAO, EM_EXECUCAO",
+        "EM_EXECUCAO, FINALIZADA",
+        "FINALIZADA, ENTREGUE",
+    )
+    fun `deve avancar pelo fluxo principal`(atual: OrdemServicoStatus, esperado: OrdemServicoStatus) {
+        val ordemServico =
+            OrdemServico.criar(
+                descricao = "Revisão",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = atual,
+            )
+
+        val avancada = ordemServico.avancarStatus()
+
+        assertEquals(esperado, avancada.status)
+        assertEquals(atual, ordemServico.status)
+    }
+
+    @Test
+    fun `deve permitir cancelamento enquanto aguarda aprovacao`() {
+        val ordemServico =
+            OrdemServico.criar(
+                descricao = "Revisão",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = OrdemServicoStatus.AGUARDANDO_APROVACAO,
+            )
+
+        val cancelada =
+            ordemServico.alterarStatus(OrdemServicoStatus.CANCELADA)
+
+        assertEquals(OrdemServicoStatus.CANCELADA, cancelada.status)
+        assertEquals(
+            OrdemServicoStatus.AGUARDANDO_APROVACAO,
+            ordemServico.status,
+        )
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "RECEBIDA, EM_EXECUCAO",
+        "RECEBIDA, CANCELADA",
+        "AGUARDANDO_APROVACAO, FINALIZADA",
+        "EM_EXECUCAO, CANCELADA",
+        "ENTREGUE, CANCELADA",
+    )
+    fun `deve rejeitar transicoes invalidas`(atual: OrdemServicoStatus, alvo: OrdemServicoStatus) {
+        val ordemServico =
+            OrdemServico.criar(
+                descricao = "Revisão",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = atual,
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            ordemServico.alterarStatus(alvo)
+        }
+
+        assertEquals(atual, ordemServico.status)
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+        value = OrdemServicoStatus::class,
+        names = ["ENTREGUE", "CANCELADA"],
+    )
+    fun `nao deve avancar a partir do estado final`(statusFinal: OrdemServicoStatus) {
+        val ordemServico =
+            OrdemServico.criar(
+                descricao = "Revisão",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = statusFinal,
+            )
+
+        assertThrows(IllegalStateException::class.java) {
+            ordemServico.avancarStatus()
+        }
+
+        assertEquals(statusFinal, ordemServico.status)
+    }
+
     @Test
     fun `deve alterar status preservando imutabilidade`() {
         val ordemServico =
@@ -143,18 +238,31 @@ class OrdemServicoTest {
                 veiculo = veiculo,
             )
 
-        val finalizada = ordemServico.alterarStatus(OrdemServicoStatus.FINALIZADA)
+        val emDiagnostico =
+            ordemServico.alterarStatus(OrdemServicoStatus.EM_DIAGNOSTICO)
 
         assertEquals(OrdemServicoStatus.RECEBIDA, ordemServico.status)
-        assertEquals(OrdemServicoStatus.FINALIZADA, finalizada.status)
+        assertEquals(OrdemServicoStatus.EM_DIAGNOSTICO, emDiagnostico.status)
     }
 
     @Test
     fun `deve registrar dataInicioExecucao ao transitar para EM_EXECUCAO`() {
         val agora = Instant.now()
-        val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val emExecucao = ordemServico.alterarStatus(OrdemServicoStatus.EM_EXECUCAO, agora)
+        val ordemServico =
+            OrdemServico.criar(
+                "Revisão",
+                funcionario,
+                cliente,
+                veiculo,
+                status = OrdemServicoStatus.AGUARDANDO_APROVACAO,
+            )
+
+        val emExecucao =
+            ordemServico.alterarStatus(
+                OrdemServicoStatus.EM_EXECUCAO,
+                agora,
+            )
 
         assertEquals(agora, emExecucao.dataInicioExecucao)
         assertNull(emExecucao.dataFinalizacao)
@@ -163,9 +271,21 @@ class OrdemServicoTest {
     @Test
     fun `deve registrar dataFinalizacao ao transitar para FINALIZADA`() {
         val agora = Instant.now()
-        val ordemServico = OrdemServico.criar("Revisão", funcionario, cliente, veiculo)
 
-        val finalizada = ordemServico.alterarStatus(OrdemServicoStatus.FINALIZADA, agora)
+        val ordemServico =
+            OrdemServico.criar(
+                "Revisão",
+                funcionario,
+                cliente,
+                veiculo,
+                status = OrdemServicoStatus.EM_EXECUCAO,
+            )
+
+        val finalizada =
+            ordemServico.alterarStatus(
+                OrdemServicoStatus.FINALIZADA,
+                agora,
+            )
 
         assertEquals(agora, finalizada.dataFinalizacao)
         assertNull(finalizada.dataInicioExecucao)
@@ -174,15 +294,33 @@ class OrdemServicoTest {
     @Test
     fun `deve preservar timestamps ao transitar para outros status`() {
         val inicio = Instant.now()
-        val ordemServico =
-            OrdemServico
-                .criar("Revisão", funcionario, cliente, veiculo)
-                .alterarStatus(OrdemServicoStatus.EM_EXECUCAO, inicio)
+        val fim = inicio.plusSeconds(3600)
 
-        val entregue = ordemServico.alterarStatus(OrdemServicoStatus.ENTREGUE)
+        val emExecucao =
+            OrdemServico.criar(
+                descricao = "Revisão",
+                funcionario = funcionario,
+                cliente = cliente,
+                veiculo = veiculo,
+                status = OrdemServicoStatus.AGUARDANDO_APROVACAO,
+            ).alterarStatus(
+                OrdemServicoStatus.EM_EXECUCAO,
+                inicio,
+            )
+
+        val finalizada =
+            emExecucao.alterarStatus(
+                OrdemServicoStatus.FINALIZADA,
+                fim,
+            )
+
+        val entregue =
+            finalizada.alterarStatus(
+                OrdemServicoStatus.ENTREGUE,
+            )
 
         assertEquals(inicio, entregue.dataInicioExecucao)
-        assertNull(entregue.dataFinalizacao)
+        assertEquals(fim, entregue.dataFinalizacao)
     }
 
     @Test
