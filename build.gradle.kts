@@ -82,10 +82,9 @@ tasks.bootRun {
 tasks.withType<Test> {
     useJUnitPlatform()
 
-    if (System.getenv("API_VERSION") == null) {
-        environment("API_VERSION", "1.43")
-    }
-    jvmArgs("-Dapi.version=1.43")
+    val dockerApiVersion = System.getenv("API_VERSION") ?: "1.44"
+    environment("API_VERSION", dockerApiVersion)
+    jvmArgs("-Dapi.version=$dockerApiVersion")
 }
 
 // Jacoco
