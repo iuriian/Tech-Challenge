@@ -22,7 +22,7 @@ class RemoverFuncionarioUseCaseTest {
     fun `deve remover funcionario com sucesso`() {
         val id = Id.generate()
 
-        useCase.executar(id)
+        useCase.executar(id.valor.toString())
 
         verify(funcionarioRepository, times(1)).deletar(id)
     }

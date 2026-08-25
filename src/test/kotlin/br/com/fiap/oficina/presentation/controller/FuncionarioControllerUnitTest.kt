@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.service.FuncionarioService
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
@@ -26,15 +27,18 @@ class FuncionarioControllerUnitTest {
     private val buscarFuncionarioPorNomeUseCase = mock(BuscarFuncionarioPorNomeUseCase::class.java)
     private val atualizarFuncionarioUseCase = mock(AtualizarFuncionarioUseCase::class.java)
     private val removerFuncionarioUseCase = mock(RemoverFuncionarioUseCase::class.java)
+    private val funcionarioMapper = mock(FuncionarioMapper::class.java)
     private val controller =
         FuncionarioController(
-            criarFuncionarioUseCase,
-            listarFuncionariosUseCase,
-            buscarFuncionarioPorIdUseCase,
-            buscarFuncionarioPorNomeUseCase,
-            atualizarFuncionarioUseCase,
-            removerFuncionarioUseCase,
-            FuncionarioMapper(),
+            FuncionarioService(
+                criarFuncionarioUseCase,
+                listarFuncionariosUseCase,
+                buscarFuncionarioPorIdUseCase,
+                buscarFuncionarioPorNomeUseCase,
+                atualizarFuncionarioUseCase,
+                removerFuncionarioUseCase,
+                funcionarioMapper,
+            ),
         )
 
     private val funcionario =
@@ -71,7 +75,7 @@ class FuncionarioControllerUnitTest {
 
         controller.deletar(id.toString())
 
-        verify(removerFuncionarioUseCase).executar(Id.fromString(id.toString()))
+        verify(removerFuncionarioUseCase).executar(id.toString())
     }
 
     @Test

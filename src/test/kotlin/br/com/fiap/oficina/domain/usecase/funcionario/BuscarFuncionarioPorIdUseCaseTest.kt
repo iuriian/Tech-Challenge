@@ -41,7 +41,7 @@ class BuscarFuncionarioPorIdUseCaseTest {
     fun `deve buscar funcionario por id com sucesso`() {
         `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
 
-        val resultado = useCase.executar(funcionarioId)
+        val resultado = useCase.executar(funcionarioId.valor.toString())
 
         assertNotNull(resultado)
         assertEquals(funcionario.id, resultado.id)

@@ -107,7 +107,7 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `deve buscar por id via GET`() {
-        `when`(buscarFuncionarioPorIdUseCase.executar(Id.fromString(idBusca))).thenReturn(funcionario)
+        `when`(buscarFuncionarioPorIdUseCase.executar(idBusca)).thenReturn(funcionario)
 
         mockMvc
             .perform(get("/funcionarios/id/$idBusca"))
@@ -118,7 +118,7 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `buscar por id quando nao encontrado deve retornar ok com corpo nulo`() {
-        `when`(buscarFuncionarioPorIdUseCase.executar(Id.fromString(idNaoEncontrado))).thenReturn(null)
+        `when`(buscarFuncionarioPorIdUseCase.executar(idNaoEncontrado)).thenReturn(null)
 
         mockMvc
             .perform(get("/funcionarios/id/$idNaoEncontrado"))
