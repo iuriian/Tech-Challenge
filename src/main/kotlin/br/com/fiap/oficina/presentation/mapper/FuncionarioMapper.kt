@@ -1,25 +1,26 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.application.dto.AtualizarFuncionarioRequest
+import br.com.fiap.oficina.application.dto.CriarFuncionarioRequest
+import br.com.fiap.oficina.application.dto.FuncionarioResponse
 import br.com.fiap.oficina.presentation.dto.FuncionarioDto
 import org.springframework.stereotype.Component
 
 @Component
 class FuncionarioMapper {
-    fun toResponse(funcionario: Funcionario): FuncionarioDto = FuncionarioDto(
-        id = funcionario.id.valor.toString(),
-        nome = funcionario.nome,
-        cargo = funcionario.cargo.name,
-    )
-
-    fun toEntity(dto: FuncionarioDto): Funcionario = Funcionario.criar(
+    fun toCriarRequest(dto: FuncionarioDto): CriarFuncionarioRequest = CriarFuncionarioRequest(
         nome = dto.nome,
         cargo = dto.cargo,
     )
 
-    fun toEntityComId(id: String, dto: FuncionarioDto): Funcionario = Funcionario.reconstruir(
-        id = id,
+    fun toAtualizarRequest(dto: FuncionarioDto): AtualizarFuncionarioRequest = AtualizarFuncionarioRequest(
         nome = dto.nome,
         cargo = dto.cargo,
+    )
+
+    fun toDto(response: FuncionarioResponse): FuncionarioDto = FuncionarioDto(
+        id = response.id,
+        nome = response.nome,
+        cargo = response.cargo,
     )
 }
