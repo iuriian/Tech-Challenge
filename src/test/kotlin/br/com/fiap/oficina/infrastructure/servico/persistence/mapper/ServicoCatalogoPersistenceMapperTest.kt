@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.infrastructure.servico.persistence.mapper
 
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.servico.persistence.entity.ServicoCatalogoJpaEntity
 import org.junit.jupiter.api.Assertions.assertEquals

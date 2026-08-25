@@ -1,14 +1,14 @@
 package br.com.fiap.oficina.presentation.servico.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.servico.usecase.AtualizarServicoUseCase
-import br.com.fiap.oficina.application.servico.usecase.BuscarServicoUseCase
-import br.com.fiap.oficina.application.servico.usecase.CriarServicoUseCase
-import br.com.fiap.oficina.application.servico.usecase.DesativarServicoUseCase
-import br.com.fiap.oficina.application.servico.usecase.ListarServicosAtivosUseCase
-import br.com.fiap.oficina.application.servico.usecase.ListarTodosServicosUseCase
-import br.com.fiap.oficina.application.servico.usecase.ReativarServicoUseCase
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.usecase.servico.AtualizarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.BuscarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.CriarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.DesativarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ListarServicosAtivosUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ListarTodosServicosUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ReativarServicoUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.servico.mapper.ServicoPresentationMapper
 import br.com.fiap.oficina.presentation.servico.request.AtualizarServicoRequest

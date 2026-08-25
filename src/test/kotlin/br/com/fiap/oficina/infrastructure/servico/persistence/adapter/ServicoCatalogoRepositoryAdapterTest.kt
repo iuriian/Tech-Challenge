@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.servico.persistence.adapter
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.servico.persistence.entity.ServicoCatalogoJpaEntity
 import br.com.fiap.oficina.infrastructure.servico.persistence.mapper.ServicoCatalogoPersistenceMapper

@@ -1,8 +1,8 @@
-package br.com.fiap.oficina.application.servico.usecase
+package br.com.fiap.oficina.domain.usecase.servico
 
-import br.com.fiap.oficina.application.servico.exception.ServicoNaoEncontradoException
-import br.com.fiap.oficina.application.servico.repository.ServicoRepository
-import br.com.fiap.oficina.domain.servico.Servico
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.exception.ServicoNaoEncontradoException
+import br.com.fiap.oficina.domain.repository.ServicoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows

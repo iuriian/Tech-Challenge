@@ -1,6 +1,6 @@
 package br.com.fiap.oficina.presentation.servico.exception
 
-import br.com.fiap.oficina.application.servico.exception.ServicoNaoEncontradoException
+import br.com.fiap.oficina.domain.exception.ServicoNaoEncontradoException
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
