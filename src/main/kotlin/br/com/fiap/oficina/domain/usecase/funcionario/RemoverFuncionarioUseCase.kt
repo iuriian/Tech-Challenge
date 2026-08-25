@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service
 
 @Service
 class RemoverFuncionarioUseCase(private val funcionarioRepository: FuncionarioRepository) {
-    fun executar(id: Id) = funcionarioRepository.deletar(id)
+    fun executar(id: String) = funcionarioRepository.deletar(Id.fromString(id))
 }

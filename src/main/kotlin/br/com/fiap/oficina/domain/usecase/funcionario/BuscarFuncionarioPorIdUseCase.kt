@@ -7,5 +7,5 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuscarFuncionarioPorIdUseCase(private val funcionarioRepository: FuncionarioRepository) {
-    fun executar(id: Id): Funcionario? = funcionarioRepository.buscarPorId(id)
+    fun executar(id: String): Funcionario? = funcionarioRepository.buscarPorId(Id.fromString(id))
 }
