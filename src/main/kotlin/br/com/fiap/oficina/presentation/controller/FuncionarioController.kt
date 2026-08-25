@@ -2,10 +2,12 @@ package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.application.service.FuncionarioService
 import br.com.fiap.oficina.presentation.dto.FuncionarioDto
+import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,44 +16,59 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/funcionarios")
 @Tag(name = "Funcionários", description = "Operações relacionadas ao gerenciamento de funcionários")
-class FuncionarioController(val funcionarioService: FuncionarioService) {
+class FuncionarioController(
+    private val funcionarioService: FuncionarioService,
+    private val mapper: FuncionarioMapper,
+) {
     @PostMapping
     @Operation(summary = "Criar um novo funcionário", description = "Cadastra um novo funcionário no sistema")
-    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
-        funcionarioService.cadastrar(funcionarioDto)
+    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): ResponseEntity<FuncionarioDto> {
+        val request = mapper.toCriarRequest(funcionarioDto)
+        val response = mapper.toDto(funcionarioService.cadastrar(request))
+        val location =
+            ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/id/{id}")
+                .buildAndExpand(response.id)
+                .toUri()
+        return ResponseEntity.created(location).body(response)
+    }
 
     @GetMapping
     @Operation(
-        summary = "ListarListar todos os funcionários",
+        summary = "Listar todos os funcionários",
         description = "Retorna uma lista com todos os funcionários cadastrados",
     )
-    fun listarTodos(): List<FuncionarioDto> = funcionarioService.listarTodos()
+    fun listarTodos(): List<FuncionarioDto> = funcionarioService.listarTodos().map { mapper.toDto(it) }
 
     @GetMapping("/id/{id}")
     @Operation(
         summary = "Buscar funcionário por ID",
         description = "Busca um funcionário através do seu identificador único",
     )
-    fun buscarPorId(@PathVariable id: String): FuncionarioDto? = funcionarioService.buscarPorId(id)
+    fun buscarPorId(@PathVariable id: String): FuncionarioDto = mapper.toDto(funcionarioService.buscarPorId(id))
 
     @GetMapping("/nome/{nome}")
     @Operation(summary = "Buscar funcionário por nome", description = "Busca um funcionário através do seu nome")
     fun buscarPorNome(
         @Parameter(description = "Nome do funcionário", required = true, example = "Vini Jr.")
         @PathVariable nome: String,
-    ): FuncionarioDto? = funcionarioService.buscarPorNome(nome)
+    ): FuncionarioDto = mapper.toDto(funcionarioService.buscarPorNome(nome))
 
     @PutMapping("/{id}")
     @Operation(
         summary = "Alterar dados de um funcionário",
         description = "Atualiza as informações de um funcionário existente",
     )
-    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
-        funcionarioService.editar(id, funcionarioDto)
+    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto {
+        val request = mapper.toAtualizarRequest(funcionarioDto)
+        return mapper.toDto(funcionarioService.editar(id, request))
+    }
 
     @DeleteMapping("/{id}")
     @Operation(
