@@ -1,21 +1,12 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
-import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorIdUseCase
-import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorNomeUseCase
-import br.com.fiap.oficina.domain.usecase.funcionario.CriarFuncionarioUseCase
-import br.com.fiap.oficina.domain.usecase.funcionario.ListarFuncionariosUseCase
-import br.com.fiap.oficina.domain.usecase.funcionario.RemoverFuncionarioUseCase
-import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
+import br.com.fiap.oficina.application.service.FuncionarioService
+import br.com.fiap.oficina.presentation.dto.FuncionarioDto
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
@@ -30,28 +21,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(FuncionarioController::class)
-@Import(FuncionarioMapper::class)
 class FuncionarioControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
 
     @MockitoBean
-    lateinit var criarFuncionarioUseCase: CriarFuncionarioUseCase
-
-    @MockitoBean
-    lateinit var listarFuncionariosUseCase: ListarFuncionariosUseCase
-
-    @MockitoBean
-    lateinit var buscarFuncionarioPorIdUseCase: BuscarFuncionarioPorIdUseCase
-
-    @MockitoBean
-    lateinit var buscarFuncionarioPorNomeUseCase: BuscarFuncionarioPorNomeUseCase
-
-    @MockitoBean
-    lateinit var atualizarFuncionarioUseCase: AtualizarFuncionarioUseCase
-
-    @MockitoBean
-    lateinit var removerFuncionarioUseCase: RemoverFuncionarioUseCase
+    lateinit var service: FuncionarioService
 
     private val idCadastro = "00000000-0000-0000-0000-000000000050"
     private val idBusca = "00000000-0000-0000-0000-000000000010"
@@ -60,19 +35,15 @@ class FuncionarioControllerTest {
     private val idRemocao = "00000000-0000-0000-0000-000000000040"
     private val idVini = "00000000-0000-0000-0000-000000000020"
 
-    private val funcionario =
-        Funcionario(
-            id = Id.fromString(idCadastro),
-            nome = "João",
-            cargo = Cargo.ATENDENTE,
-        )
+    private fun funcionarioDto(id: String = idCadastro, nome: String = "João", cargo: String = "ATENDENTE") =
+        FuncionarioDto(id = id, nome = nome, cargo = cargo)
 
     @Test
     @WithMockUser
     fun `deve cadastrar funcionario via endpoint POST`() {
         val requestJson = """{ "nome": "João", "cargo": "ATENDENTE" }"""
 
-        `when`(criarFuncionarioUseCase.executar(anyObject())).thenReturn(funcionario)
+        `when`(service.cadastrar(anyObject())).thenReturn(funcionarioDto())
 
         mockMvc
             .perform(
@@ -89,14 +60,12 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `deve listar todos os funcionarios via GET`() {
-        val funcionario2 =
-            Funcionario(
-                id = Id.fromString("00000000-0000-0000-0000-000000000002"),
-                nome = "B",
-                cargo = Cargo.MECANICO,
-            )
-
-        `when`(listarFuncionariosUseCase.executar()).thenReturn(listOf(funcionario, funcionario2))
+        `when`(service.listarTodos()).thenReturn(
+            listOf(
+                funcionarioDto(),
+                funcionarioDto(id = "00000000-0000-0000-0000-000000000002", nome = "B", cargo = "MECANICO"),
+            ),
+        )
 
         mockMvc
             .perform(get("/funcionarios"))
@@ -107,7 +76,7 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `deve buscar por id via GET`() {
-        `when`(buscarFuncionarioPorIdUseCase.executar(idBusca)).thenReturn(funcionario)
+        `when`(service.buscarPorId(idBusca)).thenReturn(funcionarioDto(id = idBusca))
 
         mockMvc
             .perform(get("/funcionarios/id/$idBusca"))
@@ -118,7 +87,7 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `buscar por id quando nao encontrado deve retornar ok com corpo nulo`() {
-        `when`(buscarFuncionarioPorIdUseCase.executar(idNaoEncontrado)).thenReturn(null)
+        `when`(service.buscarPorId(idNaoEncontrado)).thenReturn(null)
 
         mockMvc
             .perform(get("/funcionarios/id/$idNaoEncontrado"))
@@ -129,14 +98,9 @@ class FuncionarioControllerTest {
     @Test
     @WithMockUser
     fun `deve buscar por nome via GET nome path variable`() {
-        val funcionarioVini =
-            Funcionario(
-                id = Id.fromString(idVini),
-                nome = "Vini",
-                cargo = Cargo.MECANICO,
-            )
-
-        `when`(buscarFuncionarioPorNomeUseCase.executar("Vini")).thenReturn(funcionarioVini)
+        `when`(service.buscarPorNome("Vini")).thenReturn(
+            funcionarioDto(id = idVini, nome = "Vini", cargo = "MECANICO"),
+        )
 
         mockMvc
             .perform(get("/funcionarios/nome/Vini"))
@@ -148,14 +112,10 @@ class FuncionarioControllerTest {
     @WithMockUser
     fun `deve alterar funcionario via PUT`() {
         val requestJson = """{ "id": "$idAlteracao", "nome": "Alterado", "cargo": "MECANICO" }"""
-        val atualizado =
-            Funcionario(
-                id = Id.fromString(idAlteracao),
-                nome = "Alterado",
-                cargo = Cargo.MECANICO,
-            )
 
-        `when`(atualizarFuncionarioUseCase.executar(anyObject())).thenReturn(atualizado)
+        `when`(service.editar(anyObject(), anyObject())).thenReturn(
+            funcionarioDto(id = idAlteracao, nome = "Alterado", cargo = "MECANICO"),
+        )
 
         mockMvc
             .perform(
