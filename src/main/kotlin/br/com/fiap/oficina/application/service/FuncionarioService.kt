@@ -1,13 +1,16 @@
 package br.com.fiap.oficina.application.service
 
+import br.com.fiap.oficina.application.dto.AtualizarFuncionarioRequest
+import br.com.fiap.oficina.application.dto.CriarFuncionarioRequest
+import br.com.fiap.oficina.application.dto.FuncionarioResponse
+import br.com.fiap.oficina.application.mapper.FuncionarioApplicationMapper
 import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorNomeUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.CriarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.ListarFuncionariosUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.RemoverFuncionarioUseCase
-import br.com.fiap.oficina.presentation.dto.FuncionarioDto
-import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
 @Service
@@ -18,46 +21,34 @@ class FuncionarioService(
     private val buscarFuncionarioPorNomeUseCase: BuscarFuncionarioPorNomeUseCase,
     private val atualizarFuncionarioUseCase: AtualizarFuncionarioUseCase,
     private val removerFuncionarioUseCase: RemoverFuncionarioUseCase,
-    private val mapper: FuncionarioMapper,
+    private val mapper: FuncionarioApplicationMapper,
 ) {
-    fun cadastrar(dto: FuncionarioDto): FuncionarioDto {
-        val funcionario = mapper.toEntity(dto)
-
+    fun cadastrar(request: CriarFuncionarioRequest): FuncionarioResponse {
+        val funcionario = mapper.toDomain(request)
         val response = criarFuncionarioUseCase.executar(funcionario)
         return mapper.toResponse(response)
     }
 
-    fun listarTodos(): List<FuncionarioDto> {
+    fun listarTodos(): List<FuncionarioResponse> {
         val response = listarFuncionariosUseCase.executar()
         return response.map { mapper.toResponse(it) }
     }
 
-    fun buscarPorId(id: String): FuncionarioDto? {
-        val resultado = buscarFuncionarioPorIdUseCase.executar(id)
-
-        return if (resultado != null) {
-            mapper.toResponse(resultado)
-        } else {
-            null
-        }
+    fun buscarPorId(id: String): FuncionarioResponse {
+        val resultado = buscarFuncionarioPorIdUseCase.executar(Id.fromString(id))
+        return mapper.toResponse(resultado)
     }
 
-    fun buscarPorNome(nome: String): FuncionarioDto? {
-        val resultado = buscarFuncionarioPorNomeUseCase.executar(nome) // repository.buscarPorNome(nome)
-
-        return if (resultado != null) {
-            mapper.toResponse(resultado)
-        } else {
-            null
-        }
+    fun buscarPorNome(nome: String): FuncionarioResponse {
+        val resultado = buscarFuncionarioPorNomeUseCase.executar(nome)
+        return mapper.toResponse(resultado)
     }
 
-    fun editar(id: String, dto: FuncionarioDto): FuncionarioDto {
-        val funcionario = mapper.toEntityComId(id, dto)
-
+    fun editar(id: String, request: AtualizarFuncionarioRequest): FuncionarioResponse {
+        val funcionario = mapper.toDomain(id, request)
         val response = atualizarFuncionarioUseCase.executar(funcionario)
         return mapper.toResponse(response)
     }
 
-    fun deletar(id: String) = removerFuncionarioUseCase.executar(id)
+    fun deletar(id: String) = removerFuncionarioUseCase.executar(Id.fromString(id))
 }
