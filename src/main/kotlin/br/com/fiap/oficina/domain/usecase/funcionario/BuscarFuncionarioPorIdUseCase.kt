@@ -1,11 +1,12 @@
 package br.com.fiap.oficina.domain.usecase.funcionario
 
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.exception.FuncionarioNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.springframework.stereotype.Service
 
-@Service
 class BuscarFuncionarioPorIdUseCase(private val funcionarioRepository: FuncionarioRepository) {
-    fun executar(id: String): Funcionario? = funcionarioRepository.buscarPorId(Id.fromString(id))
+    fun executar(id: Id): Funcionario =
+        funcionarioRepository.buscarPorId(id)
+            ?: throw FuncionarioNaoEncontradoException.porId(id.valor.toString())
 }
