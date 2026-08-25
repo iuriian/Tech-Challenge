@@ -18,14 +18,11 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/funcionarios")
 @Tag(name = "Funcionários", description = "Operações relacionadas ao gerenciamento de funcionários")
-class FuncionarioController(
-    val funcionarioService: FuncionarioService,
-) {
+class FuncionarioController(val funcionarioService: FuncionarioService) {
     @PostMapping
     @Operation(summary = "Criar um novo funcionário", description = "Cadastra um novo funcionário no sistema")
-    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto {
-        return funcionarioService.cadastrar(funcionarioDto)
-    }
+    fun cadastrar(@Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
+        funcionarioService.cadastrar(funcionarioDto)
 
     @GetMapping
     @Operation(
@@ -53,9 +50,8 @@ class FuncionarioController(
         summary = "Alterar dados de um funcionário",
         description = "Atualiza as informações de um funcionário existente",
     )
-    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto {
-        return funcionarioService.editar(id, funcionarioDto)
-    }
+    fun alterar(@PathVariable id: String, @Valid @RequestBody funcionarioDto: FuncionarioDto): FuncionarioDto =
+        funcionarioService.editar(id, funcionarioDto)
 
     @DeleteMapping("/{id}")
     @Operation(

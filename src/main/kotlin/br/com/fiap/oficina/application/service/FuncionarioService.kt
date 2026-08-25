@@ -1,13 +1,11 @@
 package br.com.fiap.oficina.application.service
 
-import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorNomeUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.CriarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.ListarFuncionariosUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.RemoverFuncionarioUseCase
-import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.dto.FuncionarioDto
 import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
 import org.springframework.stereotype.Service
@@ -37,17 +35,21 @@ class FuncionarioService(
     fun buscarPorId(id: String): FuncionarioDto? {
         val resultado = buscarFuncionarioPorIdUseCase.executar(id)
 
-        return if(resultado != null)
+        return if (resultado != null) {
             mapper.toResponse(resultado)
-        else null
+        } else {
+            null
+        }
     }
 
     fun buscarPorNome(nome: String): FuncionarioDto? {
-        val resultado = buscarFuncionarioPorNomeUseCase.executar(nome) //repository.buscarPorNome(nome)
+        val resultado = buscarFuncionarioPorNomeUseCase.executar(nome) // repository.buscarPorNome(nome)
 
-         return if(resultado != null)
+        return if (resultado != null) {
             mapper.toResponse(resultado)
-         else null
+        } else {
+            null
+        }
     }
 
     fun editar(id: String, dto: FuncionarioDto): FuncionarioDto {
