@@ -6,50 +6,33 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.jpa.FuncionarioJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toDomain
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toEntity
-import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Component
 
 @Component
 class FuncionarioRepositoryImpl(private val repository: FuncionarioJpaRepository) : FuncionarioRepository {
-    override fun salvar(funcionario: Funcionario): Funcionario = try {
+    override fun salvar(funcionario: Funcionario): Funcionario {
         val resultado = repository.save(funcionario.toEntity())
-        resultado.toDomain()
-    } catch (ex: Exception) {
-        throw Exception("Não foi possível salvar o funcionário!")
+        return resultado.toDomain()
     }
 
-    override fun listarTodos(): List<Funcionario> = try {
+    override fun listarTodos(): List<Funcionario> =
         repository.findAll().map { it.toDomain() }
-    } catch (ex: Exception) {
-        throw EntityNotFoundException("Não há funcionários cadastrados!")
-    }
 
-    override fun buscarPorId(id: Id): Funcionario? = try {
+    override fun buscarPorId(id: Id): Funcionario? =
         repository.findById(id.valor).map { it.toDomain() }.orElse(null)
-    } catch (e: EntityNotFoundException) {
-        throw EntityNotFoundException("Funcionário não encontrado!")
-    }
 
-    override fun buscarPorNome(nome: String): Funcionario? = try {
+    override fun buscarPorNome(nome: String): Funcionario? =
         repository.findByNome(nome)?.toDomain()
-    } catch (e: EntityNotFoundException) {
-        throw EntityNotFoundException("Funcionário não encontrado!")
-    }
 
     override fun editar(funcionario: Funcionario): Funcionario {
-        val resultado =
-            repository.findById(funcionario.id.valor).orElse(null)
-                ?: throw EntityNotFoundException("Funcionário não encontrado!")
-
-        resultado.nome = funcionario.nome
-        resultado.cargo = funcionario.cargo.id
-
-        return repository.save(resultado).toDomain()
+        val entity = repository.findById(funcionario.id.valor)
+            .orElseThrow { IllegalStateException("Funcionário ${funcionario.id.valor} não encontrado para edição") }
+        entity.nome = funcionario.nome
+        entity.cargo = funcionario.cargo.id
+        return repository.save(entity).toDomain()
     }
 
-    override fun deletar(id: Id) = try {
+    override fun deletar(id: Id) {
         repository.deleteById(id.valor)
-    } catch (e: Exception) {
-        throw Exception("Não foi possível deletar o funcionário!")
     }
 }
