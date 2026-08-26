@@ -61,7 +61,8 @@ class PecaBeanConfiguration {
     fun reporPecasUseCase(pecaRepository: PecaRepository): ReporPecasUseCase = ReporPecasUseCase(pecaRepository)
 
     @Bean
-    fun desativarPecaUseCase(pecaRepository: PecaRepository): DesativarPecaUseCase = DesativarPecaUseCase(pecaRepository)
+    fun desativarPecaUseCase(pecaRepository: PecaRepository): DesativarPecaUseCase =
+        DesativarPecaUseCase(pecaRepository)
 
     @Bean
     fun deletarPecaUseCase(desativarPecaUseCase: DesativarPecaUseCase): DeletarPecaUseCase =
