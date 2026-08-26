@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.usecase.peca
 
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -48,10 +49,10 @@ class BuscarPecaPorCodigoUseCaseTest {
         `when`(repository.buscarAtivoPorCodigo("XPTO")).thenReturn(null)
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(PecaNaoEncontradoException::class.java) {
                 useCase.executar("XPTO")
             }
 
-        assertEquals("Peça não encontrada", exception.message)
+        assertEquals("Peça não encontrada com o código: XPTO", exception.message)
     }
 }

@@ -2,9 +2,11 @@ package br.com.fiap.oficina.domain.usecase.peca
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,10 +50,15 @@ class ReativarPecaUseCaseTest {
     }
 
     @Test
-    fun `deve retornar false ao reativar peca inexistente`() {
+    fun `deve lancar excecao ao reativar peca inexistente`() {
         `when`(repository.buscarPorCodigo("XPTO")).thenReturn(null)
 
-        assertFalse(useCase.executar("XPTO"))
+        val exception =
+            assertThrows(PecaNaoEncontradoException::class.java) {
+                useCase.executar("XPTO")
+            }
+
+        assertEquals("Peça não encontrada com o código: XPTO", exception.message)
         verify(repository, never()).salvar(peca)
     }
 }

@@ -1,9 +1,11 @@
 package br.com.fiap.oficina.domain.usecase.peca
 
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -40,5 +42,17 @@ class BuscarPecaPorNomeUseCaseTest {
         `when`(repository.buscarAtivoPorNome("Filtro de Óleo")).thenReturn(peca)
 
         assertEquals(peca, useCase.executar("Filtro de Óleo"))
+    }
+
+    @Test
+    fun `deve lancar excecao ao buscar peca inexistente por nome`() {
+        `when`(repository.buscarAtivoPorNome("Inexistente")).thenReturn(null)
+
+        val exception =
+            assertThrows(PecaNaoEncontradoException::class.java) {
+                useCase.executar("Inexistente")
+            }
+
+        assertEquals("Peça não encontrada com o nome: Inexistente", exception.message)
     }
 }
