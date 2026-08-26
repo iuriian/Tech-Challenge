@@ -1,46 +1,44 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.application.dto.PecaResponse
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class PecaMapperTest {
     private val mapper = PecaMapper()
 
+    private val pecaResponse =
+        PecaResponse(
+            id = "00000000-0000-0000-0000-000000000001",
+            codigo = "PEC001",
+            nome = "Filtro de Óleo",
+            descricao = "Filtro padrão",
+            fabricante = "Bosch",
+            fornecedor = "AutoParts",
+            precoDeCompra = BigDecimal("25.00"),
+            precoDeVenda = BigDecimal("45.00"),
+            qtdEstoque = 50,
+            ativo = true,
+        )
+
     @Test
-    fun `deve mapear Peca para PecaDto`() {
-        val peca =
-            Peca(
-                id = Id.generate(),
-                codigo = "PEC001",
-                nome = "Filtro de Óleo",
-                descricao = "Filtro padrão",
-                fabricante = "Bosch",
-                fornecedor = "AutoParts",
-                precoDeCompra = BigDecimal("25.00"),
-                precoDeVenda = BigDecimal("45.00"),
-                qtdEstoque = 50,
-                ativo = true,
-            )
+    fun `deve mapear PecaResponse para PecaDto`() {
+        val dto = mapper.toDto(pecaResponse)
 
-        val dto = mapper.toDto(peca)
-
-        assertEquals(peca.id.valor, dto.id)
+        assertEquals(UUID.fromString(pecaResponse.id), dto.id)
         assertEquals("PEC001", dto.codigo)
         assertEquals("Filtro de Óleo", dto.nome)
         assertEquals(BigDecimal("45.00"), dto.precoDeVenda)
         assertEquals(50, dto.qtdEstoque)
-        assertTrue(dto.ativo)
+        assertEquals(true, dto.ativo)
     }
 
     @Test
-    fun `deve mapear PecaDto para Peca`() {
+    fun `deve mapear PecaDto para CriarPecaRequest`() {
         val dto =
             PecaDto(
                 codigo = "PEC001",
@@ -50,16 +48,15 @@ class PecaMapperTest {
                 qtdEstoque = 50,
             )
 
-        val peca = mapper.toEntity(dto)
+        val request = mapper.toCriarRequest(dto)
 
-        assertNotNull(peca.id)
-        assertEquals("PEC001", peca.codigo)
-        assertEquals("Filtro de Óleo", peca.nome)
-        assertEquals(50, peca.qtdEstoque)
+        assertEquals("PEC001", request.codigo)
+        assertEquals("Filtro de Óleo", request.nome)
+        assertEquals(50, request.qtdEstoque)
     }
 
     @Test
-    fun `deve mapear PecaAtualizacaoDto usando codigo temporario e estoque zero`() {
+    fun `deve mapear PecaAtualizacaoDto para AtualizarPecaRequest`() {
         val dto =
             PecaAtualizacaoDto(
                 nome = "Filtro de Ar",
@@ -67,11 +64,9 @@ class PecaMapperTest {
                 precoDeVenda = BigDecimal("65.00"),
             )
 
-        val peca = mapper.toEntity(dto)
+        val request = mapper.toAtualizarRequest(dto)
 
-        assertEquals("TMP", peca.codigo)
-        assertEquals("Filtro de Ar", peca.nome)
-        assertEquals(0, peca.qtdEstoque)
-        assertEquals(BigDecimal("65.00"), peca.precoDeVenda)
+        assertEquals("Filtro de Ar", request.nome)
+        assertEquals(BigDecimal("65.00"), request.precoDeVenda)
     }
 }

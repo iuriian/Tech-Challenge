@@ -1,7 +1,10 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.mapper.PecaApplicationMapper
+import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
@@ -12,6 +15,7 @@ import br.com.fiap.oficina.domain.usecase.peca.ReativarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.presentation.exception.PecaExceptionHandler
 import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
@@ -27,12 +31,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 
 @WebMvcTest(PecaController::class)
-@Import(PecaMapper::class)
+@Import(PecaService::class, PecaApplicationMapper::class, PecaMapper::class, PecaExceptionHandler::class)
 class PecaControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -97,7 +102,33 @@ class PecaControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestJson),
             ).andExpect(status().isCreated)
+            .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/pecas/codigo/PEC001")))
             .andExpect(jsonPath("$.codigo").value("PEC001"))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `criar peca com codigo duplicado deve retornar 409`() {
+        val requestJson =
+            """
+            {
+              "codigo": "PEC001",
+              "nome": "Filtro de Óleo",
+              "precoDeVenda": 45.00,
+              "qtdEstoque": 10
+            }
+            """.trimIndent()
+
+        `when`(criarPecaUseCase.executar(anyObject())).thenThrow(IllegalArgumentException("Peça já cadastrada"))
+
+        mockMvc
+            .perform(
+                post("/pecas")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson),
+            ).andExpect(status().isConflict)
+            .andExpect(jsonPath("$.message").value("Peça já cadastrada"))
     }
 
     @Test
@@ -124,6 +155,18 @@ class PecaControllerTest {
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
+    fun `buscar por codigo inexistente deve retornar 404`() {
+        `when`(buscarPecaPorCodigoUseCase.executar("XPTO"))
+            .thenThrow(PecaNaoEncontradoException.porCodigo("XPTO"))
+
+        mockMvc
+            .perform(get("/pecas/codigo/XPTO"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.message").value("Peça não encontrada com o código: XPTO"))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ATENDENTE"])
     fun `deve buscar peca por nome via GET`() {
         `when`(buscarPecaPorNomeUseCase.executar("Filtro de Óleo")).thenReturn(peca)
 
@@ -131,6 +174,18 @@ class PecaControllerTest {
             .perform(get("/pecas/nome/Filtro de Óleo"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.nome").value("Filtro de Óleo"))
+    }
+
+    @Test
+    @WithMockUser(roles = ["ATENDENTE"])
+    fun `buscar por nome inexistente deve retornar 404`() {
+        `when`(buscarPecaPorNomeUseCase.executar("Inexistente"))
+            .thenThrow(PecaNaoEncontradoException.porNome("Inexistente"))
+
+        mockMvc
+            .perform(get("/pecas/nome/Inexistente"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.message").value("Peça não encontrada com o nome: Inexistente"))
     }
 
     @Test
@@ -159,6 +214,29 @@ class PecaControllerTest {
 
     @Test
     @WithMockUser(roles = ["ADMIN"])
+    fun `atualizar peca inexistente deve retornar 404`() {
+        val requestJson =
+            """
+            {
+              "nome": "Filtro Novo",
+              "precoDeVenda": 60.00
+            }
+            """.trimIndent()
+
+        `when`(atualizarPecaUseCase.executar(anyObject(), anyObject()))
+            .thenThrow(PecaNaoEncontradoException.porCodigo("XPTO"))
+
+        mockMvc
+            .perform(
+                put("/pecas/XPTO")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson),
+            ).andExpect(status().isNotFound)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `deve desativar peca via DELETE`() {
         `when`(deletarPecaUseCase.executar("PEC001")).thenReturn(true)
 
@@ -167,5 +245,18 @@ class PecaControllerTest {
                 delete("/pecas/PEC001")
                     .with(SecurityMockMvcRequestPostProcessors.csrf()),
             ).andExpect(status().isNoContent)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `desativar peca inexistente deve retornar 404`() {
+        `when`(deletarPecaUseCase.executar("XPTO"))
+            .thenThrow(PecaNaoEncontradoException.porCodigo("XPTO"))
+
+        mockMvc
+            .perform(
+                delete("/pecas/XPTO")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf()),
+            ).andExpect(status().isNotFound)
     }
 }
