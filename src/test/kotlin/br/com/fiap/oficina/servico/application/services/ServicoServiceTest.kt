@@ -376,12 +376,12 @@ class ServicoServiceTest {
                     clienteId = clienteId,
                     veiculoId = veiculoId,
                     pecas =
-                        listOf(
-                            PecaServicoComando(
-                                pecaId = pecaId1,
-                                quantidade = BigDecimal.ONE,
-                            ),
+                    listOf(
+                        PecaServicoComando(
+                            pecaId = pecaId1,
+                            quantidade = BigDecimal.ONE,
                         ),
+                    ),
                 ),
             )
 
