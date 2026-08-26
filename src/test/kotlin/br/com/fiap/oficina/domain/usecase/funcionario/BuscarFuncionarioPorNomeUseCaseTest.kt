@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.usecase.funcionario
 
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.exception.FuncionarioNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -12,7 +13,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import org.junit.jupiter.api.assertThrows
 
 @ExtendWith(MockitoExtension::class)
 class BuscarFuncionarioPorNomeUseCaseTest {
@@ -35,8 +36,18 @@ class BuscarFuncionarioPorNomeUseCaseTest {
 
         val resultado = useCase.executar("João")
 
-        assertNotNull(resultado)
         assertEquals(funcionario.nome, resultado.nome)
         verify(funcionarioRepository, times(1)).buscarPorNome("João")
+    }
+
+    @Test
+    fun `deve lancar excecao quando funcionario nao encontrado`() {
+        `when`(funcionarioRepository.buscarPorNome("Inexistente")).thenReturn(null)
+
+        assertThrows<FuncionarioNaoEncontradoException> {
+            useCase.executar("Inexistente")
+        }
+
+        verify(funcionarioRepository, times(1)).buscarPorNome("Inexistente")
     }
 }

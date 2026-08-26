@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.usecase.funcionario
 
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.exception.FuncionarioNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -51,7 +52,7 @@ class AtualizarFuncionarioUseCaseTest {
     fun `deve lancar excecao quando funcionario nao encontrado`() {
         `when`(funcionarioRepository.buscarPorId(funcionario.id)).thenReturn(null)
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<FuncionarioNaoEncontradoException> {
             useCase.executar(funcionario)
         }
 

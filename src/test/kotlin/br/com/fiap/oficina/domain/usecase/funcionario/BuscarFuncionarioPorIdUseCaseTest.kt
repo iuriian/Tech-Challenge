@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.usecase.funcionario
 
 import br.com.fiap.oficina.domain.entity.Funcionario
+import br.com.fiap.oficina.domain.exception.FuncionarioNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +14,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import org.junit.jupiter.api.assertThrows
 
 @ExtendWith(MockitoExtension::class)
 class BuscarFuncionarioPorIdUseCaseTest {
@@ -41,10 +42,20 @@ class BuscarFuncionarioPorIdUseCaseTest {
     fun `deve buscar funcionario por id com sucesso`() {
         `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
 
-        val resultado = useCase.executar(funcionarioId.valor.toString())
+        val resultado = useCase.executar(funcionarioId)
 
-        assertNotNull(resultado)
         assertEquals(funcionario.id, resultado.id)
+        verify(funcionarioRepository, times(1)).buscarPorId(funcionarioId)
+    }
+
+    @Test
+    fun `deve lancar excecao quando funcionario nao encontrado`() {
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(null)
+
+        assertThrows<FuncionarioNaoEncontradoException> {
+            useCase.executar(funcionarioId)
+        }
+
         verify(funcionarioRepository, times(1)).buscarPorId(funcionarioId)
     }
 }
