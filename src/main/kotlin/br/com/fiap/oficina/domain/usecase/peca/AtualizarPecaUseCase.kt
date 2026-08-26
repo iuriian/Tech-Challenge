@@ -1,15 +1,14 @@
 package br.com.fiap.oficina.domain.usecase.peca
 
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.PecaRepository
-import org.springframework.stereotype.Service
 
-@Service
 class AtualizarPecaUseCase(private val repository: PecaRepository) {
     fun executar(codigo: String, dadosAtualizados: Peca): Peca {
         val peca =
             repository.buscarAtivoPorCodigo(codigo)
-                ?: throw IllegalArgumentException("Peça não encontrada")
+                ?: throw PecaNaoEncontradoException.porCodigo(codigo)
 
         return repository.salvar(
             peca.copy(
