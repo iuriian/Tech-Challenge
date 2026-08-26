@@ -1,0 +1,141 @@
+name: Smoke Test Docker
+description: 'Validar que a imagem Docker sobe e responde antes de fazer push/deploy'
+
+inputs:
+  image-tag:
+    description: 'Tag da imagem Docker para testar'
+    required: true
+
+  port:
+    description: 'Porta para testar'
+    required: false
+    default: '8080'
+
+  timeout:
+    description: 'Timeout em segundos para app ficar ready'
+    required: false
+    default: '60'
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.image-tag }}" ]; then
+          echo "❌ image-tag is required"
+          exit 1
+        fi
+
+    - name: Start Docker container
+      id: start
+      shell: bash
+      run: |
+        IMAGE="${{ inputs.image-tag }}"
+        PORT=${{ inputs.port }}
+
+        echo "🚀 Starting container from image: $IMAGE"
+
+        # Iniciar container com health check
+        docker run -d --name smoke-test \
+          -p $PORT:$PORT \
+          --health-cmd="curl -f http://localhost:$PORT/actuator/health || exit 1" \
+          --health-interval=5s \
+          --health-timeout=3s \
+          --health-start-period=30s \
+          --health-retries=5 \
+          "$IMAGE"
+
+        # Esperar container ficar healthy
+        TIMEOUT=${{ inputs.timeout }}
+        ELAPSED=0
+
+        echo "⏳ Waiting for container to be healthy (max ${TIMEOUT}s)..."
+
+        while [ $ELAPSED -lt $TIMEOUT ]; do
+          STATUS=$(docker inspect -f '{{.State.Health.Status}}' smoke-test 2>/dev/null || echo "none")
+
+          if [ "$STATUS" = "healthy" ]; then
+            echo "✅ Container is healthy (${ELAPSED}s)"
+            exit 0
+          fi
+
+          sleep 1
+          ELAPSED=$((ELAPSED + 1))
+        done
+
+        echo "❌ Container failed to become healthy after ${TIMEOUT}s"
+        echo ""
+        echo "Container logs:"
+        docker logs smoke-test
+        exit 1
+
+    - name: Run smoke tests
+      id: tests
+      shell: bash
+      run: |
+        set -e
+        PORT=${{ inputs.port }}
+
+        echo "🧪 Running smoke tests..."
+        echo ""
+
+        FAILED=0
+
+        # Test 1: Health
+        echo -n "  [1/4] /actuator/health ... "
+        if curl -s -f http://localhost:$PORT/actuator/health > /dev/null; then
+          echo "✅"
+        else
+          echo "❌"
+          FAILED=$((FAILED + 1))
+        fi
+
+        # Test 2: Liveness
+        echo -n "  [2/4] /actuator/health/liveness ... "
+        if curl -s -f http://localhost:$PORT/actuator/health/liveness > /dev/null; then
+          echo "✅"
+        else
+          echo "❌"
+          FAILED=$((FAILED + 1))
+        fi
+
+        # Test 3: Readiness
+        echo -n "  [3/4] /actuator/health/readiness ... "
+        if curl -s -f http://localhost:$PORT/actuator/health/readiness > /dev/null; then
+          echo "✅"
+        else
+          echo "❌"
+          FAILED=$((FAILED + 1))
+        fi
+
+        # Test 4: Info
+        echo -n "  [4/4] /actuator/info ... "
+        if curl -s -f http://localhost:$PORT/actuator/info > /dev/null; then
+          echo "✅"
+        else
+          echo "❌"
+          FAILED=$((FAILED + 1))
+        fi
+
+        echo ""
+
+        if [ $FAILED -eq 0 ]; then
+          echo "✅ All smoke tests passed!"
+          exit 0
+        else
+          echo "❌ $FAILED test(s) failed"
+          exit 1
+        fi
+
+    - name: Stop Docker container
+      if: always()
+      shell: bash
+      run: |
+        if docker ps -a | grep -q smoke-test; then
+          echo "🛑 Stopping container..."
+          docker stop smoke-test 2>/dev/null || true
+          docker rm smoke-test 2>/dev/null || true
+          echo "✅ Container stopped"
+        fi
