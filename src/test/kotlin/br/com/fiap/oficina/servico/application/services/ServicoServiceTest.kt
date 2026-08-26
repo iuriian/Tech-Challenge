@@ -234,6 +234,84 @@ class ServicoServiceTest {
     }
 
     @Test
+    fun `deve lancar excecao ao salvar ordem de servico com funcionario inexistente`() {
+        `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(null)
+
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvar(
+                    ServicoComando(
+                        descricao = "Troca de Óleo",
+                        funcionarioId = funcionarioId,
+                        clienteId = clienteId,
+                        veiculoId = veiculoId,
+                    ),
+                )
+            }
+
+        assertEquals(
+            "Funcionário não encontrado com o ID: $funcionarioId",
+            exception.message,
+        )
+        verifyNoInteractions(repository)
+    }
+
+    @Test
+    fun `deve lancar excecao ao salvar ordem de servico com veiculo inexistente`() {
+        `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
+        `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(null)
+
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvar(
+                    ServicoComando(
+                        descricao = "Troca de Óleo",
+                        funcionarioId = funcionarioId,
+                        clienteId = clienteId,
+                        veiculoId = veiculoId,
+                    ),
+                )
+            }
+
+        assertEquals(
+            "Veículo não encontrado com o ID: $veiculoId",
+            exception.message,
+        )
+        verifyNoInteractions(repository)
+    }
+
+    @Test
+    fun `deve lancar excecao ao atualizar ordem de servico inexistente`() {
+        `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
+        `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
+        `when`(repository.buscarPorId(ordemServicoId)).thenReturn(null)
+
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                service.salvar(
+                    ServicoComando(
+                        id = ordemServicoId,
+                        descricao = "Troca de Óleo",
+                        funcionarioId = funcionarioId,
+                        clienteId = clienteId,
+                        veiculoId = veiculoId,
+                    ),
+                )
+            }
+
+        assertEquals(
+            "Serviço não encontrado com o ID: $ordemServicoId",
+            exception.message,
+        )
+        verify(repository, never()).salvar(anyObject())
+        verify(sequenciaOrdemServicoRepository, never())
+            .obterProximoValor()
+    }
+
+    @Test
     fun `deve buscar ordem de servico por id com sucesso`() {
         val ordemServico =
             OrdemServico(
@@ -277,6 +355,39 @@ class ServicoServiceTest {
         assertEquals(2, orcamento.itens.size)
         assertEquals(0, BigDecimal("50").compareTo(orcamento.valorTotal))
         verify(repository, times(1)).buscarPorId(ordemServicoId)
+    }
+
+    @Test
+    fun `deve ignorar peca inexistente ao salvar ordem de servico`() {
+        `when`(clienteRepository.buscarPorId(clienteId)).thenReturn(cliente)
+        `when`(funcionarioRepository.buscarPorId(funcionarioId)).thenReturn(funcionario)
+        `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(veiculo)
+        `when`(pecaRepository.buscarPorId(pecaId1)).thenReturn(null)
+        `when`(sequenciaOrdemServicoRepository.obterProximoValor()).thenReturn(123L)
+        `when`(repository.salvar(anyObject())).thenAnswer {
+            it.getArgument<OrdemServico>(0)
+        }
+
+        val resultado =
+            service.salvar(
+                ServicoComando(
+                    descricao = "Troca de Óleo",
+                    funcionarioId = funcionarioId,
+                    clienteId = clienteId,
+                    veiculoId = veiculoId,
+                    pecas =
+                        listOf(
+                            PecaServicoComando(
+                                pecaId = pecaId1,
+                                quantidade = BigDecimal.ONE,
+                            ),
+                        ),
+                ),
+            )
+
+        assertTrue(resultado.pecas.isEmpty())
+        verify(pecaRepository).buscarPorId(pecaId1)
+        verify(repository).salvar(anyObject())
     }
 
     @Test
@@ -522,6 +633,25 @@ class ServicoServiceTest {
 
         assertEquals(1, resultado.totalServicosFinalizados)
         assertEquals(60.0, resultado.tempoMedioMinutos)
+    }
+
+    @Test
+    fun `calcularTempoMedioExecucao deve ignorar ordens sem dataFinalizacao`() {
+        val inicio = Instant.parse("2025-01-01T08:00:00Z")
+
+        val semFinalizacao =
+            ordemServicoComStatus(OrdemServicoStatus.EM_EXECUCAO)
+                .copy(
+                    dataInicioExecucao = inicio,
+                    dataFinalizacao = null,
+                )
+
+        `when`(repository.listarTodos()).thenReturn(listOf(semFinalizacao))
+
+        val resultado = service.calcularTempoMedioExecucao()
+
+        assertEquals(0, resultado.totalServicosFinalizados)
+        assertNull(resultado.tempoMedioMinutos)
     }
 
     private fun ordemServicoComStatus(status: OrdemServicoStatus): OrdemServico = OrdemServico(
