@@ -5,8 +5,8 @@ on:
     branches: [main, develop]
 
 jobs:
-  quality:
-    name: Quality
+  static_code_analysis:
+    name: 'Static Code Analysis'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -63,7 +63,7 @@ jobs:
   unit_test:
     name: Unit Test
     runs-on: ubuntu-latest
-    needs: quality
+    needs: static_code_analysis
     permissions:
       contents: read
       pull-requests: write
