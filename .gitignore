@@ -19,12 +19,15 @@ bin/
 
 ### IntelliJ IDEA ###
 .idea
+.idea/
 *.iws
 *.iml
 *.ipr
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+*.swp
+*.swo
 
 ### NetBeans ###
 /nbproject/private/
@@ -39,4 +42,15 @@ out/
 ### Kotlin ###
 .kotlin
 
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Docker
+.docker/
+docker-compose.override.yaml
+
+# OS
+.DS_Store
+Thumbs.db
