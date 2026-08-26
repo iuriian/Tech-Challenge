@@ -27,10 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 @RestController
 @RequestMapping("/pecas")
 @Tag(name = "Peças", description = "Operações relacionadas ao gerenciamento de peças e estoque")
-class PecaController(
-    private val pecaService: PecaService,
-    private val mapper: PecaMapper,
-) {
+class PecaController(private val pecaService: PecaService, private val mapper: PecaMapper) {
     @PostMapping
     @RolesAllowed("ADMIN")
     @Operation(

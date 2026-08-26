@@ -12,10 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody
 class PecaExceptionHandler {
     @ExceptionHandler(PecaNaoEncontradoException::class)
     @ResponseBody
-    fun handlePecaNaoEncontrada(ex: PecaNaoEncontradoException): ResponseEntity<Map<String, String>> =
-        ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body(mapOf("message" to (ex.message ?: "Peça não encontrada")))
+    fun handlePecaNaoEncontrada(ex: PecaNaoEncontradoException): ResponseEntity<Map<String, String>> = ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
+        .body(mapOf("message" to (ex.message ?: "Peça não encontrada")))
 
     @ExceptionHandler(IllegalArgumentException::class)
     @ResponseBody

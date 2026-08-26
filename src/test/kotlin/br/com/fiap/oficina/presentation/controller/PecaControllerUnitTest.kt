@@ -33,13 +33,12 @@ class PecaControllerUnitTest {
             ativo = true,
         )
 
-    private fun pecaDto() =
-        PecaDto(
-            codigo = "PEC001",
-            nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
-            qtdEstoque = 10,
-        )
+    private fun pecaDto() = PecaDto(
+        codigo = "PEC001",
+        nome = "Filtro de Óleo",
+        precoDeVenda = BigDecimal("45.00"),
+        qtdEstoque = 10,
+    )
 
     @BeforeEach
     fun setupRequestContext() {
