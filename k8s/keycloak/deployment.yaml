@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels: { app: keycloak }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: keycloak }
+  template:
+    metadata:
+      labels: { app: keycloak }
+    spec:
+      initContainers:
+        - name: wait-for-db
+          image: postgres:16-alpine
+          command: ["sh", "-c", "until pg_isready -h db -U user; do sleep 2; done"]
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.2.1
+          imagePullPolicy: IfNotPresent
+          args: ["start-dev", "--import-realm"]
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef: { name: keycloak-config }
+            - secretRef: { name: keycloak-secret }
+            - secretRef: { name: db-credentials }   # fornece KC_DB_USERNAME/KC_DB_PASSWORD abaixo
+          env:
+            - name: KC_DB_USERNAME
+              valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
+            - name: KC_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
+          volumeMounts:
+            - name: realm
+              mountPath: /opt/keycloak/data/import/realm.json
+              subPath: realm.json
+              readOnly: true
+      volumes:
+        - name: realm
+          configMap: { name: keycloak-realm }
