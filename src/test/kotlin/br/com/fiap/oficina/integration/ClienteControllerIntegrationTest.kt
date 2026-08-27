@@ -139,10 +139,7 @@ class ClienteControllerIntegrationTest : AbstractIntegrationTest() {
 
         mockMvc
             .get("/clientes/${criado.id}")
-            .andExpect {
-                status { isOk() }
-                content { string("") }
-            }
+            .andExpect { status { isNotFound() } }
     }
 
     @Test
