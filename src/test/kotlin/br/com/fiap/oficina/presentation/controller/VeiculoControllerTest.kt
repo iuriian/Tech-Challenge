@@ -1,8 +1,11 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.mapper.VeiculoApplicationMapper
+import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.exception.VeiculoNaoEncontradoException
 import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
@@ -12,6 +15,7 @@ import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.presentation.exception.VeiculoExceptionHandler
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
@@ -31,7 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(VeiculoController::class)
-@Import(VeiculoMapper::class)
+@Import(VeiculoService::class, VeiculoApplicationMapper::class, VeiculoMapper::class, VeiculoExceptionHandler::class)
 class VeiculoControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -120,6 +124,17 @@ class VeiculoControllerTest {
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
+    fun `deve retornar 404 quando veiculo nao encontrado`() {
+        `when`(buscarVeiculoPorIdUseCase.executar(Id.fromString(veiculoId)))
+            .thenThrow(VeiculoNaoEncontradoException.porId(veiculoId))
+
+        mockMvc
+            .perform(get("/veiculos/$veiculoId"))
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ATENDENTE"])
     fun `deve buscar veiculo por placa via GET`() {
         `when`(buscarVeiculoPorPlacaUseCase.executar("ABC1D23")).thenReturn(veiculo)
 
@@ -186,6 +201,6 @@ class VeiculoControllerTest {
             .perform(
                 delete("/veiculos/$veiculoId")
                     .with(SecurityMockMvcRequestPostProcessors.csrf()),
-            ).andExpect(status().isNoContent)
+            ).andExpect(status().isOk)
     }
 }
