@@ -122,7 +122,7 @@ O `terraform apply` cria, para cada serviço, o `Deployment` + `Service` (+ `Con
 kubectl get pods
 ```
 
-Espere todos os Pods em `1/1 Running` antes de testar o acesso — especialmente `sonarqube`, que demora mais para responder ao boot.
+Espere todos os Pods em `1/1 Running` antes de testar o acesso — especialmente `sonarqube`, que demora mais para responder ao boot (as vezes o processo pode demorar um pouco).
 
 Se algum Pod não estabilizar, diagnostique com:
 
