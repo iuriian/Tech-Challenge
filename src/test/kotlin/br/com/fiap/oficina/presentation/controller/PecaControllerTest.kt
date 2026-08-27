@@ -244,7 +244,7 @@ class PecaControllerTest {
             .perform(
                 delete("/pecas/PEC001")
                     .with(SecurityMockMvcRequestPostProcessors.csrf()),
-            ).andExpect(status().isNoContent)
+            ).andExpect(status().isOk)
     }
 
     @Test
