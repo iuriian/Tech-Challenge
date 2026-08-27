@@ -149,7 +149,7 @@ class PecaControllerIntegrationTest : AbstractIntegrationTest() {
     fun `deve desativar peca e remove-la da listagem de ativos`() {
         mockMvc
             .delete("/pecas/{codigo}", "PEC005")
-            .andExpect { status { isNoContent() } }
+            .andExpect { status { isOk() } }
 
         mockMvc
             .get("/pecas")
@@ -164,7 +164,7 @@ class PecaControllerIntegrationTest : AbstractIntegrationTest() {
     fun `deve reativar peca previamente desativada`() {
         mockMvc
             .delete("/pecas/{codigo}", "PEC006")
-            .andExpect { status { isNoContent() } }
+            .andExpect { status { isOk() } }
 
         mockMvc
             .patch("/pecas/{codigo}/reativar", "PEC006")

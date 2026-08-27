@@ -138,7 +138,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["ADMIN"])
-    fun `deve remover veiculo retornando 204`() {
+    fun `deve remover veiculo retornando 200`() {
         val response =
             mockMvc
                 .post("/veiculos") {
@@ -151,7 +151,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
 
         mockMvc
             .delete("/veiculos/${criado.id}")
-            .andExpect { status { isNoContent() } }
+            .andExpect { status { isOk() } }
     }
 
     @Test

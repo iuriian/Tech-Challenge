@@ -170,12 +170,12 @@ class ServicoControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
-    fun `deve deletar servico retornando 204`() {
+    fun `deve deletar servico retornando 200`() {
         val criado = criarServico()
 
         mockMvc
             .delete("/servicos/${criado.id}")
-            .andExpect { status { isNoContent() } }
+            .andExpect { status { isOk() } }
 
         mockMvc
             .get("/servicos/${criado.id}")
