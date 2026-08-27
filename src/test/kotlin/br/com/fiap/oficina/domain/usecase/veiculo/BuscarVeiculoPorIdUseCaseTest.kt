@@ -2,11 +2,13 @@ package br.com.fiap.oficina.domain.usecase.veiculo
 
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.exception.VeiculoNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -59,5 +61,14 @@ class BuscarVeiculoPorIdUseCaseTest {
         assertNotNull(resultado)
         assertEquals(veiculo.id, resultado.id)
         verify(veiculoRepository, times(1)).buscarPorId(veiculoId)
+    }
+
+    @Test
+    fun `deve lancar excecao quando veiculo nao encontrado`() {
+        `when`(veiculoRepository.buscarPorId(veiculoId)).thenReturn(null)
+
+        assertThrows<VeiculoNaoEncontradoException> {
+            useCase.executar(veiculoId)
+        }
     }
 }

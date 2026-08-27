@@ -3,6 +3,8 @@ package br.com.fiap.oficina.domain.usecase.veiculo
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
+import br.com.fiap.oficina.domain.exception.VeiculoNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
@@ -105,7 +107,7 @@ class AtualizarVeiculoUseCaseTest {
         `when`(veiculoRepository.buscarPorId(idInexistente)).thenReturn(null)
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(VeiculoNaoEncontradoException::class.java) {
                 useCase.executar(veiculoInexistente)
             }
 
@@ -130,7 +132,7 @@ class AtualizarVeiculoUseCaseTest {
         `when`(clienteRepository.buscarPorId(motoristaIdInexistente)).thenReturn(null)
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(ClienteNaoEncontradoException::class.java) {
                 useCase.executar(veiculoComMotoristaInvalido)
             }
 

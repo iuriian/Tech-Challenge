@@ -3,12 +3,12 @@ package br.com.fiap.oficina.domain.usecase.veiculo
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -85,10 +85,8 @@ class CriarVeiculoUseCaseTest {
         `when`(clienteRepository.buscarPorId(motorista.id)).thenReturn(null)
 
         val exception =
-            assertThrows(IllegalArgumentException::class.java) {
+            assertThrows(ClienteNaoEncontradoException::class.java) {
                 useCase.executar(veiculo)
             }
-
-        assertTrue(exception.message!!.contains("Cliente não encontrado"))
     }
 }
