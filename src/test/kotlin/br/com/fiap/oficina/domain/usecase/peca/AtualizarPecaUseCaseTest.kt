@@ -2,6 +2,7 @@ package br.com.fiap.oficina.domain.usecase.peca
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Peca
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.PecaRepository
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -46,5 +47,14 @@ class AtualizarPecaUseCaseTest {
 
         assertEquals("Filtro Novo", resultado.nome)
         assertEquals(BigDecimal("60.00"), resultado.precoDeVenda)
+    }
+
+    @Test
+    fun `deve lancar excecao quando peca nao encontrada`() {
+        `when`(repository.buscarAtivoPorCodigo("XPTO")).thenReturn(null)
+
+        org.junit.jupiter.api.assertThrows<PecaNaoEncontradoException> {
+            useCase.executar("XPTO", peca.copy(nome = "Novo"))
+        }
     }
 }

@@ -132,6 +132,31 @@ class PecaControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `criar peca com argumento invalido deve retornar 400`() {
+        val requestJson =
+            """
+            {
+              "codigo": "PEC001",
+              "nome": "Filtro de Óleo",
+              "precoDeVenda": 45.00,
+              "qtdEstoque": 10
+            }
+            """.trimIndent()
+
+        `when`(criarPecaUseCase.executar(anyObject())).thenThrow(IllegalArgumentException("Quantidade inválida"))
+
+        mockMvc
+            .perform(
+                post("/pecas")
+                    .with(SecurityMockMvcRequestPostProcessors.csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestJson),
+            ).andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Quantidade inválida"))
+    }
+
+    @Test
     @WithMockUser(roles = ["ATENDENTE"])
     fun `deve listar pecas via GET`() {
         `when`(listarPecasUseCase.executar()).thenReturn(listOf(peca))
