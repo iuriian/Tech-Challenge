@@ -1,11 +1,11 @@
 package br.com.fiap.oficina.domain.usecase.veiculo
 
 import br.com.fiap.oficina.domain.entity.Veiculo
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
+import br.com.fiap.oficina.domain.exception.VeiculoNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
-import org.springframework.stereotype.Service
 
-@Service
 class AtualizarVeiculoUseCase(
     private val veiculoRepository: VeiculoRepository,
     private val clienteRepository: ClienteRepository,
@@ -13,7 +13,7 @@ class AtualizarVeiculoUseCase(
     fun executar(veiculo: Veiculo): Veiculo {
         val existente =
             veiculoRepository.buscarPorId(veiculo.id)
-                ?: throw IllegalArgumentException("Veículo não encontrado com o ID: ${veiculo.id}")
+                ?: throw VeiculoNaoEncontradoException.porId(veiculo.id.valor.toString())
 
         if (existente.placa != veiculo.placa) {
             require(!veiculoRepository.existePorPlaca(veiculo.placa)) {
@@ -23,7 +23,7 @@ class AtualizarVeiculoUseCase(
 
         val motorista =
             clienteRepository.buscarPorId(veiculo.motorista.id)
-                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${veiculo.motorista.id}")
+                ?: throw ClienteNaoEncontradoException.porId(veiculo.motorista.id.valor.toString())
 
         return veiculoRepository.salvar(
             Veiculo(
