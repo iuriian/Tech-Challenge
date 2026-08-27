@@ -1,12 +1,13 @@
 package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -19,7 +20,6 @@ import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
 class BuscarClientePorDocumentoUseCaseTest {
-
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
@@ -31,12 +31,13 @@ class BuscarClientePorDocumentoUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        cliente = Cliente(
-            id = Id.generate(),
-            nome = "Joao",
-            documento = Documento.cpf(numeroDocumento),
-            email = "joao@email.com",
-        )
+        cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "Joao",
+                documento = Documento.cpf(numeroDocumento),
+                email = "joao@email.com",
+            )
     }
 
     @Test
@@ -48,5 +49,14 @@ class BuscarClientePorDocumentoUseCaseTest {
         assertNotNull(resultado)
         assertEquals(cliente.nome, resultado.nome)
         verify(clienteRepository, times(1)).buscarPorDocumento(numeroDocumento)
+    }
+
+    @Test
+    fun `deve lancar excecao quando cliente nao encontrado`() {
+        `when`(clienteRepository.buscarPorDocumento(numeroDocumento)).thenReturn(null)
+
+        assertThrows<ClienteNaoEncontradoException> {
+            useCase.executar(numeroDocumento)
+        }
     }
 }

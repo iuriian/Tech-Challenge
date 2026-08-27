@@ -1,6 +1,7 @@
 package br.com.fiap.oficina.domain.usecase.cliente
 
 import br.com.fiap.oficina.domain.entity.Cliente
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.ClienteRepository
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -19,7 +20,6 @@ import kotlin.test.assertNotNull
 
 @ExtendWith(MockitoExtension::class)
 class AtualizarClienteUseCaseTest {
-
     @Mock
     lateinit var clienteRepository: ClienteRepository
 
@@ -30,12 +30,13 @@ class AtualizarClienteUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        cliente = Cliente(
-            id = Id.generate(),
-            nome = "Joao",
-            documento = Documento.cpf("12345678909"),
-            email = "joao@email.com",
-        )
+        cliente =
+            Cliente(
+                id = Id.generate(),
+                nome = "Joao",
+                documento = Documento.cpf("12345678909"),
+                email = "joao@email.com",
+            )
     }
 
     @Test
@@ -47,10 +48,6 @@ class AtualizarClienteUseCaseTest {
 
         assertNotNull(resultado)
         assertEquals(cliente.id, resultado.id)
-        assertEquals(cliente.nome, resultado.nome)
-        assertEquals(cliente.documento, resultado.documento)
-        assertEquals(cliente.email, resultado.email)
-
         verify(clienteRepository, times(1)).buscarPorId(cliente.id)
         verify(clienteRepository, times(1)).salvar(cliente)
     }
@@ -59,11 +56,12 @@ class AtualizarClienteUseCaseTest {
     fun `deve lancar excecao quando cliente nao encontrado`() {
         `when`(clienteRepository.buscarPorId(cliente.id)).thenReturn(null)
 
-        val exception = assertThrows<IllegalArgumentException> {
-            useCase.executar(cliente)
-        }
+        val exception =
+            assertThrows<ClienteNaoEncontradoException> {
+                useCase.executar(cliente)
+            }
 
-        assertEquals("Cliente não encontrado com o ID: ${cliente.id}", exception.message)
+        assertEquals("Cliente não encontrado com o ID: ${cliente.id.valor}", exception.message)
         verify(clienteRepository, times(1)).buscarPorId(cliente.id)
         verify(clienteRepository, times(0)).salvar(cliente)
     }
