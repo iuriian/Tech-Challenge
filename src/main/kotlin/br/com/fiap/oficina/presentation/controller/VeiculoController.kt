@@ -1,13 +1,6 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculosPorMotoristaUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.CriarVeiculoUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
-import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
-import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import io.swagger.v3.oas.annotations.Operation
@@ -15,7 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -23,31 +16,26 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/veiculos")
 @Tag(name = "Veículos", description = "Operações relacionadas ao gerenciamento de veículos")
-class VeiculoController(
-    private val criarVeiculoUseCase: CriarVeiculoUseCase,
-    private val buscarVeiculoPorIdUseCase: BuscarVeiculoPorIdUseCase,
-    private val buscarVeiculoPorPlacaUseCase: BuscarVeiculoPorPlacaUseCase,
-    private val buscarVeiculosPorMotoristaUseCase: BuscarVeiculosPorMotoristaUseCase,
-    private val listarVeiculosUseCase: ListarVeiculosUseCase,
-    private val atualizarVeiculoUseCase: AtualizarVeiculoUseCase,
-    private val removerVeiculoUseCase: RemoverVeiculoUseCase,
-    private val mapper: VeiculoMapper,
-) {
+class VeiculoController(private val veiculoService: VeiculoService, private val mapper: VeiculoMapper) {
     @PostMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
-    @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Criar um novo veículo", description = "Cadastra um novo veículo no sistema")
-    fun criar(@Valid @RequestBody dto: VeiculoDTO): VeiculoDTO = try {
-        mapper.toResponse(criarVeiculoUseCase.executar(mapper.toEntity(dto)))
-    } catch (e: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+    fun criar(@Valid @RequestBody dto: VeiculoDTO): ResponseEntity<VeiculoDTO> {
+        val request = mapper.toCriarRequest(dto)
+        val response = mapper.toDto(veiculoService.criar(request))
+        val location =
+            ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.id)
+                .toUri()
+        return ResponseEntity.created(location).body(response)
     }
 
     @GetMapping("/{id}")
@@ -56,7 +44,7 @@ class VeiculoController(
     fun buscarVeiculoPorId(
         @Parameter(description = "ID do veículo", required = true)
         @PathVariable id: String,
-    ): VeiculoDTO? = buscarVeiculoPorIdUseCase.executar(Id.fromString(id))?.let { mapper.toResponse(it) }
+    ): VeiculoDTO = mapper.toDto(veiculoService.buscarPorId(id))
 
     @GetMapping("/placa/{placa}")
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -64,7 +52,7 @@ class VeiculoController(
     fun buscarVeiculoPorPlaca(
         @Parameter(description = "Placa do veículo", required = true, example = "abc1234")
         @PathVariable placa: String,
-    ): VeiculoDTO? = buscarVeiculoPorPlacaUseCase.executar(placa)?.let { mapper.toResponse(it) }
+    ): VeiculoDTO = mapper.toDto(veiculoService.buscarPorPlaca(placa))
 
     @GetMapping("/motorista/{motoristaId}")
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -72,13 +60,12 @@ class VeiculoController(
     fun buscarVeiculosPorMotorista(
         @Parameter(description = "ID do cliente (motorista)", required = true)
         @PathVariable motoristaId: String,
-    ): List<VeiculoDTO> =
-        buscarVeiculosPorMotoristaUseCase.executar(Id.fromString(motoristaId)).map { mapper.toResponse(it) }
+    ): List<VeiculoDTO> = veiculoService.buscarPorMotorista(motoristaId).map { mapper.toDto(it) }
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN")
     @Operation(summary = "Listar veículos", description = "Lista todos os veículos cadastrados no sistema")
-    fun listarTodos(): List<VeiculoDTO> = listarVeiculosUseCase.executar().map { mapper.toResponse(it) }
+    fun listarTodos(): List<VeiculoDTO> = veiculoService.listarTodos().map { mapper.toDto(it) }
 
     @PutMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
@@ -87,10 +74,9 @@ class VeiculoController(
         @Parameter(description = "ID do veículo a ser atualizado", required = true)
         @PathVariable id: String,
         @Valid @RequestBody dto: VeiculoDTO,
-    ): VeiculoDTO = try {
-        mapper.toResponse(atualizarVeiculoUseCase.executar(mapper.toEntityComId(id, dto)))
-    } catch (e: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.CONFLICT, e.message, e)
+    ): VeiculoDTO {
+        val request = mapper.toAtualizarRequest(dto)
+        return mapper.toDto(veiculoService.atualizar(id, request))
     }
 
     @DeleteMapping("/{id}")
@@ -100,10 +86,6 @@ class VeiculoController(
         @Parameter(description = "ID do veículo a ser removido", required = true)
         @PathVariable id: String,
     ) {
-        try {
-            removerVeiculoUseCase.executar(Id.fromString(id))
-        } catch (e: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.NOT_FOUND, e.message, e)
-        }
+        veiculoService.remover(id)
     }
 }
