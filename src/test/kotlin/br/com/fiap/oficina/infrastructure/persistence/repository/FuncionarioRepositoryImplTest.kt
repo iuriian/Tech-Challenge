@@ -6,7 +6,6 @@ import br.com.fiap.oficina.domain.enum.Cargo
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.FuncionarioEntity
 import br.com.fiap.oficina.infrastructure.persistence.jpa.FuncionarioJpaRepository
-import br.com.fiap.oficina.infrastructure.persistence.mapper.toDomain
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull

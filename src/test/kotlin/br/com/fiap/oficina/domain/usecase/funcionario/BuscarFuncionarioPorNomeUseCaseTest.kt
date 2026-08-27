@@ -5,6 +5,7 @@ import br.com.fiap.oficina.domain.exception.FuncionarioNaoEncontradoException
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -13,7 +14,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
 
 @ExtendWith(MockitoExtension::class)
 class BuscarFuncionarioPorNomeUseCaseTest {

@@ -35,7 +35,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(FuncionarioController::class)
-@Import(FuncionarioService::class, FuncionarioApplicationMapper::class, FuncionarioMapper::class, FuncionarioExceptionHandler::class)
+@Import(
+    FuncionarioService::class,
+    FuncionarioApplicationMapper::class,
+    FuncionarioMapper::class,
+    FuncionarioExceptionHandler::class,
+)
 class FuncionarioControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -86,7 +91,9 @@ class FuncionarioControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestJson),
             ).andExpect(status().isCreated)
-            .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/funcionarios/id/$idCadastro")))
+            .andExpect(
+                header().string("Location", org.hamcrest.Matchers.containsString("/funcionarios/id/$idCadastro")),
+            )
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.nome").value("João"))
             .andExpect(jsonPath("$.cargo").value("ATENDENTE"))

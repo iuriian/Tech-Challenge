@@ -15,14 +15,11 @@ class FuncionarioRepositoryImpl(private val repository: FuncionarioJpaRepository
         return resultado.toDomain()
     }
 
-    override fun listarTodos(): List<Funcionario> =
-        repository.findAll().map { it.toDomain() }
+    override fun listarTodos(): List<Funcionario> = repository.findAll().map { it.toDomain() }
 
-    override fun buscarPorId(id: Id): Funcionario? =
-        repository.findById(id.valor).map { it.toDomain() }.orElse(null)
+    override fun buscarPorId(id: Id): Funcionario? = repository.findById(id.valor).map { it.toDomain() }.orElse(null)
 
-    override fun buscarPorNome(nome: String): Funcionario? =
-        repository.findByNome(nome)?.toDomain()
+    override fun buscarPorNome(nome: String): Funcionario? = repository.findByNome(nome)?.toDomain()
 
     override fun editar(funcionario: Funcionario): Funcionario {
         val entity = repository.findById(funcionario.id.valor)

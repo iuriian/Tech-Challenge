@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.doThrow
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
@@ -105,7 +104,9 @@ class FuncionarioServiceTest {
     @Test
     fun `deve propagar excecao ao buscar por id inexistente`() {
         val id = Id.generate()
-        `when`(buscarFuncionarioPorIdUseCase.executar(id)).thenThrow(FuncionarioNaoEncontradoException.porId(id.valor.toString()))
+        `when`(
+            buscarFuncionarioPorIdUseCase.executar(id),
+        ).thenThrow(FuncionarioNaoEncontradoException.porId(id.valor.toString()))
 
         assertThrows(FuncionarioNaoEncontradoException::class.java) {
             service.buscarPorId(id.valor.toString())
