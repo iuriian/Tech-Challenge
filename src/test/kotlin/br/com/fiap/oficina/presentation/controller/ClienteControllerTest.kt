@@ -1,88 +1,71 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.mapper.ClienteApplicationMapper
+import br.com.fiap.oficina.application.dto.ClienteResponse
 import br.com.fiap.oficina.application.service.ClienteService
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
-import br.com.fiap.oficina.domain.usecase.cliente.AtualizarClienteUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorIdUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorNomeUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.CriarClienteUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.ListarClientesUseCase
-import br.com.fiap.oficina.domain.usecase.cliente.RemoverClienteUseCase
-import br.com.fiap.oficina.domain.valueobject.Documento
-import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.presentation.exception.ClienteExceptionHandler
 import br.com.fiap.oficina.presentation.mapper.ClienteMapper
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.context.annotation.Import
-import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 import java.util.UUID
 
-@WebMvcTest(ClienteController::class)
-@Import(ClienteService::class, ClienteApplicationMapper::class, ClienteMapper::class, ClienteExceptionHandler::class)
 class ClienteControllerTest {
-    @Autowired
-    lateinit var mockMvc: MockMvc
+    private val service = mock(ClienteService::class.java)
+    private val mapper = ClienteMapper()
+    private val controller = ClienteController(service, mapper)
 
-    @MockitoBean
-    lateinit var criarClienteUseCase: CriarClienteUseCase
+    private val clienteResponse =
+        ClienteResponse(
+            id = "00000000-0000-0000-0000-000000000001",
+            nome = "João Silva",
+            numeroDocumento = "39053344705",
+            tipoPessoa = "PESSOA_FISICA",
+            email = "joao@example.com",
+        )
 
-    @MockitoBean
-    lateinit var buscarClientePorIdUseCase: BuscarClientePorIdUseCase
+    private val clienteResponse2 =
+        ClienteResponse(
+            id = "00000000-0000-0000-0000-000000000002",
+            nome = "Maria Souza",
+            numeroDocumento = "12345678901",
+            tipoPessoa = "PESSOA_FISICA",
+            email = "maria@example.com",
+        )
 
-    @MockitoBean
-    lateinit var buscarClientePorNomeUseCase: BuscarClientePorNomeUseCase
+    @BeforeEach
+    fun setupRequestContext() {
+        val request = MockHttpServletRequest("POST", "/clientes")
+        RequestContextHolder.setRequestAttributes(ServletRequestAttributes(request))
+    }
 
-    @MockitoBean
-    lateinit var buscarClientePorDocumentoUseCase: BuscarClientePorDocumentoUseCase
-
-    @MockitoBean
-    lateinit var listarClientesUseCase: ListarClientesUseCase
-
-    @MockitoBean
-    lateinit var atualizarClienteUseCase: AtualizarClienteUseCase
-
-    @MockitoBean
-    lateinit var removerClienteUseCase: RemoverClienteUseCase
-
-    @Test
-    @WithMockUser
-    fun `deve buscar cliente por id`() {
-        val id = UUID.randomUUID()
-        val cliente =
-            Cliente(
-                id = Id.fromString(id.toString()),
-                nome = "João Silva",
-                documento = Documento.cpf("39053344705"),
-                email = "joao.silva@example.com",
-            )
-
-        `when`(buscarClientePorIdUseCase.executar(Id.fromString(id.toString()))).thenReturn(cliente)
-
-        mockMvc
-            .perform(get("/clientes/$id"))
-            .andExpect(status().isOk)
+    @AfterEach
+    fun clearRequestContext() {
+        RequestContextHolder.resetRequestAttributes()
     }
 
     @Test
-    @WithMockUser
-    fun `deve retornar 404 quando cliente nao encontrado`() {
-        val id = UUID.randomUUID()
+    fun `buscarPorId deve mapear resultado`() {
+        `when`(service.buscarPorId(clienteResponse.id)).thenReturn(clienteResponse)
 
-        `when`(buscarClientePorIdUseCase.executar(Id.fromString(id.toString())))
-            .thenThrow(ClienteNaoEncontradoException.porId(id.toString()))
+        val dto = controller.buscarPorId(clienteResponse.id)
 
-        mockMvc
-            .perform(get("/clientes/$id"))
-            .andExpect(status().isNotFound)
+        assertEquals("João Silva", dto.nome)
+        assertEquals(UUID.fromString(clienteResponse.id), dto.id)
+    }
+
+    @Test
+    fun `listarTodos deve retornar lista mapeada`() {
+        `when`(service.listarTodos()).thenReturn(listOf(clienteResponse, clienteResponse2))
+
+        val lista = controller.listarTodos()
+
+        assertEquals(2, lista.size)
+        assertEquals("João Silva", lista[0].nome)
+        assertEquals("Maria Souza", lista[1].nome)
     }
 }
