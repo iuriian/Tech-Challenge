@@ -180,7 +180,6 @@ class ServicoController(private val service: ServicoService, private val mapper:
         summary = "Deletar servico por ID",
         description = "Deleta um servico do sistema pelo ID",
     )
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletarPorId(
         @Parameter(description = "ID do servico a ser removido", required = true)
         @PathVariable id: String,

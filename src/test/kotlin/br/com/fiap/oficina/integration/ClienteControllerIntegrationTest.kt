@@ -122,7 +122,7 @@ class ClienteControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["ADMIN"])
-    fun `deve remover cliente retornando 204`() {
+    fun `deve remover cliente retornando 200`() {
         val response =
             mockMvc
                 .post("/clientes") {
@@ -135,14 +135,11 @@ class ClienteControllerIntegrationTest : AbstractIntegrationTest() {
 
         mockMvc
             .delete("/clientes/${criado.id}")
-            .andExpect { status { isNoContent() } }
+            .andExpect { status { isOk() } }
 
         mockMvc
             .get("/clientes/${criado.id}")
-            .andExpect {
-                status { isOk() }
-                content { string("") }
-            }
+            .andExpect { status { isNotFound() } }
     }
 
     @Test

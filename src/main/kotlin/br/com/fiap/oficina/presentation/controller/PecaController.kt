@@ -107,7 +107,6 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
 
     @DeleteMapping("/{codigo}")
     @RolesAllowed("ADMIN")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "Desativar uma peça",
         description = "Desativa (remoção lógica) uma peça identificada pelo código",

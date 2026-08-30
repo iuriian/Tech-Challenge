@@ -32,5 +32,21 @@ data class Cliente(
                 contatos = contatos,
             )
         }
+
+        fun reconstruir(
+            id: String,
+            nome: String,
+            documento: Documento,
+            email: String,
+            endereco: Endereco? = null,
+            contatos: List<Contato> = emptyList(),
+        ): Cliente = Cliente(
+            id = Id.fromString(id),
+            nome = nome,
+            documento = documento,
+            email = email,
+            endereco = endereco,
+            contatos = contatos,
+        )
     }
 }

@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.adapter
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Cliente
@@ -6,9 +6,9 @@ import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.entity.VeiculoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.VeiculoJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.VeiculoJpaRepository
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

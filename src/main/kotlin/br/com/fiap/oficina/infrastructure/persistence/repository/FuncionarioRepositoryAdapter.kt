@@ -1,11 +1,11 @@
-package br.com.fiap.oficina.infrastructure.persistence.adapter
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.repository.FuncionarioRepository
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.infrastructure.persistence.jpa.FuncionarioRepositoryJpa
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toDomain
 import br.com.fiap.oficina.infrastructure.persistence.mapper.toEntity
-import br.com.fiap.oficina.infrastructure.persistence.repository.FuncionarioRepositoryJpa
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Component
 

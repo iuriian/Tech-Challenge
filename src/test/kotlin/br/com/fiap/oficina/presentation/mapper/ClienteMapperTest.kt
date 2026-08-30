@@ -1,54 +1,51 @@
 package br.com.fiap.oficina.presentation.mapper
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Contato
-import br.com.fiap.oficina.domain.entity.Endereco
-import br.com.fiap.oficina.domain.valueobject.Documento
-import br.com.fiap.oficina.domain.valueobject.TipoPessoa
+import br.com.fiap.oficina.application.dto.ClienteResponse
+import br.com.fiap.oficina.application.dto.ContatoResponse
+import br.com.fiap.oficina.application.dto.EnderecoResponse
 import br.com.fiap.oficina.presentation.dto.ClienteDto
 import br.com.fiap.oficina.presentation.dto.ContatoDto
 import br.com.fiap.oficina.presentation.dto.EnderecoDto
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import java.util.UUID
 
 class ClienteMapperTest {
     private val mapper = ClienteMapper()
 
     @Test
-    fun `deve mapear Cliente para ClienteResponse`() {
-        val cliente =
-            Cliente.criar(
+    fun `deve mapear ClienteResponse para ClienteDto`() {
+        val response =
+            ClienteResponse(
+                id = UUID.randomUUID().toString(),
                 nome = "João Silva",
-                documento = Documento.cpf("39053344705"),
+                numeroDocumento = "39053344705",
+                tipoPessoa = "PESSOA_FISICA",
                 email = "joao.silva@example.com",
                 endereco =
-                Endereco.criar(
+                EnderecoResponse(
                     logradouro = "Rua A",
                     numero = "100",
+                    complemento = null,
                     bairro = "Centro",
                     cidade = "São Paulo",
                     estado = "SP",
                     cep = "01000-000",
                 ),
-                contatos =
-                listOf(
-                    Contato.criar(tipo = "Pessoal", nome = "Contato 1", telefone = "123456789"),
-                ),
+                contatos = listOf(ContatoResponse("Pessoal", "Contato 1", "123456789")),
             )
 
-        val response = mapper.toResponse(cliente)
+        val dto = mapper.toDto(response)
 
-        assertEquals(cliente.nome, response.nome)
-        assertEquals(cliente.documento.numero, response.numeroDocumento)
-        assertNotNull(response.endereco)
-        assertEquals(cliente.endereco?.logradouro, response.endereco?.logradouro)
-        assertEquals(1, response.contatos.size)
-        assertEquals(cliente.contatos[0].nome, response.contatos[0].nome)
+        assertEquals(response.nome, dto.nome)
+        assertEquals(response.numeroDocumento, dto.numeroDocumento)
+        assertNotNull(dto.endereco)
+        assertEquals(1, dto.contatos.size)
     }
 
     @Test
-    fun `deve mapear EnderecoDto para Endereco entity`() {
+    fun `deve mapear EnderecoDto para EnderecoRequest`() {
         val dto =
             EnderecoDto(
                 logradouro = "Rua B",
@@ -60,16 +57,14 @@ class ClienteMapperTest {
                 cep = "02000-000",
             )
 
-        val entity = mapper.toEnderecoEntity(dto)
+        val request = mapper.toEnderecoRequest(dto)
 
-        assertNotNull(entity)
-        assertEquals(dto.logradouro, entity.logradouro)
-        assertEquals(dto.numero, entity.numero)
-        assertEquals(dto.complemento, entity.complemento)
+        assertEquals(dto.logradouro, request.logradouro)
+        assertEquals(dto.numero, request.numero)
     }
 
     @Test
-    fun `deve mapear ClienteDto para Cliente entity`() {
+    fun `deve mapear ClienteDto para CriarClienteRequest`() {
         val dto =
             ClienteDto(
                 nome = "João Silva",
@@ -80,31 +75,22 @@ class ClienteMapperTest {
                 contatos = listOf(ContatoDto("Pessoal", "Contato 1", "123456789")),
             )
 
-        val cliente = mapper.toEntity(dto)
+        val request = mapper.toCriarRequest(dto)
 
-        assertEquals("João Silva", cliente.nome)
-        assertEquals("39053344705", cliente.documento.numero)
-        assertEquals(TipoPessoa.PESSOA_FISICA, cliente.documento.tipoPessoa)
-        assertNotNull(cliente.endereco)
-        assertEquals("Rua A", cliente.endereco?.logradouro)
-        assertEquals(1, cliente.contatos.size)
-        assertEquals("Contato 1", cliente.contatos[0].nome)
+        assertEquals("João Silva", request.nome)
+        assertEquals("39053344705", request.numeroDocumento)
+        assertNotNull(request.endereco)
+        assertEquals(1, request.contatos.size)
     }
 
     @Test
-    fun `deve mapear ContatoDto para Contato entity`() {
-        val dto =
-            ContatoDto(
-                tipo = "Trabalho",
-                nome = "Chefe",
-                telefone = "987654321",
-            )
+    fun `deve mapear ContatoDto para ContatoRequest`() {
+        val dto = ContatoDto(tipo = "Trabalho", nome = "Chefe", telefone = "987654321")
 
-        val entity = mapper.toContatoEntity(dto)
+        val request = mapper.toContatoRequest(dto)
 
-        assertNotNull(entity)
-        assertEquals(dto.tipo, entity.tipo)
-        assertEquals(dto.nome, entity.nome)
-        assertEquals(dto.telefone, entity.telefone)
+        assertEquals(dto.tipo, request.tipo)
+        assertEquals(dto.nome, request.nome)
+        assertEquals(dto.telefone, request.telefone)
     }
 }

@@ -1,143 +1,135 @@
 package br.com.fiap.oficina.application
 
+import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.AtualizarClienteRequest
+import br.com.fiap.oficina.application.dto.CriarClienteRequest
+import br.com.fiap.oficina.application.mapper.ClienteApplicationMapper
 import br.com.fiap.oficina.application.service.ClienteService
 import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.repository.ClienteRepository
+import br.com.fiap.oficina.domain.exception.ClienteNaoEncontradoException
+import br.com.fiap.oficina.domain.usecase.cliente.AtualizarClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorDocumentoUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorIdUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.BuscarClientePorNomeUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.CriarClienteUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.ListarClientesUseCase
+import br.com.fiap.oficina.domain.usecase.cliente.RemoverClienteUseCase
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
 class ClienteServiceTest {
     @Mock
-    lateinit var repository: ClienteRepository
+    lateinit var criarClienteUseCase: CriarClienteUseCase
 
-    @InjectMocks
-    lateinit var service: ClienteService
+    @Mock
+    lateinit var listarClientesUseCase: ListarClientesUseCase
 
-    private lateinit var clienteId: Id
+    @Mock
+    lateinit var buscarClientePorIdUseCase: BuscarClientePorIdUseCase
+
+    @Mock
+    lateinit var buscarClientePorNomeUseCase: BuscarClientePorNomeUseCase
+
+    @Mock
+    lateinit var buscarClientePorDocumentoUseCase: BuscarClientePorDocumentoUseCase
+
+    @Mock
+    lateinit var atualizarClienteUseCase: AtualizarClienteUseCase
+
+    @Mock
+    lateinit var removerClienteUseCase: RemoverClienteUseCase
+
+    private val mapper = ClienteApplicationMapper()
+    private lateinit var service: ClienteService
     private lateinit var cliente: Cliente
 
     @BeforeEach
     fun setup() {
-        clienteId = Id.generate()
+        service =
+            ClienteService(
+                criarClienteUseCase,
+                listarClientesUseCase,
+                buscarClientePorIdUseCase,
+                buscarClientePorNomeUseCase,
+                buscarClientePorDocumentoUseCase,
+                atualizarClienteUseCase,
+                removerClienteUseCase,
+                mapper,
+            )
         cliente =
             Cliente(
-                id = clienteId,
+                id = Id.generate(),
                 nome = "João Silva",
-                documento = Documento.cpf("12345678909"),
-                email = "joao@email.com",
+                documento = Documento.cpf("39053344705"),
+                email = "joao@example.com",
             )
     }
 
     @Test
-    fun `deve salvar cliente com sucesso`() {
-        `when`(repository.salvar(cliente)).thenReturn(cliente)
+    fun `deve criar cliente`() {
+        val request =
+            CriarClienteRequest(
+                nome = "João Silva",
+                numeroDocumento = "39053344705",
+                tipoPessoa = "PESSOA_FISICA",
+                email = "joao@example.com",
+            )
+        `when`(criarClienteUseCase.executar(anyObject())).thenReturn(cliente)
 
-        val resultado = service.salvarCliente(cliente)
+        val response = service.criar(request)
 
-        assertNotNull(resultado)
-        assertEquals(cliente.id, resultado.id)
-        assertEquals(cliente.nome, resultado.nome)
-        assertEquals(cliente.email, resultado.email)
-        verify(repository, times(1)).salvar(cliente)
+        assertEquals(cliente.nome, response.nome)
+        assertEquals(cliente.id.valor.toString(), response.id)
     }
 
     @Test
-    fun `deve buscar cliente por id com sucesso`() {
-        `when`(repository.buscarPorId(clienteId)).thenReturn(cliente)
+    fun `deve buscar cliente por id`() {
+        `when`(buscarClientePorIdUseCase.executar(anyObject())).thenReturn(cliente)
 
-        val resultado = service.buscarPorId(clienteId)
+        val response = service.buscarPorId(cliente.id.valor.toString())
 
-        assertNotNull(resultado)
-        assertEquals(cliente.id, resultado.id)
-        assertEquals(cliente.nome, resultado.nome)
-        assertEquals(cliente.email, resultado.email)
-        verify(repository, times(1)).buscarPorId(clienteId)
+        assertEquals(cliente.nome, response.nome)
     }
 
     @Test
-    fun `deve retornar null quando cliente nao encontrado por id`() {
-        val idInexistente = Id.generate()
-        `when`(repository.buscarPorId(idInexistente)).thenReturn(null)
+    fun `deve alterar cliente`() {
+        val request =
+            AtualizarClienteRequest(
+                nome = "João Silva",
+                numeroDocumento = "39053344705",
+                tipoPessoa = "PESSOA_FISICA",
+                email = "joao@example.com",
+            )
+        `when`(atualizarClienteUseCase.executar(anyObject())).thenReturn(cliente)
 
-        val resultado = service.buscarPorId(idInexistente)
+        val response = service.alterar(cliente.id.valor.toString(), request)
 
-        assertNull(resultado)
-        verify(repository, times(1)).buscarPorId(idInexistente)
+        assertEquals(cliente.nome, response.nome)
     }
 
     @Test
-    fun `deve buscar cliente por documento com sucesso`() {
-        val documentoNumero = "12345678909"
-        `when`(repository.buscarPorDocumento(documentoNumero)).thenReturn(cliente)
+    fun `deve remover cliente`() {
+        service.remover(cliente.id.valor.toString())
 
-        val resultado = service.buscarPorDocumento(documentoNumero)
-
-        assertNotNull(resultado)
-        assertEquals(cliente.nome, resultado.nome)
-        verify(repository, times(1)).buscarPorDocumento(documentoNumero)
+        verify(removerClienteUseCase).executar(Id.fromString(cliente.id.valor.toString()))
     }
 
     @Test
-    fun `deve retornar null quando cliente nao encontrado por documento`() {
-        val documentoNumero = "00000000000"
-        `when`(repository.buscarPorDocumento(documentoNumero)).thenReturn(null)
+    fun `deve propagar ClienteNaoEncontradoException`() {
+        `when`(buscarClientePorIdUseCase.executar(anyObject()))
+            .thenThrow(ClienteNaoEncontradoException.porId(cliente.id.valor.toString()))
 
-        val resultado = service.buscarPorDocumento(documentoNumero)
-
-        assertNull(resultado)
-        verify(repository, times(1)).buscarPorDocumento(documentoNumero)
-    }
-
-    @Test
-    fun `deve buscar cliente por nome com sucesso`() {
-        val nome = "João Silva"
-        `when`(repository.buscarPorNome(nome)).thenReturn(cliente)
-
-        val resultado = service.buscarPorNome(nome)
-
-        assertNotNull(resultado)
-        assertEquals(nome, resultado.nome)
-        verify(repository, times(1)).buscarPorNome(nome)
-    }
-
-    @Test
-    fun `deve retornar null quando cliente nao encontrado por nome`() {
-        val nome = "Nome Inexistente"
-        `when`(repository.buscarPorNome(nome)).thenReturn(null)
-
-        val resultado = service.buscarPorNome(nome)
-
-        assertNull(resultado)
-        verify(repository, times(1)).buscarPorNome(nome)
-    }
-
-    @Test
-    fun `deve listar todos os clientes`() {
-        `when`(repository.listarTodos()).thenReturn(listOf(cliente))
-
-        val resultado = service.listarTodos()
-
-        assertEquals(listOf(cliente), resultado)
-        verify(repository, times(1)).listarTodos()
-    }
-
-    @Test
-    fun `deve remover cliente por id`() {
-        service.removerCliente(clienteId)
-
-        verify(repository, times(1)).remover(clienteId)
+        org.junit.jupiter.api.assertThrows<ClienteNaoEncontradoException> {
+            service.buscarPorId(cliente.id.valor.toString())
+        }
     }
 }

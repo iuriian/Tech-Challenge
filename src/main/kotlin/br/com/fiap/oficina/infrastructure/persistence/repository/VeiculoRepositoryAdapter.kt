@@ -1,10 +1,10 @@
-package br.com.fiap.oficina.infrastructure.persistence.adapter
+package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.repository.VeiculoRepository
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.infrastructure.persistence.jpa.VeiculoJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.VeiculoJpaRepository
 import org.springframework.stereotype.Component
 
 @Component

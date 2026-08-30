@@ -103,7 +103,6 @@ class VeiculoController(private val service: VeiculoService, private val mapper:
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remover um veículo", description = "Exclui um veículo do sistema pelo seu ID")
     fun remover(
         @Parameter(description = "ID do veículo a ser removido", required = true)

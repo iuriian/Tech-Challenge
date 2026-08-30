@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.repository
+package br.com.fiap.oficina.infrastructure.persistence.jpa
 
 import br.com.fiap.oficina.infrastructure.persistence.entity.VeiculoJpaEntity
 import org.springframework.data.jpa.repository.JpaRepository
