@@ -59,10 +59,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
+      - name: Extract first tag
+        id: get-tag
+        run: |
+          TAGS="${{ needs.build.outputs.image-tags }}"
+          FIRST_TAG=$(echo "$TAGS" | head -n1)
+          echo "tag=$FIRST_TAG" >> $GITHUB_OUTPUT
+
       - name: Smoke Test Docker Image
         uses: ./.github/actions/smoke-test
         with:
-          image-tag: ${{ needs.build.outputs.image-tags }}
+          image-tag: ${{ steps.get-tag.outputs.tag }}
           port: '8080'
           timeout: '60'
 
