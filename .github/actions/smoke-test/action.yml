@@ -40,8 +40,16 @@ runs:
         echo ""
 
         # Iniciar container SEM health check (vamos testar depois)
+        # Passar variáveis de ambiente necessárias para smoke test
         docker run -d --name smoke-test \
           -p $PORT:$PORT \
+          -e KEYCLOAK_URL=http://localhost:8081 \
+          -e KEYCLOAK_REALM=master \
+          -e KEYCLOAK_CLIENT_ID=test \
+          -e KEYCLOAK_CLIENT_SECRET=test \
+          -e DATABASE_URL=jdbc:postgresql://localhost:5432/test \
+          -e DATABASE_USER=test \
+          -e DATABASE_PASSWORD=test \
           "$IMAGE"
 
         if [ $? -ne 0 ]; then
