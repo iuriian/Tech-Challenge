@@ -65,6 +65,8 @@ DOCKER_IMAGE="$1"
 ENVIRONMENT="$2"
 NAMESPACE="$3"
 
+DEPLOY_SONARQUBE="${DEPLOY_SONARQUBE:-false}"
+
 log_info "Iniciando deploy com:"
 log_info "  Imagem: $DOCKER_IMAGE"
 log_info "  Ambiente: $ENVIRONMENT"
@@ -153,7 +155,7 @@ if [ -f "k8s/nginx/configmap.yaml" ]; then
 fi
 
 # SonarQube ConfigMap
-if [ -f "k8s/sonarqube/configmap.yaml" ]; then
+if [ "$DEPLOY_SONARQUBE" = "true" ] && [ -f "k8s/sonarqube/configmap.yaml" ]; then
     log_info "  → Aplicando sonarqube/configmap.yaml..."
     kubectl apply -f k8s/sonarqube/configmap.yaml -n "$NAMESPACE"
     log_success "  → SonarQube configmap aplicado"
@@ -175,7 +177,7 @@ if [ -f "k8s/db/pvc.yaml" ]; then
 fi
 
 # SonarQube PVC
-if [ -f "k8s/sonarqube/pvc.yaml" ]; then
+if [ "$DEPLOY_SONARQUBE" = "true" ] && [ -f "k8s/sonarqube/pvc.yaml" ]; then
     log_info "  → Aplicando sonarqube/pvc.yaml..."
     kubectl apply -f k8s/sonarqube/pvc.yaml -n "$NAMESPACE"
     log_success "  → SonarQube PVC criado"
@@ -189,7 +191,12 @@ echo ""
 
 log_info "Passo 4.1: Aplicando Services..."
 
-for SVC in db keycloak app sonarqube nginx; do
+SERVICES="db keycloak app nginx"
+if [ "$DEPLOY_SONARQUBE" = "true" ]; then
+    SERVICES="$SERVICES sonarqube"
+fi
+
+for SVC in $SERVICES; do
     if [ -f "k8s/$SVC/service.yaml" ]; then
         log_info "  → Aplicando $SVC/service.yaml..."
         kubectl apply -f "k8s/$SVC/service.yaml" -n "$NAMESPACE"
@@ -259,9 +266,10 @@ echo ""
 # Passo 8: Deploy SonarQube
 ################################################################################
 
-log_info "Passo 8: Fazendo deploy do SonarQube..."
-
-if [ -f "k8s/sonarqube/deployment.yaml" ]; then
+if [ "$DEPLOY_SONARQUBE" != "true" ]; then
+    log_warning "Passo 8: SonarQube desabilitado (DEPLOY_SONARQUBE=false), pulando"
+elif [ -f "k8s/sonarqube/deployment.yaml" ]; then
+    log_info "Passo 8: Fazendo deploy do SonarQube..."
     log_info "  → Aplicando sonarqube/deployment.yaml..."
     kubectl apply -f k8s/sonarqube/deployment.yaml -n "$NAMESPACE"
     log_success "  → SonarQube deployado"
