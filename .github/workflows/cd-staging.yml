@@ -152,11 +152,6 @@ jobs:
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Debug - Show image value
-        run: |
-          echo "Image from push job: ${{ needs.push.outputs.image }}"
-          echo "KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}"
-
       - name: Deploy to Kubernetes
         run: |
           chmod +x ./k8s/deploy.sh

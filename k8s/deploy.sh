@@ -78,22 +78,6 @@ if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
 fi
 
 ################################################################################
-# DEBUG
-################################################################################
-
-echo "🔍 DEBUG: Valores recebidos"
-echo "  DOCKER_IMAGE: '$DOCKER_IMAGE'"
-echo "  ENVIRONMENT: '$ENVIRONMENT'"
-echo "  NAMESPACE: '$NAMESPACE'"
-
-if [ -z "$DOCKER_IMAGE" ]; then
-    log_error "DOCKER_IMAGE está vazio!"
-    exit 1
-fi
-
-echo ""
-
-################################################################################
 # Passo 1: Criar Namespace
 ################################################################################
 
@@ -143,6 +127,13 @@ if [ -f "k8s/db/configmap.yaml" ]; then
     log_info "  → Aplicando db/configmap.yaml..."
     kubectl apply -f k8s/db/configmap.yaml -n "$NAMESPACE"
     log_success "  → DB configmap aplicado"
+fi
+
+# Database Init Scripts ConfigMap
+if [ -f "k8s/db/init-scripts-configmap.yaml" ]; then
+    log_info "  → Aplicando db/init-scripts-configmap.yaml..."
+    kubectl apply -f k8s/db/init-scripts-configmap.yaml -n "$NAMESPACE"
+    log_success "  → DB init scripts configmap aplicado"
 fi
 
 # Keycloak ConfigMap
