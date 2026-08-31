@@ -17,7 +17,7 @@ spec:
           command: ["sh", "-c", "until pg_isready -h db -U user; do sleep 2; done"]
       containers:
         - name: app
-          image: ghcr.io/seu-usuario/tech-challenge:latest
+          image: ghcr.io/iuriian/tech-challenge:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
