@@ -62,7 +62,7 @@ jobs:
       - name: Smoke Test Docker Image
         uses: ./.github/actions/smoke-test
         with:
-          image-tag: ${{ env.IMAGE_NAME }}
+          image-tag: ${{ needs.build.outputs.image-tags }}
           port: '8080'
           timeout: '60'
 
@@ -152,7 +152,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           chmod +x ./k8s/deploy.sh
-          ./k8s/deploy.sh "${{ env.IMAGE_NAME }}" staging ${{ env.KUBE_NAMESPACE }}
+          ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
 
       - name: Verify Deployment
         run: |
