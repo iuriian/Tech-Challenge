@@ -74,7 +74,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.build.outputs.image }}
+      image: ${{ steps.build.outputs.imageid }}
       digest: ${{ steps.build.outputs.digest }}
 
     steps:
@@ -160,7 +160,6 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           chmod +x ./k8s/deploy.sh
-          # ✅ CORRIGIDO: Usando a imagem completa do job push
           echo "🚀 Deploying image: ${{ needs.push.outputs.image }}"
           ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
 

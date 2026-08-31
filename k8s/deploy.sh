@@ -78,6 +78,22 @@ if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
 fi
 
 ################################################################################
+# DEBUG
+################################################################################
+
+echo "🔍 DEBUG: Valores recebidos"
+echo "  DOCKER_IMAGE: '$DOCKER_IMAGE'"
+echo "  ENVIRONMENT: '$ENVIRONMENT'"
+echo "  NAMESPACE: '$NAMESPACE'"
+
+if [ -z "$DOCKER_IMAGE" ]; then
+    log_error "DOCKER_IMAGE está vazio!"
+    exit 1
+fi
+
+echo ""
+
+################################################################################
 # Passo 1: Criar Namespace
 ################################################################################
 
