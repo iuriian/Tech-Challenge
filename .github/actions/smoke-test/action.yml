@@ -62,7 +62,7 @@ runs:
           if docker ps | grep -q smoke-test; then
             echo "✅ Container is running"
             sleep 3
-            return 0
+            exit 0
           fi
           echo "  [$i/30] Still waiting..."
           sleep 1
@@ -86,7 +86,7 @@ runs:
           if nc -z localhost $PORT 2>/dev/null; then
             echo "✅ Port $PORT is responding (${ELAPSED}s)"
             echo ""
-            return 0
+            exit 0
           fi
 
           if [ $((ELAPSED % 10)) -eq 0 ]; then
