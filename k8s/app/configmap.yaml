@@ -7,4 +7,4 @@ data:
   KEYCLOAK_URL: "http://localhost:8081"
   KEYCLOAK_REALM: "Fiap"
   KEYCLOAK_CLIENT_ID: "oficina"
-  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/Fiap/protocol/openid-connect/certs"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/Fiap/protocol/openid-c'onnect/certs"

@@ -18,7 +18,7 @@ spec:
       containers:
         - name: app
           image: oficina-app:0.1.0    # buildado do Dockerfile — ver Etapa 5 (docker build + kind load)
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
