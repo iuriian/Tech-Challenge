@@ -2,7 +2,9 @@ name: CD - Staging
 
 on:
   pull_request:
-    branches: ['release/*']
+#    branches: ['release/*']
+    branches:
+      - develop
     types: [opened, synchronize]
   workflow_dispatch:
 
