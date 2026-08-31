@@ -159,6 +159,7 @@ jobs:
           ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
 
       - name: Debug DB Status
+        if: failure()
         run: |
           echo "🔍 DB Pod Logs:"
           kubectl logs db-5f8f9db9cd-62ls4 -n default --all-containers=true --tail=100
