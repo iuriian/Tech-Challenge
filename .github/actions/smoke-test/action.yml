@@ -36,8 +36,10 @@ runs:
         PORT=${{ inputs.port }}
 
         echo "🚀 Starting container from image: $IMAGE"
+        echo "📌 Port: $PORT"
+        echo ""
 
-        # Iniciar container com health check
+        # Iniciar container
         docker run -d --name smoke-test \
           -p $PORT:$PORT \
           --health-cmd="curl -f http://localhost:$PORT/actuator/health || exit 1" \
@@ -47,29 +49,92 @@ runs:
           --health-retries=5 \
           "$IMAGE"
 
-        # Esperar container ficar healthy
+        if [ $? -ne 0 ]; then
+          echo "❌ Failed to start container"
+          echo "Image: $IMAGE"
+          docker pull "$IMAGE" 2>&1 || echo "Could not pull image"
+          exit 1
+        fi
+
+        echo "✅ Container started (ID: $(docker ps -aq -f name=smoke-test))"
+        echo ""
+
+    - name: Monitor container health
+      id: health
+      shell: bash
+      run: |
+        set +e
         TIMEOUT=${{ inputs.timeout }}
         ELAPSED=0
+        LAST_STATUS=""
 
         echo "⏳ Waiting for container to be healthy (max ${TIMEOUT}s)..."
+        echo ""
 
         while [ $ELAPSED -lt $TIMEOUT ]; do
           STATUS=$(docker inspect -f '{{.State.Health.Status}}' smoke-test 2>/dev/null || echo "none")
 
+          # Mostrar mudanças de status
+          if [ "$STATUS" != "$LAST_STATUS" ]; then
+            echo "  [$ELAPSED/$TIMEOUT] Health Status: $STATUS"
+            LAST_STATUS="$STATUS"
+          fi
+
           if [ "$STATUS" = "healthy" ]; then
+            echo ""
             echo "✅ Container is healthy (${ELAPSED}s)"
             exit 0
           fi
 
-          sleep 1
-          ELAPSED=$((ELAPSED + 1))
+          if [ "$STATUS" = "unhealthy" ]; then
+            echo ""
+            echo "❌ Container marked as unhealthy"
+            break
+          fi
+
+          sleep 2
+          ELAPSED=$((ELAPSED + 2))
         done
 
+        echo ""
         echo "❌ Container failed to become healthy after ${TIMEOUT}s"
         echo ""
-        echo "Container logs:"
-        docker logs smoke-test
         exit 1
+
+    - name: Debug container info
+      if: failure()
+      shell: bash
+      run: |
+        echo "🔍 DEBUG INFORMATION:"
+        echo ""
+
+        echo "📋 Container Status:"
+        docker inspect smoke-test --format='
+        Status: {{.State.Status}}
+        Running: {{.State.Running}}
+        PID: {{.State.Pid}}
+        ExitCode: {{.State.ExitCode}}
+        Error: {{.State.Error}}
+        ' || echo "Container not found"
+
+        echo ""
+        echo "🏥 Health Status:"
+        docker inspect smoke-test --format='
+        Status: {{.State.Health.Status}}
+        FailingStreak: {{.State.Health.FailingStreak}}
+        ' || echo "Health info not available"
+
+        echo ""
+        echo "📜 Last 50 lines of logs:"
+        docker logs smoke-test --tail=50 2>&1 || echo "Could not get logs"
+
+        echo ""
+        echo "🌐 Testing port connectivity:"
+        docker exec smoke-test curl -v http://localhost:8080/actuator/health 2>&1 || echo "Could not connect"
+
+        echo ""
+        echo "📦 Container processes:"
+        docker top smoke-test 2>&1 || echo "Could not get processes"
 
     - name: Run smoke tests
       id: tests
@@ -84,8 +149,8 @@ runs:
         FAILED=0
 
         # Test 1: Health
-        echo -n "  [1/4] /actuator/health ... "
-        if curl -s -f http://localhost:$PORT/actuator/health > /dev/null; then
+        echo -n "  [1/4] GET /actuator/health ... "
+        if curl -s -f http://localhost:$PORT/actuator/health > /dev/null 2>&1; then
           echo "✅"
         else
           echo "❌"
@@ -93,8 +158,8 @@ runs:
         fi
 
         # Test 2: Liveness
-        echo -n "  [2/4] /actuator/health/liveness ... "
-        if curl -s -f http://localhost:$PORT/actuator/health/liveness > /dev/null; then
+        echo -n "  [2/4] GET /actuator/health/liveness ... "
+        if curl -s -f http://localhost:$PORT/actuator/health/liveness > /dev/null 2>&1; then
           echo "✅"
         else
           echo "❌"
@@ -102,8 +167,8 @@ runs:
         fi
 
         # Test 3: Readiness
-        echo -n "  [3/4] /actuator/health/readiness ... "
-        if curl -s -f http://localhost:$PORT/actuator/health/readiness > /dev/null; then
+        echo -n "  [3/4] GET /actuator/health/readiness ... "
+        if curl -s -f http://localhost:$PORT/actuator/health/readiness > /dev/null 2>&1; then
           echo "✅"
         else
           echo "❌"
@@ -111,8 +176,8 @@ runs:
         fi
 
         # Test 4: Info
-        echo -n "  [4/4] /actuator/info ... "
-        if curl -s -f http://localhost:$PORT/actuator/info > /dev/null; then
+        echo -n "  [4/4] GET /actuator/info ... "
+        if curl -s -f http://localhost:$PORT/actuator/info > /dev/null 2>&1; then
           echo "✅"
         else
           echo "❌"
