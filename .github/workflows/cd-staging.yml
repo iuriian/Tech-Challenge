@@ -175,37 +175,44 @@ jobs:
           echo "🚀 Deploying image: ${{ needs.push.outputs.image }}"
           ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
 
-      - name: Debug DB Status
+      - name: Debug - diagnostico completo
         if: failure()
         run: |
-          echo "🔍 DB Pod Logs:"
-          kubectl logs -l app=db -n default --all-containers=true --tail=100
-          
-          echo ""
-          echo "🔍 DB Pod Description:"
-          kubectl describe pod -l app=db -n default
+          NS=${{ env.KUBE_NAMESPACE }}
 
-      - name: Debug - Check pod status and logs
-        if: failure()
-        run: |
-          echo "🔍 Pod Status:"
-          kubectl get pods -n default -o wide
-          
+          echo "=================== IMAGEM NO DEPLOYMENT ==================="
+          kubectl get deploy app -n $NS \
+            -o jsonpath='{.spec.template.spec.containers[*].image}{"\n"}' || true
+          echo "Referencia esperada: ${{ needs.push.outputs.image }}"
+
           echo ""
-          echo "🔍 App Logs:"
-          kubectl logs -l app=app -n default --tail=100
-          
+          echo "=================== PODS ==================="
+          kubectl get pods -n $NS -o wide || true
+
           echo ""
-          echo "🔍 DB Logs:"
-          kubectl logs -l app=db -n default --tail=50
-          
+          echo "=================== SERVICES ==================="
+          kubectl get svc -n $NS || true
+
           echo ""
-          echo "🔍 Keycloak Logs:"
-          kubectl logs -l app=keycloak -n default --tail=50
-          
+          echo "=================== EVENTOS DO POD APP ==================="
+          kubectl describe pod -l app=app -n $NS | sed -n '/Events:/,$p' || true
+
           echo ""
-          echo "🔍 Pod Descriptions:"
-          kubectl describe pod -l app=app -n default
+          echo "=================== LOGS APP (init) ==================="
+          kubectl logs -l app=app -n $NS -c wait-for-db --tail=30 || true
+
+          echo ""
+          echo "=================== LOGS APP (container) ==================="
+          kubectl logs -l app=app -n $NS -c app --tail=80 || true
+          kubectl logs -l app=app -n $NS -c app --previous --tail=80 || true
+
+          echo ""
+          echo "=================== LOGS KEYCLOAK ==================="
+          kubectl logs -l app=keycloak -n $NS --all-containers --tail=40 || true
+
+          echo ""
+          echo "=================== EVENTOS DO NAMESPACE ==================="
+          kubectl get events -n $NS --sort-by=.lastTimestamp | tail -30 || true
 
       - name: Verify Deployment
         run: |

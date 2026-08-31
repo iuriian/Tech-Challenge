@@ -95,71 +95,58 @@ fi
 echo ""
 
 ################################################################################
-# Passo 2: Aplicar Secrets
+# Passo 2: Componentes do deploy
 ################################################################################
 
-log_info "Passo 2: Aplicando secrets..."
-
-# Database Secret (se arquivo existir)
-if kubectl get secret db-credentials -n "$NAMESPACE" &> /dev/null; then
-    log_warning "  → Secret db-credentials ja existe (criado pelo pipeline), mantendo"
-elif [ -f "k8s/db/secret.yaml" ]; then
-    log_info "  → Aplicando db/secret.yaml..."
-    kubectl apply -f k8s/db/secret.yaml -n "$NAMESPACE"
-    log_success "  → DB secret aplicado"
-else
-    log_warning "  → Arquivo k8s/db/secret.yaml não encontrado, pulando"
+COMPONENTS="db keycloak app nginx"
+if [ "$DEPLOY_SONARQUBE" = "true" ]; then
+    COMPONENTS="$COMPONENTS sonarqube"
 fi
 
-# Keycloak Secret (se arquivo existir)
-if [ -f "k8s/keycloak/secret.yaml" ]; then
-    log_info "  → Aplicando keycloak/secret.yaml..."
-    kubectl apply -f k8s/keycloak/secret.yaml -n "$NAMESPACE"
-    log_success "  → Keycloak secret aplicado"
-fi
+log_info "Componentes: $COMPONENTS"
+echo ""
+
+################################################################################
+# Passo 2.1: Aplicar Secrets (descoberta automatica)
+################################################################################
+
+log_info "Passo 2.1: Aplicando secrets..."
+
+for C in $COMPONENTS; do
+    for F in k8s/$C/*secret*.yaml; do
+        [ -e "$F" ] || continue
+
+        # o secret do banco e criado pelo pipeline com a senha real;
+        # o arquivo versionado tem REPLACE_ME e nao pode sobrescrever
+        if [ "$F" = "k8s/db/secret.yaml" ] && kubectl get secret db-credentials -n "$NAMESPACE" &> /dev/null; then
+            log_warning "  → db-credentials ja existe (criado pelo pipeline), mantendo"
+            continue
+        fi
+
+        log_info "  → Aplicando $F..."
+        kubectl apply -f "$F" -n "$NAMESPACE"
+    done
+done
 
 echo ""
 
 ################################################################################
-# Passo 3: Aplicar ConfigMaps
+# Passo 3: Aplicar ConfigMaps (descoberta automatica)
+#
+# Pega TODO k8s/<componente>/*configmap*.yaml. Uma lista fixa aqui ja causou
+# CreateContainerConfigError no app (app-config) e FailedMount no keycloak
+# (keycloak-realm) por esquecer arquivos.
 ################################################################################
 
 log_info "Passo 3: Aplicando configmaps..."
 
-# Database ConfigMap
-if [ -f "k8s/db/configmap.yaml" ]; then
-    log_info "  → Aplicando db/configmap.yaml..."
-    kubectl apply -f k8s/db/configmap.yaml -n "$NAMESPACE"
-    log_success "  → DB configmap aplicado"
-fi
-
-# Database Init Scripts ConfigMap
-if [ -f "k8s/db/init-scripts-configmap.yaml" ]; then
-    log_info "  → Aplicando db/init-scripts-configmap.yaml..."
-    kubectl apply -f k8s/db/init-scripts-configmap.yaml -n "$NAMESPACE"
-    log_success "  → DB init scripts configmap aplicado"
-fi
-
-# Keycloak ConfigMap
-if [ -f "k8s/keycloak/configmap.yaml" ]; then
-    log_info "  → Aplicando keycloak/configmap.yaml..."
-    kubectl apply -f k8s/keycloak/configmap.yaml -n "$NAMESPACE"
-    log_success "  → Keycloak configmap aplicado"
-fi
-
-# Nginx ConfigMap
-if [ -f "k8s/nginx/configmap.yaml" ]; then
-    log_info "  → Aplicando nginx/configmap.yaml..."
-    kubectl apply -f k8s/nginx/configmap.yaml -n "$NAMESPACE"
-    log_success "  → Nginx configmap aplicado"
-fi
-
-# SonarQube ConfigMap
-if [ "$DEPLOY_SONARQUBE" = "true" ] && [ -f "k8s/sonarqube/configmap.yaml" ]; then
-    log_info "  → Aplicando sonarqube/configmap.yaml..."
-    kubectl apply -f k8s/sonarqube/configmap.yaml -n "$NAMESPACE"
-    log_success "  → SonarQube configmap aplicado"
-fi
+for C in $COMPONENTS; do
+    for F in k8s/$C/*configmap*.yaml; do
+        [ -e "$F" ] || continue
+        log_info "  → Aplicando $F..."
+        kubectl apply -f "$F" -n "$NAMESPACE"
+    done
+done
 
 echo ""
 
@@ -191,12 +178,7 @@ echo ""
 
 log_info "Passo 4.1: Aplicando Services..."
 
-SERVICES="db keycloak app nginx"
-if [ "$DEPLOY_SONARQUBE" = "true" ]; then
-    SERVICES="$SERVICES sonarqube"
-fi
-
-for SVC in $SERVICES; do
+for SVC in $COMPONENTS; do
     if [ -f "k8s/$SVC/service.yaml" ]; then
         log_info "  → Aplicando $SVC/service.yaml..."
         kubectl apply -f "k8s/$SVC/service.yaml" -n "$NAMESPACE"
