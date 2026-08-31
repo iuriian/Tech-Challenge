@@ -157,15 +157,15 @@ jobs:
           echo "Image from push job: ${{ needs.push.outputs.image }}"
           echo "KUBE_NAMESPACE: ${{ env.KUBE_NAMESPACE }}"
 
-#      - name: Deploy to Kubernetes
-#        run: |
-#          chmod +x ./k8s/deploy.sh
-#          # ✅ CORRIGIDO: Usando a imagem completa do job push
-#          echo "🚀 Deploying image: ${{ needs.push.outputs.image }}"
-#          ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
-#
-#      - name: Verify Deployment
-#        run: |
-#          echo "🔍 Checking deployment status..."
-#          kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
-#          kubectl get svc -n ${{ env.KUBE_NAMESPACE }}
+      - name: Deploy to Kubernetes
+        run: |
+          chmod +x ./k8s/deploy.sh
+          # ✅ CORRIGIDO: Usando a imagem completa do job push
+          echo "🚀 Deploying image: ${{ needs.push.outputs.image }}"
+          ./k8s/deploy.sh "${{ needs.push.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
+
+      - name: Verify Deployment
+        run: |
+          echo "🔍 Checking deployment status..."
+          kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
+          kubectl get svc -n ${{ env.KUBE_NAMESPACE }}
