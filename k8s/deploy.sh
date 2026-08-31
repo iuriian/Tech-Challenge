@@ -307,7 +307,7 @@ echo ""
 
 log_info "Passo 12: Aguardando rollout completo..."
 
-if kubectl rollout status deployment/app -n "$NAMESPACE" --timeout=600s; then
+if kubectl rollout status deployment/app -n "$NAMESPACE" --timeout=1800s; then
     log_success "  → Rollout completado com sucesso!"
 else
     log_error "  → Rollout falhou ou timeout!"
