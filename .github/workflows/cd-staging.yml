@@ -162,11 +162,11 @@ jobs:
         if: failure()
         run: |
           echo "🔍 DB Pod Logs:"
-          kubectl logs db-5f8f9db9cd-62ls4 -n default --all-containers=true --tail=100
+          kubectl logs -l app=db -n default --all-containers=true --tail=100
           
           echo ""
           echo "🔍 DB Pod Description:"
-          kubectl describe pod db-5f8f9db9cd-62ls4 -n default
+          kubectl describe pod -l app=db -n default
 
       - name: Debug - Check pod status and logs
         if: failure()

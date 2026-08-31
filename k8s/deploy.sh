@@ -99,7 +99,9 @@ echo ""
 log_info "Passo 2: Aplicando secrets..."
 
 # Database Secret (se arquivo existir)
-if [ -f "k8s/db/secret.yaml" ]; then
+if kubectl get secret db-credentials -n "$NAMESPACE" &> /dev/null; then
+    log_warning "  → Secret db-credentials ja existe (criado pelo pipeline), mantendo"
+elif [ -f "k8s/db/secret.yaml" ]; then
     log_info "  → Aplicando db/secret.yaml..."
     kubectl apply -f k8s/db/secret.yaml -n "$NAMESPACE"
     log_success "  → DB secret aplicado"
@@ -178,6 +180,24 @@ if [ -f "k8s/sonarqube/pvc.yaml" ]; then
     kubectl apply -f k8s/sonarqube/pvc.yaml -n "$NAMESPACE"
     log_success "  → SonarQube PVC criado"
 fi
+
+echo ""
+
+################################################################################
+# Passo 4.1: Aplicar Services (ANTES dos Deployments)
+################################################################################
+
+log_info "Passo 4.1: Aplicando Services..."
+
+for SVC in db keycloak app sonarqube nginx; do
+    if [ -f "k8s/$SVC/service.yaml" ]; then
+        log_info "  → Aplicando $SVC/service.yaml..."
+        kubectl apply -f "k8s/$SVC/service.yaml" -n "$NAMESPACE"
+        log_success "  → Service $SVC aplicado"
+    else
+        log_warning "  → k8s/$SVC/service.yaml nao encontrado, pulando"
+    fi
+done
 
 echo ""
 
