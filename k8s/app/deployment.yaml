@@ -11,6 +11,8 @@ spec:
     metadata:
       labels: { app: app }
     spec:
+      imagePullSecrets:
+        - name: ghcr-creds
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine

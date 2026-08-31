@@ -33,13 +33,16 @@ spec:
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "user", "-d", "oficina"]
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 5
+            failureThreshold: 6
           livenessProbe:
             exec:
               command: ["pg_isready", "-U", "user", "-d", "oficina"]
+            initialDelaySeconds: 30
             periodSeconds: 10
+            failureThreshold: 5
       volumes:
         - name: data
           persistentVolumeClaim: { claimName: postgres-data }

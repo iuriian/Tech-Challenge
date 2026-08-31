@@ -74,7 +74,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.build.outputs.imageid }}
+      image: ${{ steps.image.outputs.ref }}
       digest: ${{ steps.build.outputs.digest }}
 
     steps:
@@ -110,6 +110,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Compute image reference
+        id: image
+        run: |
+          REPO=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          REF="${REPO}@${{ steps.build.outputs.digest }}"
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
+          echo "Image ref: ${REF}"
 
       - name: Show result
         run: |
@@ -149,6 +157,15 @@ jobs:
           kubectl create secret generic db-credentials \
             --from-literal=POSTGRES_USER=user \
             --from-literal=POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -n ${{ env.KUBE_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create GHCR pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-creds \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }} \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
