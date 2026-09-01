@@ -124,29 +124,46 @@ runs:
         PORT="${{ inputs.port }}"
         FAILED=0
 
-        echo "🧪 Rodando smoke tests..."
-        for endpoint in \
-          /actuator/health \
-          /actuator/health/liveness \
-          /actuator/health/readiness \
-          /actuator/info \
-          /v3/api-docs \
-          /swagger-ui/index.html
-        do
-          printf '  %-35s ' "$endpoint"
-          if curl -fsS "http://localhost:${PORT}${endpoint}" >/dev/null 2>&1; then
-            echo "✅"
-          else
-            echo "❌"
+        # Imprime o status HTTP: 404 (endpoint inexistente, erro de configuracao)
+        # e 503 (endpoint existe e reporta DOWN) sao problemas bem diferentes, e
+        # "curl -f" sozinho esconde a diferenca.
+        check() {
+          local endpoint="$1" required="$2"
+          local code
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+                 "http://localhost:${PORT}${endpoint}" || echo "000")
+
+          if [ "$code" = "200" ]; then
+            printf '  %-38s %s ✅\n' "$endpoint" "$code"
+          elif [ "$required" = "required" ]; then
+            printf '  %-38s %s ❌\n' "$endpoint" "$code"
             FAILED=$((FAILED + 1))
+          else
+            printf '  %-38s %s ⚠️  (informativo)\n' "$endpoint" "$code"
           fi
-        done
+        }
+
+        echo "🧪 Smoke tests - o que a imagem precisa servir:"
+        check /actuator/health          required
+        check /actuator/info            required
+        check /v3/api-docs              required
+        check /swagger-ui/index.html    required
+
+        # Os grupos liveness/readiness sao uma preocupacao do Kubernetes, e quem
+        # os valida de verdade e o kubelet: se nao responderem, o startupProbe
+        # falha, o pod nunca fica Ready e o `kubectl rollout status` derruba o
+        # deploy. Aqui sao apenas informativos - o ambiente de um container solto
+        # nao e o lugar para transformar isso em portao.
+        echo ""
+        echo "ℹ️  Endpoints de probe (validados pelo Kubernetes, nao bloqueiam aqui):"
+        check /actuator/health/liveness  optional
+        check /actuator/health/readiness optional
 
         echo ""
         if [ "$FAILED" -eq 0 ]; then
-          echo "✅ Todos os smoke tests passaram"
+          echo "✅ Smoke tests obrigatorios passaram"
         else
-          echo "❌ $FAILED teste(s) falharam"
+          echo "❌ $FAILED endpoint(s) obrigatorio(s) falharam"
           docker logs smoke-test
           exit 1
         fi

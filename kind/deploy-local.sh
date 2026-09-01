@@ -141,6 +141,9 @@ kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout="$ROLLOUT_T
 # 6. Keycloak
 # ---------------------------------------------------------------------------
 echo "==> Aplicando Keycloak (issuer: $KEYCLOAK_URL)"
+echo "    O primeiro boot leva ~2 min (augmentation do Quarkus + import do realm)."
+echo "    Ate la o startupProbe registra 'connection refused' na porta 9000: e esperado."
+echo "    NAO interrompa - o Ctrl+C aqui mata o script inteiro, antes de aplicar a app."
 sed "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$K8S_DIR/keycloak/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
@@ -159,6 +162,13 @@ sed -e "s|__IMAGE__|${IMAGE}|g" \
 #    declaram LoadBalancer para o GKE)
 # ---------------------------------------------------------------------------
 kubectl apply -f "$SCRIPT_DIR/nodeport-services.yaml" -n "$NAMESPACE"
+
+# A tag local e sempre a mesma (oficina-app:local), entao apos um rebuild o
+# `apply` retorna "unchanged" e o pod antigo continua com a imagem velha.
+# O restart forca o kubelet a recriar o pod, que ai pega a imagem recem-carregada.
+if [[ "$SKIP_BUILD" != "true" ]]; then
+  kubectl rollout restart deployment/app -n "$NAMESPACE"
+fi
 
 kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 

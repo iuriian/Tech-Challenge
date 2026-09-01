@@ -23,6 +23,7 @@ class SecurityConfig {
                 auth
                     .requestMatchers(
                         "/actuator/health",
+                        "/actuator/health/**",
                         "/actuator/info",
                         "/swagger-ui.html",
                         "/swagger-ui/**",

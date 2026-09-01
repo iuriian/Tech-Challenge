@@ -122,6 +122,9 @@ echo "==> Keycloak URL: $KEYCLOAK_URL"
 # 5. Keycloak
 # ---------------------------------------------------------------------------
 echo "==> Aplicando Keycloak"
+echo "    O primeiro boot leva ~2 min (augmentation do Quarkus + import do realm)."
+echo "    Ate la o startupProbe registra 'connection refused' na porta 9000: e esperado."
+echo "    NAO interrompa - o Ctrl+C aqui mata o script inteiro, antes de aplicar a app."
 sed "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/keycloak/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
