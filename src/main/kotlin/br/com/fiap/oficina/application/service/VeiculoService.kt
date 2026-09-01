@@ -1,9 +1,8 @@
 package br.com.fiap.oficina.application.service
 
-import br.com.fiap.oficina.application.dto.AtualizarVeiculoRequest
-import br.com.fiap.oficina.application.dto.CriarVeiculoRequest
+import br.com.fiap.oficina.application.dto.VeiculoRequest
 import br.com.fiap.oficina.application.dto.VeiculoResponse
-import br.com.fiap.oficina.application.mapper.VeiculoApplicationMapper
+import br.com.fiap.oficina.application.mapper.VeiculoMapper
 import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
@@ -23,9 +22,9 @@ class VeiculoService(
     private val buscarVeiculosPorMotoristaUseCase: BuscarVeiculosPorMotoristaUseCase,
     private val atualizarVeiculoUseCase: AtualizarVeiculoUseCase,
     private val removerVeiculoUseCase: RemoverVeiculoUseCase,
-    private val mapper: VeiculoApplicationMapper,
+    private val mapper: VeiculoMapper,
 ) {
-    fun criar(request: CriarVeiculoRequest): VeiculoResponse {
+    fun criar(request: VeiculoRequest): VeiculoResponse {
         val veiculo = mapper.toDomain(request)
         val response = criarVeiculoUseCase.executar(veiculo)
         return mapper.toResponse(response)
@@ -46,8 +45,8 @@ class VeiculoService(
     fun buscarPorMotorista(motoristaId: String): List<VeiculoResponse> =
         buscarVeiculosPorMotoristaUseCase.executar(Id.fromString(motoristaId)).map { mapper.toResponse(it) }
 
-    fun atualizar(id: String, request: AtualizarVeiculoRequest): VeiculoResponse {
-        val veiculo = mapper.toDomain(id, request)
+    fun atualizar(id: String, request: VeiculoRequest): VeiculoResponse {
+        val veiculo = mapper.toDomain(request.copy(id = id))
         val response = atualizarVeiculoUseCase.executar(veiculo)
         return mapper.toResponse(response)
     }
