@@ -1,0 +1,346 @@
+name: CD - Staging
+
+on:
+  push:
+    branches: ["release/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-staging
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build e push (tag do commit)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.ref }}
+      repo: ${{ steps.repo.outputs.name }}
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Normalize image name
+        id: repo
+        run: |
+          NAME=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract build tag
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.repo.outputs.name }}
+          tags: type=sha,format=short
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Compute image reference
+        id: image
+        run: |
+          REF="${{ steps.repo.outputs.name }}@${{ steps.build.outputs.digest }}"
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
+          echo "📦 Imagem: ${REF}"
+
+  smoke-test:
+    name: Smoke test
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image by digest
+        run: docker pull "${{ needs.build.outputs.image }}"
+
+      - name: Smoke test
+        uses: ./.github/actions/smoke-test
+        with:
+          image-tag: ${{ needs.build.outputs.image }}
+          port: '8080'
+          timeout: '180'
+          with-postgres: 'true'
+          env: |
+            DB_URL=jdbc:postgresql://smoke-db:5432/oficina
+            DB_USERNAME=user
+            DB_PASSWORD=password
+            KEYCLOAK_URL=http://keycloak.invalid:8080
+            KEYCLOAK_REALM=Fiap
+
+  promote:
+    name: Promover tags estaveis
+    needs: [build, smoke-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ needs.build.outputs.repo }}
+          tags: |
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Apply stable tags to the tested digest
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          SOURCE: ${{ needs.build.outputs.image }}
+        run: |
+          echo "🏷️  Promovendo $SOURCE para:"
+          ARGS=()
+          while IFS= read -r TAG; do
+            [ -n "$TAG" ] || continue
+            echo "    $TAG"
+            ARGS+=(--tag "$TAG")
+          done <<< "$TAGS"
+
+          if [ ${#ARGS[@]} -eq 0 ]; then
+            echo "::error::metadata-action nao gerou nenhuma tag"
+            exit 1
+          fi
+
+          docker buildx imagetools create "${ARGS[@]}" "$SOURCE"
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [build, promote]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.expose.outputs.url }}
+    env:
+      KUBE_NAMESPACE: ${{ vars.KUBE_NAMESPACE || 'tech-challenge-staging' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check environment configuration
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
+          GKE_ZONE: ${{ vars.GKE_ZONE }}
+        run: |
+          MISSING=()
+          [ -n "$GCP_SA_KEY" ]              || MISSING+=("secret GCP_SA_KEY")
+          [ -n "$DB_PASSWORD" ]             || MISSING+=("secret DB_PASSWORD")
+          [ -n "$KEYCLOAK_ADMIN_PASSWORD" ] || MISSING+=("secret KEYCLOAK_ADMIN_PASSWORD")
+          [ -n "$GCP_PROJECT_ID" ]          || MISSING+=("variable GCP_PROJECT_ID")
+          [ -n "$GKE_CLUSTER" ]             || MISSING+=("variable GKE_CLUSTER")
+          [ -n "$GKE_ZONE" ]                || MISSING+=("variable GKE_ZONE")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Configuracao ausente no Environment 'staging': ${MISSING[*]}"
+            echo "Configure em: Settings > Environments > staging"
+            exit 1
+          fi
+
+          echo "✅ Environment 'staging' configurado"
+          echo "   Cluster:   $GKE_CLUSTER ($GKE_ZONE)"
+          echo "   Projeto:   $GCP_PROJECT_ID"
+          echo "   Namespace: ${{ env.KUBE_NAMESPACE }}"
+
+      - name: Setup Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: gcloud components install gke-gcloud-auth-plugin
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ vars.GKE_CLUSTER }} \
+            --zone ${{ vars.GKE_ZONE }} \
+            --project ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Ensure namespace
+        run: |
+          kubectl get namespace ${{ env.KUBE_NAMESPACE }} >/dev/null 2>&1 \
+            || kubectl create namespace ${{ env.KUBE_NAMESPACE }}
+
+      - name: Create Database Secret
+        run: |
+          kubectl create secret generic db-credentials \
+            --from-literal=POSTGRES_USER=user \
+            --from-literal=POSTGRES_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            -n ${{ env.KUBE_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create Keycloak Secret
+        run: |
+          kubectl create secret generic keycloak-credentials \
+            --from-literal=KEYCLOAK_ADMIN_USER=admin \
+            --from-literal=KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}' \
+            -n ${{ env.KUBE_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create GHCR pull secret
+        run: |
+          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+            echo "::warning::GHCR_PAT nao configurado - usando GITHUB_TOKEN, que expira ao fim deste job. Pods que reiniciarem depois vao falhar com ImagePullBackOff."
+          fi
+          kubectl create secret docker-registry ghcr-creds \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password='${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}' \
+            -n ${{ env.KUBE_NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Validate manifests (server dry-run)
+        run: |
+          kubectl apply --dry-run=server \
+            -f k8s/app/configmap.yaml \
+            -f k8s/postgres/pvc.yaml \
+            -f k8s/postgres/deployment.yaml \
+            -f k8s/keycloak/service.yaml \
+            -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          chmod +x ./k8s/deploy.sh
+          echo "🚀 Deploying image: ${{ needs.build.outputs.image }}"
+          ./k8s/deploy.sh "${{ needs.build.outputs.image }}" staging ${{ env.KUBE_NAMESPACE }}
+
+      - name: Verify deployment and expose URL
+        id: expose
+        run: |
+          NS=${{ env.KUBE_NAMESPACE }}
+
+          echo "⏳ Aguardando IP externo do Service app..."
+          for i in $(seq 1 30); do
+            APP_IP=$(kubectl get svc app -n $NS -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            [ -n "$APP_IP" ] && break
+            sleep 10
+          done
+
+          if [ -z "$APP_IP" ]; then
+            echo "::error::O Service app nao recebeu IP externo."
+            kubectl get svc -n $NS
+            exit 1
+          fi
+
+          KC_IP=$(kubectl get svc keycloak -n $NS -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+
+          echo "🔍 Testando http://${APP_IP}/actuator/health"
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 10 "http://${APP_IP}/actuator/health"; then
+              echo ""
+              echo "url=http://${APP_IP}" >> "$GITHUB_OUTPUT"
+
+              {
+                echo "## Staging no ar"
+                echo ""
+                echo "| | |"
+                echo "|---|---|"
+                echo "| Aplicacao | http://${APP_IP} |"
+                echo "| Swagger UI | http://${APP_IP}/swagger-ui/index.html |"
+                echo "| Keycloak | http://${KC_IP}:8080 |"
+                echo "| Namespace | \`${NS}\` |"
+                echo "| Imagem | \`${{ needs.build.outputs.image }}\` |"
+              } >> "$GITHUB_STEP_SUMMARY"
+
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "❌ A aplicacao nao respondeu pelo LoadBalancer"
+          exit 1
+
+      - name: Debug - diagnostico completo
+        if: failure()
+        run: |
+          NS=${{ env.KUBE_NAMESPACE }}
+
+          echo "=================== IMAGEM NO DEPLOYMENT ==================="
+          kubectl get deploy app -n $NS \
+            -o jsonpath='{.spec.template.spec.containers[*].image}{"\n"}' || true
+          echo "Referencia esperada: ${{ needs.build.outputs.image }}"
+
+          echo ""
+          echo "=================== PODS ==================="
+          kubectl get pods -n $NS -o wide || true
+
+          echo ""
+          echo "=================== SERVICES ==================="
+          kubectl get svc -n $NS || true
+
+          echo ""
+          echo "=================== PVC ==================="
+          kubectl get pvc -n $NS || true
+
+          echo ""
+          echo "=================== EVENTOS DO POD APP ==================="
+          kubectl describe pod -l app=app -n $NS | sed -n '/Events:/,$p' || true
+
+          echo ""
+          echo "=================== LOGS APP (init) ==================="
+          kubectl logs -l app=app -n $NS -c wait-for-db --tail=30 || true
+
+          echo ""
+          echo "=================== LOGS APP (container) ==================="
+          kubectl logs -l app=app -n $NS -c app --tail=80 || true
+          kubectl logs -l app=app -n $NS -c app --previous --tail=80 || true
+
+          echo ""
+          echo "=================== LOGS KEYCLOAK ==================="
+          kubectl logs -l app=keycloak -n $NS --all-containers --tail=40 || true
+
+          echo ""
+          echo "=================== EVENTOS DO NAMESPACE ==================="
+          kubectl get events -n $NS --sort-by=.lastTimestamp | tail -30 || true
