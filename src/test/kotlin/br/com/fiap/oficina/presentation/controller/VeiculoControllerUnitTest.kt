@@ -1,10 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.VeiculoRequest
 import br.com.fiap.oficina.application.dto.VeiculoResponse
 import br.com.fiap.oficina.application.service.VeiculoService
-import br.com.fiap.oficina.presentation.dto.VeiculoDTO
-import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -18,8 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes
 
 class VeiculoControllerUnitTest {
     private val service = mock(VeiculoService::class.java)
-    private val mapper = VeiculoMapper()
-    private val controller = VeiculoController(service, mapper)
+    private val controller = VeiculoController(service)
 
     private val veiculoResponse =
         VeiculoResponse(
@@ -32,7 +30,7 @@ class VeiculoControllerUnitTest {
             motoristaId = "00000000-0000-0000-0000-000000000050",
         )
 
-    private fun veiculoDto() = VeiculoDTO(
+    private fun veiculoRequest() = VeiculoRequest(
         nome = "Gol",
         marca = "Volkswagen",
         modelo = "Gol 1.6",
@@ -56,7 +54,7 @@ class VeiculoControllerUnitTest {
     fun `criar deve retornar dto do veiculo salvo`() {
         `when`(service.criar(anyObject())).thenReturn(veiculoResponse)
 
-        val response = controller.criar(veiculoDto())
+        val response = controller.criar(veiculoRequest())
 
         assertEquals("ABC1D23", response.body?.placa)
         assertEquals(201, response.statusCode.value())
@@ -73,9 +71,9 @@ class VeiculoControllerUnitTest {
     fun `atualizar deve retornar dto do veiculo atualizado`() {
         `when`(service.atualizar(anyObject(), anyObject())).thenReturn(veiculoResponse)
 
-        val dto = controller.atualizar(veiculoResponse.id, veiculoDto())
+        val response = controller.atualizar(veiculoResponse.id, veiculoRequest())
 
-        assertEquals("ABC1D23", dto.placa)
+        assertEquals("ABC1D23", response.placa)
     }
 
     @Test

@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.mapper.VeiculoApplicationMapper
+import br.com.fiap.oficina.application.mapper.VeiculoMapper
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
@@ -16,7 +16,6 @@ import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.exception.VeiculoExceptionHandler
-import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +34,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(VeiculoController::class)
-@Import(VeiculoService::class, VeiculoApplicationMapper::class, VeiculoMapper::class, VeiculoExceptionHandler::class)
+@Import(VeiculoService::class, VeiculoMapper::class, VeiculoExceptionHandler::class)
 class VeiculoControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc

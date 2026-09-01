@@ -1,8 +1,8 @@
 package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.dto.CriarVeiculoRequest
-import br.com.fiap.oficina.application.mapper.VeiculoApplicationMapper
+import br.com.fiap.oficina.application.dto.VeiculoRequest
+import br.com.fiap.oficina.application.mapper.VeiculoMapper
 import br.com.fiap.oficina.application.service.VeiculoService
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
@@ -48,7 +48,7 @@ class VeiculoServiceTest {
     @Mock
     lateinit var removerVeiculoUseCase: RemoverVeiculoUseCase
 
-    private val mapper = VeiculoApplicationMapper()
+    private val mapper = VeiculoMapper()
     private lateinit var service: VeiculoService
     private lateinit var veiculo: Veiculo
 
@@ -87,7 +87,7 @@ class VeiculoServiceTest {
     @Test
     fun `deve criar veiculo`() {
         val request =
-            CriarVeiculoRequest(
+            VeiculoRequest(
                 nome = "Gol",
                 marca = "Volkswagen",
                 modelo = "Gol 1.6",
