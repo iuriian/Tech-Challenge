@@ -17,6 +17,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @ExtendWith(MockitoExtension::class)
 class VeiculoRepositoryImplTest {
@@ -68,10 +69,25 @@ class VeiculoRepositoryImplTest {
     }
 
     @Test
+    fun `buscarPorId deve retornar null quando ausente`() {
+        val id = Id.generate()
+        `when`(jpaRepository.findByIdVeiculo(id.valor)).thenReturn(null)
+
+        assertNull(repository.buscarPorId(id))
+    }
+
+    @Test
     fun `buscarPorPlaca deve mapear resultado`() {
         `when`(jpaRepository.findByPlaca("ABC1D23")).thenReturn(jpa)
 
         assertEquals(veiculo, repository.buscarPorPlaca("ABC1D23"))
+    }
+
+    @Test
+    fun `buscarPorPlaca deve retornar null quando ausente`() {
+        `when`(jpaRepository.findByPlaca("INEXISTENTE")).thenReturn(null)
+
+        assertNull(repository.buscarPorPlaca("INEXISTENTE"))
     }
 
     @Test
