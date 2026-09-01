@@ -1,7 +1,6 @@
 package br.com.fiap.oficina.application.mapper
 
-import br.com.fiap.oficina.application.dto.AtualizarVeiculoRequest
-import br.com.fiap.oficina.application.dto.CriarVeiculoRequest
+import br.com.fiap.oficina.application.dto.VeiculoRequest
 import br.com.fiap.oficina.application.dto.VeiculoResponse
 import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
@@ -10,25 +9,27 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Component
 
 @Component
-class VeiculoApplicationMapper {
-    fun toDomain(request: CriarVeiculoRequest): Veiculo = Veiculo.criar(
-        marca = request.marca,
-        nome = request.nome,
-        modelo = request.modelo,
-        ano = request.ano,
-        placa = request.placa,
-        motorista = motoristaReferencia(request.motoristaId),
-    )
-
-    fun toDomain(id: String, request: AtualizarVeiculoRequest): Veiculo = Veiculo.reconstruir(
-        id = id,
-        marca = request.marca,
-        nome = request.nome,
-        modelo = request.modelo,
-        ano = request.ano,
-        placa = request.placa,
-        motorista = motoristaReferencia(request.motoristaId),
-    )
+class VeiculoMapper {
+    fun toDomain(request: VeiculoRequest): Veiculo = if (request.id == null) {
+        Veiculo.criar(
+            marca = request.marca,
+            nome = request.nome,
+            modelo = request.modelo,
+            ano = request.ano,
+            placa = request.placa,
+            motorista = motoristaReferencia(request.motoristaId),
+        )
+    } else {
+        Veiculo.reconstruir(
+            id = request.id,
+            marca = request.marca,
+            nome = request.nome,
+            modelo = request.modelo,
+            ano = request.ano,
+            placa = request.placa,
+            motorista = motoristaReferencia(request.motoristaId),
+        )
+    }
 
     fun toResponse(veiculo: Veiculo): VeiculoResponse = VeiculoResponse(
         id = veiculo.id.valor.toString(),
