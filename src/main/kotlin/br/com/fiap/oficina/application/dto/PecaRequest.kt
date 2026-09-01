@@ -10,5 +10,5 @@ data class PecaRequest(
     val fornecedor: String? = null,
     val precoDeCompra: BigDecimal? = null,
     val precoDeVenda: BigDecimal,
-    val qtdEstoque: Int,
+    val qtdEstoque: Int = 0,
 )
