@@ -1,8 +1,17 @@
-package br.com.fiap.oficina.presentation.controller
+package br.com.fiap.oficina.servico.presentation.controller
 
-import br.com.fiap.oficina.application.dto.ServicoRequest
+import br.com.fiap.oficina.application.dto.AtualizarServicoRequest
+import br.com.fiap.oficina.application.dto.CriarServicoRequest
 import br.com.fiap.oficina.application.dto.ServicoResponse
-import br.com.fiap.oficina.application.service.ServicoService
+import br.com.fiap.oficina.application.mapper.ServicoApplicationMapper
+import br.com.fiap.oficina.domain.usecase.servico.AtualizarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.BuscarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.CriarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.DesativarServicoUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ListarServicosAtivosUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ListarTodosServicosUseCase
+import br.com.fiap.oficina.domain.usecase.servico.ReativarServicoUseCase
+import br.com.fiap.oficina.domain.valueobject.Id
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
@@ -26,7 +35,16 @@ import java.util.UUID
     name = "Catálogo de Serviços",
     description = "Operações relacionadas ao catálogo de serviços da oficina",
 )
-class ServicoController(private val service: ServicoService) {
+class ServicoCatalogoController(
+    private val criarServicoUseCase: CriarServicoUseCase,
+    private val buscarServicoUseCase: BuscarServicoUseCase,
+    private val atualizarServicoUseCase: AtualizarServicoUseCase,
+    private val listarServicosAtivosUseCase: ListarServicosAtivosUseCase,
+    private val listarTodosServicosUseCase: ListarTodosServicosUseCase,
+    private val desativarServicoUseCase: DesativarServicoUseCase,
+    private val reativarServicoUseCase: ReativarServicoUseCase,
+    private val mapper: ServicoApplicationMapper,
+) {
     @PostMapping
     @RolesAllowed("ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
@@ -37,8 +55,12 @@ class ServicoController(private val service: ServicoService) {
     fun criar(
         @Valid
         @RequestBody
-        request: ServicoRequest,
-    ): ServicoResponse = service.criar(request)
+        request: CriarServicoRequest,
+    ): ServicoResponse = mapper.toResponse(
+        criarServicoUseCase.executar(
+            mapper.fromRequest(request),
+        ),
+    )
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -46,7 +68,9 @@ class ServicoController(private val service: ServicoService) {
         summary = "Listar serviços ativos",
         description = "Lista os serviços ativos disponíveis no catálogo",
     )
-    fun listarAtivos(): List<ServicoResponse> = service.listarAtivos()
+    fun listarAtivos(): List<ServicoResponse> = listarServicosAtivosUseCase
+        .executar()
+        .map(mapper::toResponse)
 
     @GetMapping("/todos")
     @RolesAllowed("ADMIN")
@@ -54,7 +78,9 @@ class ServicoController(private val service: ServicoService) {
         summary = "Listar todos os serviços",
         description = "Lista serviços ativos e inativos para administração do catálogo",
     )
-    fun listarTodos(): List<ServicoResponse> = service.listarTodos()
+    fun listarTodos(): List<ServicoResponse> = listarTodosServicosUseCase
+        .executar()
+        .map(mapper::toResponse)
 
     @GetMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -62,7 +88,11 @@ class ServicoController(private val service: ServicoService) {
         summary = "Buscar serviço",
         description = "Busca um serviço do catálogo pelo identificador",
     )
-    fun buscar(@PathVariable id: UUID): ServicoResponse = service.buscar(id)
+    fun buscar(@PathVariable id: UUID): ServicoResponse = mapper.toResponse(
+        buscarServicoUseCase.executar(
+            Id(id),
+        ),
+    )
 
     @PutMapping("/{id}")
     @RolesAllowed("ADMIN")
@@ -74,8 +104,13 @@ class ServicoController(private val service: ServicoService) {
         @PathVariable id: UUID,
         @Valid
         @RequestBody
-        request: ServicoRequest,
-    ): ServicoResponse = service.atualizar(id, request)
+        request: AtualizarServicoRequest,
+    ): ServicoResponse = mapper.toResponse(
+        atualizarServicoUseCase.executar(
+            id = Id(id),
+            input = mapper.fromRequest(request),
+        ),
+    )
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
@@ -85,7 +120,7 @@ class ServicoController(private val service: ServicoService) {
         description = "Desativa logicamente um serviço do catálogo",
     )
     fun desativar(@PathVariable id: UUID) {
-        service.desativar(id)
+        desativarServicoUseCase.executar(Id(id))
     }
 
     @PatchMapping("/{id}/reativar")
@@ -94,5 +129,9 @@ class ServicoController(private val service: ServicoService) {
         summary = "Reativar serviço",
         description = "Reativa um serviço previamente desativado",
     )
-    fun reativar(@PathVariable id: UUID): ServicoResponse = service.reativar(id)
+    fun reativar(@PathVariable id: UUID): ServicoResponse = mapper.toResponse(
+        reativarServicoUseCase.executar(
+            Id(id),
+        ),
+    )
 }

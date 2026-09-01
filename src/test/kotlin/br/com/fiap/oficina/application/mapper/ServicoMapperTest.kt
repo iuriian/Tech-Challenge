@@ -1,69 +1,100 @@
 package br.com.fiap.oficina.application.mapper
 
-import br.com.fiap.oficina.application.dto.ServicoRequest
-import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.application.dto.PecaServicoDto
+import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import br.com.fiap.oficina.servico.domain.entities.OrdemServico
+import br.com.fiap.oficina.servico.domain.entities.PecaServico
+import br.com.fiap.oficina.servico.domain.enums.OrdemServicoStatus
+import br.com.fiap.oficina.servico.domain.enums.TipoItemOrcamento
+import br.com.fiap.oficina.servico.domain.valueobjects.ItemOrcamento
+import br.com.fiap.oficina.servico.domain.valueobjects.Orcamento
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.util.UUID
+import kotlin.test.assertEquals
 
 class ServicoMapperTest {
     private val mapper = ServicoMapper()
 
     @Test
-    fun `deve converter request para novo servico`() {
-        val request =
-            ServicoRequest(
+    fun `deve mapear OrdemServico para ServicoDto`() {
+        val funcionarioId = Id.generate()
+        val clienteId = Id.generate()
+        val veiculoId = Id.generate()
+
+        val peca =
+            Peca(
+                id = Id.generate(),
+                codigo = "PEC001",
+                nome = "Filtro",
+                precoDeVenda = BigDecimal.TEN,
+            )
+
+        val pecaServico = PecaServico.criar(peca, BigDecimal("2"))
+
+        val ordemServico =
+            OrdemServico(
+                id = Id.generate(),
                 descricao = "Troca de óleo",
-                valor = BigDecimal("150.00"),
+                status = OrdemServicoStatus.EM_EXECUCAO,
+                funcionarioId = funcionarioId,
+                clienteId = clienteId,
+                veiculoId = veiculoId,
+                pecas = listOf(pecaServico),
             )
 
-        val resultado = mapper.toDomain(request)
+        val dto = mapper.toResponse(ordemServico)
 
-        assertEquals("Troca de óleo", resultado.descricao)
-        assertEquals(BigDecimal("150.00"), resultado.valor)
-        assertTrue(resultado.ativo)
+        assertEquals(ordemServico.id.valor, dto.id)
+        assertEquals("Troca de óleo", dto.descricao)
+        assertEquals(OrdemServicoStatus.EM_EXECUCAO, dto.status)
+        assertEquals(funcionarioId.valor.toString(), dto.funcionarioId)
+        assertEquals(clienteId.valor.toString(), dto.clienteId)
+        assertEquals(veiculoId.valor.toString(), dto.veiculoId)
+        assertEquals(
+            listOf(
+                PecaServicoDto(
+                    peca.id.valor.toString(),
+                    BigDecimal("2"),
+                ),
+            ),
+            dto.pecas,
+        )
     }
 
     @Test
-    fun `deve converter request e id para servico existente`() {
-        val id = UUID.randomUUID()
-        val request =
-            ServicoRequest(
-                descricao = "Troca de óleo completa",
-                valor = BigDecimal("180.00"),
+    fun `deve mapear Orcamento para OrcamentoDto`() {
+        val ordemServicoId = Id.generate()
+        val pecaId = Id.generate()
+        val orcamento =
+            Orcamento(
+                ordemServicoId = ordemServicoId,
+                itens =
+                listOf(
+                    ItemOrcamento(
+                        tipo = TipoItemOrcamento.PECA,
+                        referenciaId = pecaId,
+                        descricao = "Filtro",
+                        valorUnitario = BigDecimal.TEN,
+                        quantidade = BigDecimal("2"),
+                        codigoReferencia = "PEC001",
+                    ),
+                ),
             )
 
-        val resultado =
-            mapper.toDomain(
-                id = Id(id),
-                request = request,
-            )
+        val dto = mapper.toResponse(orcamento)
 
-        assertEquals(id, resultado.id.valor)
-        assertEquals("Troca de óleo completa", resultado.descricao)
-        assertEquals(BigDecimal("180.00"), resultado.valor)
-    }
+        assertEquals(ordemServicoId.valor, dto.servicoId)
+        assertEquals(BigDecimal("20"), dto.valorTotal)
+        assertEquals(1, dto.itens.size)
 
-    @Test
-    fun `deve converter servico para response`() {
-        val id = UUID.randomUUID()
-        val servico =
-            Servico(
-                id = Id(id),
-                descricao = "Alinhamento",
-                valor = BigDecimal("120.00"),
-                ativo = false,
-            )
+        val item = dto.itens.first()
 
-        val resultado = mapper.toResponse(servico)
-
-        assertEquals(id, resultado.id)
-        assertEquals("Alinhamento", resultado.descricao)
-        assertEquals(BigDecimal("120.00"), resultado.valor)
-        assertFalse(resultado.ativo)
+        assertEquals(pecaId.valor, item.pecaId)
+        assertEquals("PEC001", item.codigo)
+        assertEquals("Filtro", item.nome)
+        assertEquals(BigDecimal.TEN, item.precoUnitario)
+        assertEquals(BigDecimal("2"), item.quantidade)
+        assertEquals(BigDecimal("20"), item.subtotal)
     }
 }
