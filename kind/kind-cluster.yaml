@@ -4,11 +4,9 @@ name: oficina-local
 nodes:
   - role: control-plane
     extraPortMappings:
-      - containerPort: 30080   # nginx
-        hostPort: 80
-      - containerPort: 30081   # keycloak
-        hostPort: 8081
-      - containerPort: 30090   # sonarqube
-        hostPort: 9000
-      - containerPort: 30083
-        hostPort: 8080
+      - containerPort: 30080
+        hostPort: 18080
+        protocol: TCP
+      - containerPort: 30081
+        hostPort: 18081
+        protocol: TCP
