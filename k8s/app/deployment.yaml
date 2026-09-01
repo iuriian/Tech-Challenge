@@ -11,6 +11,17 @@ spec:
     metadata:
       labels: { app: app }
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: [keycloak]
       imagePullSecrets:
         - name: ghcr-creds
       initContainers:

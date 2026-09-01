@@ -11,6 +11,17 @@ spec:
     metadata:
       labels: { app: keycloak }
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: [app]
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine
