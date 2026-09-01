@@ -1,10 +1,11 @@
-# k8s/db/pvc.yaml  (equivalente ao volume nomeado "postgres_data")
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-data
+  labels:
+    app: postgres
 spec:
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
-      storage: 1Gi
+      storage: 10Gi
