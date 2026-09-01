@@ -1,9 +1,8 @@
 package br.com.fiap.oficina.application.service
 
-import br.com.fiap.oficina.application.dto.AtualizarFuncionarioRequest
-import br.com.fiap.oficina.application.dto.CriarFuncionarioRequest
+import br.com.fiap.oficina.application.dto.FuncionarioRequest
 import br.com.fiap.oficina.application.dto.FuncionarioResponse
-import br.com.fiap.oficina.application.mapper.FuncionarioApplicationMapper
+import br.com.fiap.oficina.application.mapper.FuncionarioMapper
 import br.com.fiap.oficina.domain.usecase.funcionario.AtualizarFuncionarioUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorIdUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.BuscarFuncionarioPorNomeUseCase
@@ -21,9 +20,9 @@ class FuncionarioService(
     private val buscarFuncionarioPorNomeUseCase: BuscarFuncionarioPorNomeUseCase,
     private val atualizarFuncionarioUseCase: AtualizarFuncionarioUseCase,
     private val removerFuncionarioUseCase: RemoverFuncionarioUseCase,
-    private val mapper: FuncionarioApplicationMapper,
+    private val mapper: FuncionarioMapper,
 ) {
-    fun cadastrar(request: CriarFuncionarioRequest): FuncionarioResponse {
+    fun cadastrar(request: FuncionarioRequest): FuncionarioResponse {
         val funcionario = mapper.toDomain(request)
         val response = criarFuncionarioUseCase.executar(funcionario)
         return mapper.toResponse(response)
@@ -44,8 +43,8 @@ class FuncionarioService(
         return mapper.toResponse(resultado)
     }
 
-    fun editar(id: String, request: AtualizarFuncionarioRequest): FuncionarioResponse {
-        val funcionario = mapper.toDomain(id, request)
+    fun editar(id: String, request: FuncionarioRequest): FuncionarioResponse {
+        val funcionario = mapper.toDomain(request.copy(id = id))
         val response = atualizarFuncionarioUseCase.executar(funcionario)
         return mapper.toResponse(response)
     }
