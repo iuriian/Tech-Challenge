@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -35,6 +36,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(VeiculoController::class)
 @Import(VeiculoService::class, VeiculoMapper::class, VeiculoExceptionHandler::class)
+@ActiveProfiles("test")
 class VeiculoControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
