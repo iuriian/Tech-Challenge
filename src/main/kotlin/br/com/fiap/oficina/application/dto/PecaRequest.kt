@@ -2,7 +2,7 @@ package br.com.fiap.oficina.application.dto
 
 import java.math.BigDecimal
 
-data class PecaDto(
+data class PecaRequest(
     val codigo: String,
     val nome: String,
     val descricao: String? = null,

@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.application.mapper
 
 import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
-import br.com.fiap.oficina.application.dto.PecaDto
+import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,7 +14,7 @@ class PecaMapperTest {
     @Test
     fun `deve mapear PecaDto para dominio`() {
         val request =
-            PecaDto(
+            PecaRequest(
                 codigo = "PEC001",
                 nome = "Filtro de Óleo",
                 descricao = "Filtro padrão",
@@ -44,7 +44,7 @@ class PecaMapperTest {
                 precoDeVenda = BigDecimal("65.00"),
             )
 
-        val peca = mapper.toDomain("PEC002", request)
+        val peca = mapper.toDomain(mapper.toPecaRequest("PEC002", request))
 
         assertEquals("PEC002", peca.codigo)
         assertEquals("Filtro de Ar", peca.nome)

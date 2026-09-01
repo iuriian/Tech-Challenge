@@ -2,7 +2,7 @@ package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
-import br.com.fiap.oficina.application.dto.PecaDto
+import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.domain.entity.Peca
@@ -90,7 +90,7 @@ class PecaServiceTest {
     @Test
     fun `deve criar peca`() {
         val request =
-            PecaDto(
+            PecaRequest(
                 codigo = "PEC001",
                 nome = "Filtro de Óleo",
                 precoDeVenda = BigDecimal("45.00"),

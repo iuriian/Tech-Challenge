@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.entity
+package br.com.fiap.oficina.infrastructure.persistence.jpa.entity
 
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column

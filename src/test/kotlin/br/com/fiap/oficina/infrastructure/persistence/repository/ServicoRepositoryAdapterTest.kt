@@ -7,8 +7,8 @@ import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.enum.ServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.jpa.ServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ServicoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.repository.ServicoJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper

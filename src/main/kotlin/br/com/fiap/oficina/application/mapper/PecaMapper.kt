@@ -1,18 +1,17 @@
 package br.com.fiap.oficina.application.mapper
 
 import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
-import br.com.fiap.oficina.application.dto.PecaDto
+import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.application.dto.PecaResponse
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 import java.util.UUID
 import br.com.fiap.oficina.presentation.dto.PecaDto as PecaPresentationDto
 
 @Component
 class PecaMapper {
-    fun toDomain(request: PecaDto): Peca = toDomain(
+    fun toDomain(request: PecaRequest): Peca = Peca.criar(
         codigo = request.codigo,
         nome = request.nome,
         descricao = request.descricao,
@@ -23,7 +22,7 @@ class PecaMapper {
         qtdEstoque = request.qtdEstoque,
     )
 
-    fun toDomain(codigo: String, request: AtualizarPecaRequest): Peca = toDomain(
+    fun toPecaRequest(codigo: String, request: AtualizarPecaRequest): PecaRequest = PecaRequest(
         codigo = codigo,
         nome = request.nome,
         descricao = request.descricao,
@@ -47,7 +46,7 @@ class PecaMapper {
         ativo = peca.ativo,
     )
 
-    fun toCriarRequest(dto: PecaPresentationDto): PecaDto = PecaDto(
+    fun toCriarRequest(dto: PecaPresentationDto): PecaRequest = PecaRequest(
         codigo = dto.codigo,
         nome = dto.nome,
         descricao = dto.descricao,
@@ -78,25 +77,5 @@ class PecaMapper {
         precoDeVenda = response.precoDeVenda,
         qtdEstoque = response.qtdEstoque,
         ativo = response.ativo,
-    )
-
-    private fun toDomain(
-        codigo: String,
-        nome: String,
-        descricao: String? = null,
-        fabricante: String? = null,
-        fornecedor: String? = null,
-        precoDeCompra: BigDecimal? = null,
-        precoDeVenda: BigDecimal,
-        qtdEstoque: Int = 0,
-    ): Peca = Peca.criar(
-        codigo = codigo,
-        nome = nome,
-        descricao = descricao,
-        fabricante = fabricante,
-        fornecedor = fornecedor,
-        precoDeCompra = precoDeCompra,
-        precoDeVenda = precoDeVenda,
-        qtdEstoque = qtdEstoque,
     )
 }

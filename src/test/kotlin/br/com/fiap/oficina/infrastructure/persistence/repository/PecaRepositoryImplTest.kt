@@ -3,8 +3,8 @@ package br.com.fiap.oficina.infrastructure.persistence.repository
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.PecaJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.jpa.PecaJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.PecaJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.repository.PecaJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

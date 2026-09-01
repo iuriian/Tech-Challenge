@@ -2,7 +2,7 @@ package br.com.fiap.oficina.infrastructure.persistence.mapper
 
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.VeiculoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.VeiculoJpaEntity
 import org.springframework.stereotype.Component
 
 @Component

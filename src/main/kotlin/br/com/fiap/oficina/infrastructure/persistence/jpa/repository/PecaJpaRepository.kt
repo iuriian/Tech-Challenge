@@ -1,6 +1,6 @@
-package br.com.fiap.oficina.infrastructure.persistence.jpa
+package br.com.fiap.oficina.infrastructure.persistence.jpa.repository
 
-import br.com.fiap.oficina.infrastructure.persistence.entity.PecaJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.PecaJpaEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 

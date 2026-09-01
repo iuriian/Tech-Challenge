@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.entity
+package br.com.fiap.oficina.infrastructure.persistence.jpa.entity
 
 import br.com.fiap.oficina.domain.valueobject.TipoPessoa
 import jakarta.persistence.Column
