@@ -154,7 +154,7 @@ kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_T
 echo "==> Aplicando aplicacao"
 sed -e "s|__IMAGE__|${IMAGE}|g" \
     -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" \
-    -e "s|^  replicas: 2$|  replicas: 1|" "$K8S_DIR/app/deployment.yaml" \
+    "$K8S_DIR/app/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 
 # ---------------------------------------------------------------------------
