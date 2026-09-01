@@ -1,11 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.application.dto.PecaResponse
-import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
-import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
-import br.com.fiap.oficina.presentation.dto.PecaDto
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -16,12 +14,10 @@ import org.mockito.Mockito.`when`
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.math.BigDecimal
 
 class PecaControllerUnitTest {
     private val service = mock(PecaService::class.java)
-    private val mapper = PecaMapper()
-    private val controller = PecaController(service, mapper)
+    private val controller = PecaController(service)
 
     private val pecaResponse =
         PecaResponse(
@@ -33,10 +29,10 @@ class PecaControllerUnitTest {
             ativo = true,
         )
 
-    private fun pecaDto() = PecaDto(
+    private fun pecaRequest() = PecaRequest(
         codigo = "PEC001",
         nome = "Filtro de Óleo",
-        precoDeVenda = BigDecimal("45.00"),
+        precoDeVenda = 45.00,
         qtdEstoque = 10,
     )
 
@@ -55,7 +51,7 @@ class PecaControllerUnitTest {
     fun `criar deve retornar dto da peca salva`() {
         `when`(service.criar(anyObject())).thenReturn(pecaResponse)
 
-        val response = controller.criar(pecaDto())
+        val response = controller.criar(pecaRequest())
 
         assertEquals("PEC001", response.body?.codigo)
         assertEquals(201, response.statusCode.value())
@@ -68,7 +64,7 @@ class PecaControllerUnitTest {
         val dto =
             controller.atualizar(
                 "PEC001",
-                PecaAtualizacaoDto(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00")),
+                PecaRequest(nome = "Filtro Novo", precoDeVenda = 60.00),
             )
 
         assertEquals("PEC001", dto.codigo)
