@@ -1,9 +1,9 @@
 package br.com.fiap.oficina.application.service
 
 import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
-import br.com.fiap.oficina.application.dto.CriarPecaRequest
+import br.com.fiap.oficina.application.dto.PecaDto
 import br.com.fiap.oficina.application.dto.PecaResponse
-import br.com.fiap.oficina.application.mapper.PecaApplicationMapper
+import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
 import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
@@ -26,9 +26,9 @@ class PecaService(
     private val reporPecasUseCase: ReporPecasUseCase,
     private val reativarPecaUseCase: ReativarPecaUseCase,
     private val deletarPecaUseCase: DeletarPecaUseCase,
-    private val mapper: PecaApplicationMapper,
+    private val mapper: PecaMapper,
 ) {
-    fun criar(request: CriarPecaRequest): PecaResponse {
+    fun criar(request: PecaDto): PecaResponse {
         val peca = mapper.toDomain(request)
         val response = criarPecaUseCase.executar(peca)
         return mapper.toResponse(response)

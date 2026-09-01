@@ -2,8 +2,8 @@ package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
-import br.com.fiap.oficina.application.dto.CriarPecaRequest
-import br.com.fiap.oficina.application.mapper.PecaApplicationMapper
+import br.com.fiap.oficina.application.dto.PecaDto
+import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
@@ -58,7 +58,7 @@ class PecaServiceTest {
     @Mock
     lateinit var deletarPecaUseCase: DeletarPecaUseCase
 
-    private val mapper = PecaApplicationMapper()
+    private val mapper = PecaMapper()
     private lateinit var service: PecaService
     private lateinit var peca: Peca
 
@@ -90,7 +90,7 @@ class PecaServiceTest {
     @Test
     fun `deve criar peca`() {
         val request =
-            CriarPecaRequest(
+            PecaDto(
                 codigo = "PEC001",
                 nome = "Filtro de Óleo",
                 precoDeVenda = BigDecimal("45.00"),

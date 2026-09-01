@@ -1,9 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
+import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
 import br.com.fiap.oficina.presentation.dto.PecaDto
-import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
