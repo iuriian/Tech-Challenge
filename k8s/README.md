@@ -50,25 +50,29 @@ gcloud container clusters get-credentials tech-challenge-staging \
 ## Deploy manual
 
 ```bash
-# Secrets (opcional: o script cria valores padrão de desenvolvimento se não existirem)
-kubectl create secret generic db-credentials \
+NS=tech-challenge-staging
+
+# O deploy.sh cria o namespace, mas os secrets precisam dele antes
+kubectl create namespace $NS
+
+# Secrets (o script cria valores padrão de desenvolvimento se não existirem)
+kubectl create secret generic db-credentials -n $NS \
   --from-literal=POSTGRES_USER=user \
   --from-literal=POSTGRES_PASSWORD='SENHA_FORTE'
 
-kubectl create secret generic keycloak-credentials \
+# ATENÇÃO: o Service do Keycloak é LoadBalancer — no GKE o console de admin fica
+# acessível pela internet. Nunca deixe a senha padrão em um cluster público.
+kubectl create secret generic keycloak-credentials -n $NS \
   --from-literal=KEYCLOAK_ADMIN_USER=admin \
   --from-literal=KEYCLOAK_ADMIN_PASSWORD='SENHA_FORTE'
 
-# ATENÇÃO: o Service do Keycloak é LoadBalancer — no GKE o console de admin fica
-# acessível pela internet. Nunca deixe a senha padrão em um cluster público.
-
 # Secret para puxar a imagem do GHCR (repositório privado)
-kubectl create secret docker-registry ghcr-creds \
+kubectl create secret docker-registry ghcr-creds -n $NS \
   --docker-server=ghcr.io \
   --docker-username=SEU_USUARIO \
   --docker-password=SEU_PAT
 
-./k8s/deploy.sh ghcr.io/seu-usuario/tech-challenge:latest staging default
+./k8s/deploy.sh ghcr.io/seu-usuario/tech-challenge:latest staging $NS
 ```
 
 Variáveis de ambiente aceitas pelo script: `POSTGRES_USER`, `POSTGRES_PASSWORD`,
@@ -76,20 +80,47 @@ Variáveis de ambiente aceitas pelo script: `POSTGRES_USER`, `POSTGRES_PASSWORD`
 
 ## Deploy pelo pipeline
 
-O workflow `.github/workflows/cd.yml` já chama `./k8s/deploy.sh "<imagem>" staging default`
-depois de buildar, testar (smoke test) e publicar a imagem no GHCR.
+O workflow `.github/workflows/cd.yml` dispara em push nas branches **`release/**`**
+(e por `workflow_dispatch`), e encadeia: `build` → `smoke-test` → `promote` → `deploy-staging`.
+O job de deploy chama `./k8s/deploy.sh "<imagem>" staging <namespace>`.
 
-Secrets necessários no repositório GitHub:
+### Configuração do Environment `staging`
 
-| Secret | Obrigatório | Uso |
+Toda a configuração de acesso ao cluster vive no **GitHub Environment**, não em
+secrets do repositório. Crie em *Settings → Environments → New environment → `staging`*.
+
+**Environment secrets:**
+
+| Secret | Uso |
+|---|---|
+| `GCP_SA_KEY` | JSON da service account com papel `roles/container.developer` |
+| `DB_PASSWORD` | Senha do PostgreSQL |
+| `KEYCLOAK_ADMIN_PASSWORD` | Senha do admin do Keycloak |
+
+**Environment variables:**
+
+| Variável | Obrigatória | Uso |
 |---|---|---|
-| `GCP_SA_KEY` | sim | JSON da service account com papel `roles/container.developer` |
 | `GCP_PROJECT_ID` | sim | ID do projeto GCP |
 | `GKE_CLUSTER` | sim | Nome do cluster |
 | `GKE_ZONE` | sim | Zona/região do cluster |
-| `DB_PASSWORD` | sim | Senha do PostgreSQL |
-| `KEYCLOAK_ADMIN_PASSWORD` | sim | Senha do admin do Keycloak — o workflow falha sem ela |
-| `GHCR_PAT` | **na prática, sim** | PAT com escopo `read:packages` para o cluster puxar a imagem |
+| `KUBE_NAMESPACE` | não | Padrão: `tech-challenge-staging` |
+
+**Secret do repositório** (não é específico do ambiente):
+
+| Secret | Uso |
+|---|---|
+| `GHCR_PAT` | PAT com escopo `read:packages` para o cluster puxar a imagem |
+
+O job valida essa configuração no primeiro passo e falha nomeando o que estiver
+faltando, em vez de deixar o `gcloud` errar com "cluster not found".
+
+### Por que Environment e não secrets do repositório
+
+Secrets de ambiente só ficam disponíveis para jobs que declaram `environment: staging` —
+o job de build, por exemplo, nunca enxerga a chave do GCP. O ambiente também é onde se
+configuram **regras de proteção**: aprovadores obrigatórios, janela de espera e
+restrição de branches. Nada disso existe para secrets de repositório.
 
 ### Por que o `GHCR_PAT` importa
 
@@ -102,8 +133,9 @@ tenha mudado no código. Crie um PAT clássico com escopo `read:packages` e salv
 ## Verificação
 
 ```bash
-kubectl get pods
-kubectl get svc                       # pega o EXTERNAL-IP de app e keycloak
+NS=tech-challenge-staging
+kubectl get pods -n $NS
+kubectl get svc -n $NS                # pega o EXTERNAL-IP de app e keycloak
 curl http://<APP_IP>/actuator/health  # deve retornar {"status":"UP"}
 ```
 
