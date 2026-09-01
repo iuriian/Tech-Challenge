@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.mapper.PecaApplicationMapper
+import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
@@ -16,7 +16,6 @@ import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
 import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.exception.PecaExceptionHandler
-import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +36,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.math.BigDecimal
 
 @WebMvcTest(PecaController::class)
-@Import(PecaService::class, PecaApplicationMapper::class, PecaMapper::class, PecaExceptionHandler::class)
+@Import(PecaService::class, PecaMapper::class, PecaExceptionHandler::class)
 class PecaControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
