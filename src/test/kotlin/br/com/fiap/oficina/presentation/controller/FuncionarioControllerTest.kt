@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
@@ -41,6 +42,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
     FuncionarioMapper::class,
     FuncionarioExceptionHandler::class,
 )
+@ActiveProfiles("test")
 class FuncionarioControllerTest {
     @Autowired
     lateinit var mockMvc: MockMvc
