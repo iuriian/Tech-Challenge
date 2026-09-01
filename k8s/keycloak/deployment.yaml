@@ -19,6 +19,9 @@ spec:
         - name: keycloak
           image: quay.io/keycloak/keycloak:26.2.1
           imagePullPolicy: IfNotPresent
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { memory: "1Gi" }
           args: ["start-dev", "--import-realm"]
           ports:
             - containerPort: 8080

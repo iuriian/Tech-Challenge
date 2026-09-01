@@ -21,6 +21,9 @@ spec:
         - name: app
           image: ghcr.io/iuriian/tech-challenge:latest
           imagePullPolicy: Always
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { memory: "1Gi" }
           ports:
             - containerPort: 8080
           envFrom:
