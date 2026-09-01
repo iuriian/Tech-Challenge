@@ -9,4 +9,5 @@ data class AtualizarPecaRequest(
     val fornecedor: String? = null,
     val precoDeCompra: BigDecimal? = null,
     val precoDeVenda: BigDecimal,
+    val qtdEstoque: Int = 0,
 )
