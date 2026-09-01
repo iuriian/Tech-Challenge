@@ -94,6 +94,9 @@ secrets do repositório. Crie em *Settings → Environments → New environment 
 | Secret | Uso |
 |---|---|
 | `GCP_SA_KEY` | JSON da service account com papel `roles/container.developer` |
+| `GCP_PROJECT_ID` | ID do projeto GCP |
+| `GKE_CLUSTER` | Nome do cluster |
+| `GKE_ZONE` | Zona/região do cluster |
 | `DB_PASSWORD` | Senha do PostgreSQL |
 | `KEYCLOAK_ADMIN_PASSWORD` | Senha do admin do Keycloak |
 
@@ -101,9 +104,6 @@ secrets do repositório. Crie em *Settings → Environments → New environment 
 
 | Variável | Obrigatória | Uso |
 |---|---|---|
-| `GCP_PROJECT_ID` | sim | ID do projeto GCP |
-| `GKE_CLUSTER` | sim | Nome do cluster |
-| `GKE_ZONE` | sim | Zona/região do cluster |
 | `KUBE_NAMESPACE` | não | Padrão: `tech-challenge-staging` |
 
 **Secret do repositório** (não é específico do ambiente):
