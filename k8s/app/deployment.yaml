@@ -2,29 +2,117 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app
-  labels: { app: app }
+  labels:
+    app: app
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
-    matchLabels: { app: app }
+    matchLabels:
+      app: app
   template:
     metadata:
-      labels: { app: app }
+      labels:
+        app: app
     spec:
+      imagePullSecrets:
+        - name: ghcr-creds
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine
-          command: ["sh", "-c", "until pg_isready -h db -U user; do sleep 2; done"]
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres -p 5432; do
+                echo "aguardando postgres..."
+                sleep 3
+              done
       containers:
         - name: app
-          image: oficina-app:0.1.0    # buildado do Dockerfile — ver Etapa 5 (docker build + kind load)
+          image: __IMAGE__
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
-          envFrom:
-            - configMapRef: { name: app-config }
+            - name: http
+              containerPort: 8080
           env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_DB
+            - name: KEYCLOAK_REALM
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KEYCLOAK_REALM
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: KEYCLOAK_CLIENT_ID
+            - name: DB_URL
+              value: "jdbc:postgresql://postgres:5432/$(POSTGRES_DB)"
             - name: DB_USERNAME
-              valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_USER } }
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_USER
             - name: DB_PASSWORD
-              valueFrom: { secretKeyRef: { name: db-credentials, key: POSTGRES_PASSWORD } }
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: POSTGRES_PASSWORD
+            - name: KEYCLOAK_URL
+              value: "__KEYCLOAK_URL__"
+            - name: KEYCLOAK_JWK_SET_URI
+              value: "http://keycloak:8080/realms/$(KEYCLOAK_REALM)/protocol/openid-connect/certs"
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  labels:
+    app: app
+spec:
+  type: LoadBalancer
+  selector:
+    app: app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

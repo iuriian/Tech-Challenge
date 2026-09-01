@@ -1,129 +1,157 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Deploy da aplicacao no GKE (ambiente de staging).
+#
+# Uso:
+#   ./k8s/deploy.sh <IMAGEM> [AMBIENTE] [NAMESPACE]
+#
+# Exemplo:
+#   ./k8s/deploy.sh ghcr.io/iuriian/tech-challenge@sha256:abc... staging default
+#
+# Pre-requisitos: kubectl autenticado no cluster (gcloud container clusters
+# get-credentials ...) e a imagem ja publicada no registry.
+#
+set -euo pipefail
 
-# ========================================
-# Script de Deploy com CI/CD
-# ========================================
+IMAGE="${1:-}"
+ENVIRONMENT="${2:-staging}"
+NAMESPACE="${3:-default}"
 
-set -e  # Para na primeira falha
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Cores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Tempo maximo (segundos) de espera pelo IP externo do Service do Keycloak.
+KEYCLOAK_IP_TIMEOUT="${KEYCLOAK_IP_TIMEOUT:-300}"
+ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-600s}"
 
-# Variáveis de configuração
-DOCKER_REGISTRY="seu-usuario"  # Mude para seu usuário Docker Hub ou registry
-APP_NAME="oficina-app"
-VERSION="${1:-latest}"
-ENVIRONMENT="${2:-dev}"
-NAMESPACE="oficina"
-
-echo -e "${YELLOW}=== Deploy Script ===${NC}"
-echo "Registry: $DOCKER_REGISTRY"
-echo "App: $APP_NAME"
-echo "Version: $VERSION"
-echo "Environment: $ENVIRONMENT"
-
-# ========================================
-# 1. Build da imagem Docker
-# ========================================
-echo -e "\n${YELLOW}[1/5] Building Docker image...${NC}"
-docker build -f Dockerfile.prod \
-  -t $DOCKER_REGISTRY/$APP_NAME:$VERSION \
-  -t $DOCKER_REGISTRY/$APP_NAME:latest \
-  .
-
-if [ $? -eq 0 ]; then
-  echo -e "${GREEN}✓ Docker build succeeded${NC}"
-else
-  echo -e "${RED}✗ Docker build failed${NC}"
+if [[ -z "$IMAGE" ]]; then
+  echo "Uso: $0 <IMAGEM> [AMBIENTE] [NAMESPACE]" >&2
   exit 1
 fi
 
-# ========================================
-# 2. Push para Docker Registry
-# ========================================
-echo -e "\n${YELLOW}[2/5] Pushing image to registry...${NC}"
-docker push $DOCKER_REGISTRY/$APP_NAME:$VERSION
-docker push $DOCKER_REGISTRY/$APP_NAME:latest
+echo "==> Ambiente : $ENVIRONMENT"
+echo "==> Namespace: $NAMESPACE"
+echo "==> Imagem   : $IMAGE"
 
-if [ $? -eq 0 ]; then
-  echo -e "${GREEN}✓ Docker push succeeded${NC}"
-else
-  echo -e "${RED}✗ Docker push failed${NC}"
-  exit 1
+kubectl get namespace "$NAMESPACE" >/dev/null 2>&1 || kubectl create namespace "$NAMESPACE"
+
+# ---------------------------------------------------------------------------
+# 1. Secrets
+# No pipeline (cd.yml) o db-credentials ja e criado a partir dos GitHub Secrets.
+# Em execucao local, criamos valores de desenvolvimento para nao travar o deploy.
+# ---------------------------------------------------------------------------
+if ! kubectl get secret db-credentials -n "$NAMESPACE" >/dev/null 2>&1; then
+  echo "==> Criando secret db-credentials (valores padrao de desenvolvimento)"
+  kubectl create secret generic db-credentials \
+    --from-literal=POSTGRES_USER="${POSTGRES_USER:-user}" \
+    --from-literal=POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-password}" \
+    -n "$NAMESPACE"
 fi
 
-# ========================================
-# 3. Criar namespace
-# ========================================
-echo -e "\n${YELLOW}[3/5] Creating namespace...${NC}"
-kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
-
-if [ $? -eq 0 ]; then
-  echo -e "${GREEN}✓ Namespace created${NC}"
-else
-  echo -e "${RED}✗ Namespace creation failed${NC}"
-  exit 1
+if ! kubectl get secret keycloak-credentials -n "$NAMESPACE" >/dev/null 2>&1; then
+  echo "==> Criando secret keycloak-credentials"
+  if [[ -z "${KEYCLOAK_ADMIN_PASSWORD:-}" ]]; then
+    # O Service do Keycloak e LoadBalancer: no GKE o console de admin fica
+    # acessivel pela internet. Deixar admin/admin ai e um convite.
+    echo "!! ATENCAO: KEYCLOAK_ADMIN_PASSWORD nao definido - usando a senha padrao 'admin'." >&2
+    echo "!!          Aceitavel apenas em ambiente local. No GKE, defina o secret antes:" >&2
+    echo "!!          kubectl create secret generic keycloak-credentials \\" >&2
+    echo "!!            --from-literal=KEYCLOAK_ADMIN_USER=admin \\" >&2
+    echo "!!            --from-literal=KEYCLOAK_ADMIN_PASSWORD='SENHA_FORTE' -n $NAMESPACE" >&2
+  fi
+  kubectl create secret generic keycloak-credentials \
+    --from-literal=KEYCLOAK_ADMIN_USER="${KEYCLOAK_ADMIN_USER:-admin}" \
+    --from-literal=KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}" \
+    -n "$NAMESPACE"
 fi
 
-# ========================================
-# 4. Deploy dos serviços
-# ========================================
-echo -e "\n${YELLOW}[4/5] Deploying services...${NC}"
+# ---------------------------------------------------------------------------
+# 2. ConfigMaps gerados a partir dos arquivos versionados em conf/
+#    (evita duplicar realm e script de init entre docker-compose e Kubernetes)
+# ---------------------------------------------------------------------------
+echo "==> Aplicando ConfigMaps"
+kubectl create configmap postgres-initdb \
+  --from-file="$ROOT_DIR/conf/init-db/" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-# Atualizar imagem no deployment
-kubectl set image deployment/spring-app \
-  spring-app=$DOCKER_REGISTRY/$APP_NAME:$VERSION \
-  -n $NAMESPACE \
-  --record \
-  2>/dev/null || echo "Deployment not found, applying files..."
+kubectl create configmap keycloak-realm \
+  --from-file=realm.json="$ROOT_DIR/conf/realm-export.json" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
 
-# Aplicar manifestos
-kubectl apply -f k8s/postgres.yaml -n $NAMESPACE
-kubectl apply -f k8s/keycloak.yaml -n $NAMESPACE
+kubectl apply -f "$SCRIPT_DIR/app/configmap.yaml" -n "$NAMESPACE"
 
-# Atualizar imagem da app
-sed "s|DOCKER_IMAGE|$DOCKER_REGISTRY/$APP_NAME:$VERSION|g" k8s/app.yaml | kubectl apply -f - -n $NAMESPACE
+# ---------------------------------------------------------------------------
+# 3. PostgreSQL
+# ---------------------------------------------------------------------------
+echo "==> Aplicando PostgreSQL"
+# O PVC precisa existir antes do Deployment que o monta, senao o pod fica Pending.
+kubectl apply -f "$SCRIPT_DIR/postgres/pvc.yaml" -n "$NAMESPACE"
+kubectl apply -f "$SCRIPT_DIR/postgres/deployment.yaml" -n "$NAMESPACE"
+kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
-if [ $? -eq 0 ]; then
-  echo -e "${GREEN}✓ Services deployed${NC}"
+# ---------------------------------------------------------------------------
+# 4. Service do Keycloak + descoberta do IP externo
+#    O issuer dos tokens precisa ser a URL publica; o Deployment so e aplicado
+#    depois que esse endereco e conhecido.
+# ---------------------------------------------------------------------------
+echo "==> Aplicando Service do Keycloak"
+kubectl apply -f "$SCRIPT_DIR/keycloak/service.yaml" -n "$NAMESPACE"
+
+echo "==> Aguardando IP externo do Keycloak (ate ${KEYCLOAK_IP_TIMEOUT}s)"
+KEYCLOAK_IP=""
+ELAPSED=0
+while [[ $ELAPSED -lt $KEYCLOAK_IP_TIMEOUT ]]; do
+  KEYCLOAK_IP="$(kubectl get svc keycloak -n "$NAMESPACE" \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
+  [[ -n "$KEYCLOAK_IP" ]] && break
+  sleep 10
+  ELAPSED=$((ELAPSED + 10))
+done
+
+if [[ -n "$KEYCLOAK_IP" ]]; then
+  KEYCLOAK_URL="http://${KEYCLOAK_IP}:8080"
 else
-  echo -e "${RED}✗ Services deployment failed${NC}"
-  exit 1
+  # Sem IP publico o deploy continua, mas apenas tokens emitidos de dentro do
+  # cluster serao aceitos (issuer interno).
+  KEYCLOAK_URL="http://keycloak:8080"
+  echo "!! IP externo nao atribuido a tempo; usando issuer interno $KEYCLOAK_URL" >&2
 fi
+echo "==> Keycloak URL: $KEYCLOAK_URL"
 
-# ========================================
-# 5. Verificar status
-# ========================================
-echo -e "\n${YELLOW}[5/5] Checking deployment status...${NC}"
+# ---------------------------------------------------------------------------
+# 5. Keycloak
+# ---------------------------------------------------------------------------
+echo "==> Aplicando Keycloak"
+sed "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/keycloak/deployment.yaml" \
+  | kubectl apply -n "$NAMESPACE" -f -
+kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
-# Aguardar rollout
-echo "Waiting for rollout..."
-kubectl rollout status deployment/spring-app -n $NAMESPACE --timeout=5m || true
+# ---------------------------------------------------------------------------
+# 6. Aplicacao
+# ---------------------------------------------------------------------------
+echo "==> Aplicando aplicacao"
+sed -e "s|__IMAGE__|${IMAGE}|g" \
+    -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/app/deployment.yaml" \
+  | kubectl apply -n "$NAMESPACE" -f -
+kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
-# Mostrar status
-echo -e "\n${GREEN}=== Deployment Status ===${NC}"
-kubectl get pods -n $NAMESPACE
+# ---------------------------------------------------------------------------
+# 7. Resumo
+# ---------------------------------------------------------------------------
+APP_IP="$(kubectl get svc app -n "$NAMESPACE" \
+  -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)"
+
 echo ""
-kubectl get svc -n $NAMESPACE
-
-# ========================================
-# Info de acesso
-# ========================================
-echo -e "\n${GREEN}=== Access Information ===${NC}"
-echo "Namespace: $NAMESPACE"
-echo "App Version: $VERSION"
-echo ""
-echo "Port forward (local testing):"
-echo "  kubectl port-forward svc/spring-app 8080:8080 -n $NAMESPACE"
-echo "  kubectl port-forward svc/keycloak 8081:8080 -n $NAMESPACE"
-echo ""
-echo "View logs:"
-echo "  kubectl logs -f deployment/spring-app -n $NAMESPACE"
-echo ""
-echo "Delete deployment:"
-echo "  kubectl delete all --all -n $NAMESPACE"
-
-echo -e "\n${GREEN}✓ Deploy completed successfully!${NC}"
+echo "=========================================="
+echo " Deploy concluido ($ENVIRONMENT)"
+echo "=========================================="
+if [[ -n "$APP_IP" ]]; then
+  echo " App      : http://$APP_IP"
+  echo " Swagger  : http://$APP_IP/swagger-ui/index.html"
+  echo " Health   : http://$APP_IP/actuator/health"
+else
+  echo " App      : IP externo ainda nao atribuido (kubectl get svc app -w)"
+fi
+echo " Keycloak : $KEYCLOAK_URL"
+echo "=========================================="
+kubectl get pods,svc -n "$NAMESPACE"
