@@ -1,6 +1,5 @@
 package br.com.fiap.oficina.application.mapper
 
-import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
 import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.domain.entity.Peca
 import br.com.fiap.oficina.domain.valueobject.Id
@@ -12,7 +11,7 @@ class PecaMapperTest {
     private val mapper = PecaMapper()
 
     @Test
-    fun `deve mapear PecaDto para dominio`() {
+    fun `deve mapear PecaRequest para dominio`() {
         val request =
             PecaRequest(
                 codigo = "PEC001",
@@ -20,8 +19,8 @@ class PecaMapperTest {
                 descricao = "Filtro padrão",
                 fabricante = "Bosch",
                 fornecedor = "AutoParts",
-                precoDeCompra = BigDecimal("25.00"),
-                precoDeVenda = BigDecimal("45.00"),
+                precoDeCompra = 25.00,
+                precoDeVenda = 45.00,
                 qtdEstoque = 50,
             )
 
@@ -33,18 +32,18 @@ class PecaMapperTest {
     }
 
     @Test
-    fun `deve mapear AtualizarPecaRequest para dominio com estoque zerado`() {
+    fun `deve mapear PecaRequest de atualizacao para dominio com estoque zerado`() {
         val request =
-            AtualizarPecaRequest(
+            PecaRequest(
                 nome = "Filtro de Ar",
                 descricao = "Novo filtro",
                 fabricante = "Mann",
                 fornecedor = "PartsCo",
-                precoDeCompra = BigDecimal("30.00"),
-                precoDeVenda = BigDecimal("65.00"),
+                precoDeCompra = 30.00,
+                precoDeVenda = 65.00,
             )
 
-        val peca = mapper.toDomain(mapper.toPecaRequest("PEC002", request))
+        val peca = mapper.toDomain(request.copy(codigo = "PEC002"))
 
         assertEquals("PEC002", peca.codigo)
         assertEquals("Filtro de Ar", peca.nome)
@@ -68,5 +67,6 @@ class PecaMapperTest {
         assertEquals("PEC001", response.codigo)
         assertEquals(10, response.qtdEstoque)
         assertEquals(true, response.ativo)
+        assertEquals(45.00, response.precoDeVenda)
     }
 }

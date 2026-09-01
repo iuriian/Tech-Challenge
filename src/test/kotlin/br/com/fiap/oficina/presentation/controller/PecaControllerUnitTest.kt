@@ -28,7 +28,7 @@ class PecaControllerUnitTest {
             id = "00000000-0000-0000-0000-000000000001",
             codigo = "PEC001",
             nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
+            precoDeVenda = 45.00,
             qtdEstoque = 10,
             ativo = true,
         )

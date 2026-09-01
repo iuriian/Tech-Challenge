@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class PecaPresentationMapperTest {
     private val mapper = PecaMapper()
@@ -19,8 +20,8 @@ class PecaPresentationMapperTest {
             descricao = "Filtro padrão",
             fabricante = "Bosch",
             fornecedor = "AutoParts",
-            precoDeCompra = BigDecimal("25.00"),
-            precoDeVenda = BigDecimal("45.00"),
+            precoDeCompra = 25.00,
+            precoDeVenda = 45.00,
             qtdEstoque = 50,
             ativo = true,
         )
@@ -32,13 +33,13 @@ class PecaPresentationMapperTest {
         assertEquals(UUID.fromString(pecaResponse.id), dto.id)
         assertEquals("PEC001", dto.codigo)
         assertEquals("Filtro de Óleo", dto.nome)
-        assertEquals(BigDecimal("45.00"), dto.precoDeVenda)
+        assertEquals(0, BigDecimal("45.00").compareTo(dto.precoDeVenda))
         assertEquals(50, dto.qtdEstoque)
         assertEquals(true, dto.ativo)
     }
 
     @Test
-    fun `deve mapear PecaDto de apresentacao para PecaDto de application`() {
+    fun `deve mapear PecaDto de apresentacao para PecaRequest`() {
         val dto =
             PecaDto(
                 codigo = "PEC001",
@@ -53,10 +54,11 @@ class PecaPresentationMapperTest {
         assertEquals("PEC001", request.codigo)
         assertEquals("Filtro de Óleo", request.nome)
         assertEquals(50, request.qtdEstoque)
+        assertEquals(45.00, request.precoDeVenda)
     }
 
     @Test
-    fun `deve mapear PecaAtualizacaoDto para AtualizarPecaRequest`() {
+    fun `deve mapear PecaAtualizacaoDto para PecaRequest sem codigo`() {
         val dto =
             PecaAtualizacaoDto(
                 nome = "Filtro de Ar",
@@ -64,9 +66,10 @@ class PecaPresentationMapperTest {
                 precoDeVenda = BigDecimal("65.00"),
             )
 
-        val request = mapper.toAtualizarRequest(dto)
+        val request = mapper.toPecaRequest(dto)
 
+        assertNull(request.codigo)
         assertEquals("Filtro de Ar", request.nome)
-        assertEquals(BigDecimal("65.00"), request.precoDeVenda)
+        assertEquals(65.00, request.precoDeVenda)
     }
 }

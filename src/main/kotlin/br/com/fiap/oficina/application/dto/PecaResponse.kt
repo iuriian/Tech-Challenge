@@ -1,7 +1,5 @@
 package br.com.fiap.oficina.application.dto
 
-import java.math.BigDecimal
-
 data class PecaResponse(
     val id: String,
     val codigo: String,
@@ -9,8 +7,8 @@ data class PecaResponse(
     val descricao: String? = null,
     val fabricante: String? = null,
     val fornecedor: String? = null,
-    val precoDeCompra: BigDecimal? = null,
-    val precoDeVenda: BigDecimal,
+    val precoDeCompra: Double? = null,
+    val precoDeVenda: Double,
     val qtdEstoque: Int,
     val ativo: Boolean,
 )

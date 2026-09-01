@@ -1,14 +1,12 @@
 package br.com.fiap.oficina.application.dto
 
-import java.math.BigDecimal
-
 data class PecaRequest(
-    val codigo: String,
+    val codigo: String? = null,
     val nome: String,
     val descricao: String? = null,
     val fabricante: String? = null,
     val fornecedor: String? = null,
-    val precoDeCompra: BigDecimal? = null,
-    val precoDeVenda: BigDecimal,
+    val precoDeCompra: Double? = null,
+    val precoDeVenda: Double,
     val qtdEstoque: Int = 0,
 )

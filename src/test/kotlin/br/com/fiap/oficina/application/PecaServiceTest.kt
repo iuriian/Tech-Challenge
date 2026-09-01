@@ -1,7 +1,6 @@
 package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.dto.AtualizarPecaRequest
 import br.com.fiap.oficina.application.dto.PecaRequest
 import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
@@ -93,7 +92,7 @@ class PecaServiceTest {
             PecaRequest(
                 codigo = "PEC001",
                 nome = "Filtro de Óleo",
-                precoDeVenda = BigDecimal("45.00"),
+                precoDeVenda = 45.00,
                 qtdEstoque = 10,
             )
         `when`(criarPecaUseCase.executar(anyObject())).thenReturn(peca)
@@ -155,14 +154,14 @@ class PecaServiceTest {
 
     @Test
     fun `deve atualizar peca`() {
-        val request = AtualizarPecaRequest(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00"))
+        val request = PecaRequest(nome = "Filtro Novo", precoDeVenda = 60.00)
         val atualizada = peca.copy(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00"))
         `when`(atualizarPecaUseCase.executar(anyObject(), anyObject())).thenReturn(atualizada)
 
         val response = service.atualizar("PEC001", request)
 
         assertEquals("Filtro Novo", response.nome)
-        assertEquals(BigDecimal("60.00"), response.precoDeVenda)
+        assertEquals(60.00, response.precoDeVenda)
     }
 
     @Test

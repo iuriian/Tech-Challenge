@@ -55,7 +55,7 @@ class PecaController(private val pecaService: PecaService, private val mapper: P
         @PathVariable codigo: String,
         @Valid @RequestBody peca: PecaAtualizacaoDto,
     ): PecaDto {
-        val request = mapper.toAtualizarRequest(peca)
+        val request = mapper.toPecaRequest(peca)
         return mapper.toDto(pecaService.atualizar(codigo, request))
     }
 
