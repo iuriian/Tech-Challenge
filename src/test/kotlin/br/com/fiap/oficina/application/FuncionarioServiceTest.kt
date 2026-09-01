@@ -1,9 +1,8 @@
 package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.dto.AtualizarFuncionarioRequest
-import br.com.fiap.oficina.application.dto.CriarFuncionarioRequest
-import br.com.fiap.oficina.application.mapper.FuncionarioApplicationMapper
+import br.com.fiap.oficina.application.dto.FuncionarioRequest
+import br.com.fiap.oficina.application.mapper.FuncionarioMapper
 import br.com.fiap.oficina.application.service.FuncionarioService
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.enum.Cargo
@@ -46,7 +45,7 @@ class FuncionarioServiceTest {
     @Mock
     lateinit var removerFuncionarioUseCase: RemoverFuncionarioUseCase
 
-    private val mapper = FuncionarioApplicationMapper()
+    private val mapper = FuncionarioMapper()
     private lateinit var service: FuncionarioService
     private lateinit var funcionario: Funcionario
 
@@ -72,7 +71,7 @@ class FuncionarioServiceTest {
 
     @Test
     fun `deve cadastrar funcionario`() {
-        val request = CriarFuncionarioRequest(nome = "João", cargo = "ATENDENTE")
+        val request = FuncionarioRequest(nome = "João", cargo = "ATENDENTE")
         `when`(criarFuncionarioUseCase.executar(anyObject())).thenReturn(funcionario)
 
         val response = service.cadastrar(request)
@@ -134,7 +133,7 @@ class FuncionarioServiceTest {
 
     @Test
     fun `deve editar funcionario`() {
-        val request = AtualizarFuncionarioRequest(nome = "Maria", cargo = "MECANICO")
+        val request = FuncionarioRequest(nome = "Maria", cargo = "MECANICO")
         val atualizado = funcionario.copy(nome = "Maria", cargo = Cargo.MECANICO)
         `when`(atualizarFuncionarioUseCase.executar(anyObject())).thenReturn(atualizado)
 

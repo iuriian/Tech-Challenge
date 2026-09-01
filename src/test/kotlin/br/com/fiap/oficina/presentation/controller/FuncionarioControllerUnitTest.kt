@@ -1,10 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.FuncionarioRequest
 import br.com.fiap.oficina.application.dto.FuncionarioResponse
 import br.com.fiap.oficina.application.service.FuncionarioService
-import br.com.fiap.oficina.presentation.dto.FuncionarioDto
-import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -19,8 +18,7 @@ import java.util.UUID
 
 class FuncionarioControllerUnitTest {
     private val service = mock(FuncionarioService::class.java)
-    private val mapper = FuncionarioMapper()
-    private val controller = FuncionarioController(service, mapper)
+    private val controller = FuncionarioController(service)
 
     private val funcionarioResponse = FuncionarioResponse(
         id = "00000000-0000-0000-0000-000000000001",
@@ -28,7 +26,7 @@ class FuncionarioControllerUnitTest {
         cargo = "ATENDENTE",
     )
 
-    private fun funcionarioRequestDto() = FuncionarioDto(nome = "João", cargo = "ATENDENTE")
+    private fun funcionarioRequest() = FuncionarioRequest(nome = "João", cargo = "ATENDENTE")
 
     @BeforeEach
     fun setupRequestContext() {
@@ -45,7 +43,7 @@ class FuncionarioControllerUnitTest {
     fun `cadastrar deve retornar dto do funcionario salvo`() {
         `when`(service.cadastrar(anyObject())).thenReturn(funcionarioResponse)
 
-        val response = controller.cadastrar(funcionarioRequestDto())
+        val response = controller.cadastrar(funcionarioRequest())
 
         assertEquals("João", response.body?.nome)
         assertEquals(funcionarioResponse.id, response.body?.id)
@@ -56,7 +54,7 @@ class FuncionarioControllerUnitTest {
     fun `alterar deve retornar dto do funcionario atualizado`() {
         `when`(service.editar(anyObject(), anyObject())).thenReturn(funcionarioResponse)
 
-        val dto = controller.alterar("00000000-0000-0000-0000-000000000001", funcionarioRequestDto())
+        val dto = controller.alterar("00000000-0000-0000-0000-000000000001", funcionarioRequest())
 
         assertEquals("João", dto.nome)
     }

@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.application.mapper.FuncionarioApplicationMapper
+import br.com.fiap.oficina.application.mapper.FuncionarioMapper
 import br.com.fiap.oficina.application.service.FuncionarioService
 import br.com.fiap.oficina.domain.entity.Funcionario
 import br.com.fiap.oficina.domain.enum.Cargo
@@ -14,7 +14,6 @@ import br.com.fiap.oficina.domain.usecase.funcionario.ListarFuncionariosUseCase
 import br.com.fiap.oficina.domain.usecase.funcionario.RemoverFuncionarioUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.presentation.exception.FuncionarioExceptionHandler
-import br.com.fiap.oficina.presentation.mapper.FuncionarioMapper
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,12 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(FuncionarioController::class)
-@Import(
-    FuncionarioService::class,
-    FuncionarioApplicationMapper::class,
-    FuncionarioMapper::class,
-    FuncionarioExceptionHandler::class,
-)
+@Import(FuncionarioService::class, FuncionarioMapper::class, FuncionarioExceptionHandler::class)
 @ActiveProfiles("test")
 class FuncionarioControllerTest {
     @Autowired
