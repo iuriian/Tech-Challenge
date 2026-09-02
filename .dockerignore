@@ -1,31 +1,12 @@
-# Build outputs / caches
 build/
 .gradle/
 .kotlin/
-
-# Controle de versao e IDE
 .git/
-.gitignore
-.gitattributes
 .idea/
-.vscode/
-*.iml
-
-# Documentacao e artefatos que nao entram na imagem
 docs/
-HELP.md
 *.md
-
-# Segredos e configuracao local
 .env
 .env.*
-create-env.sh
-
-# SO
-.DS_Store
-**/.DS_Store
-
-# O proprio Docker
 Dockerfile
 .dockerignore
-docker-compose.yaml
+docker-compose*

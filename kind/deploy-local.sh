@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+#
+# Sobe a stack completa (Postgres + Keycloak + aplicacao) em um cluster kind
+# local, reutilizando exatamente os mesmos manifests usados no GKE (pasta k8s/).
+#
+# Uso:
+#   ./kind/deploy-local.sh              # cria cluster, builda a imagem e faz o deploy
+#   SKIP_BUILD=true ./kind/deploy-local.sh   # reaproveita a imagem ja buildada
+#
+# Pre-requisitos: docker, kind e kubectl no PATH.
+#
+set -euo pipefail
+
+CLUSTER_NAME="${CLUSTER_NAME:-oficina-local}"
+IMAGE="${IMAGE:-oficina-app:local}"
+NAMESPACE="${NAMESPACE:-default}"
+SKIP_BUILD="${SKIP_BUILD:-false}"
+ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-600s}"
+
+# Portas publicadas na maquina host. Os padroes evitam as portas usadas pelo
+# docker-compose (80, 5432, 8081, 8090) e as portas 8080/8081, comuns demais.
+# Para trocar:  APP_HOST_PORT=19000 ./kind/deploy-local.sh
+APP_HOST_PORT="${APP_HOST_PORT:-18080}"
+KEYCLOAK_HOST_PORT="${KEYCLOAK_HOST_PORT:-18081}"
+
+# No kind nao ha LoadBalancer: o Keycloak e publicado via NodePort no host, e
+# essa URL e o issuer que a aplicacao vai validar.
+KEYCLOAK_URL="${KEYCLOAK_URL:-http://localhost:${KEYCLOAK_HOST_PORT}}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+K8S_DIR="$ROOT_DIR/k8s"
+
+for bin in docker kind kubectl; do
+  command -v "$bin" >/dev/null 2>&1 || { echo "ERRO: '$bin' nao encontrado no PATH" >&2; exit 1; }
+done
+
+# Aborta cedo se a porta ja estiver ocupada no host: o erro nativo do kind para
+# esse caso ("port is already allocated") vem enterrado em um docker run gigante.
+check_port_free() {
+  local port="$1" label="$2" var="$3"
+  if (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null; then
+    exec 3<&- 3>&- 2>/dev/null || true
+    echo "ERRO: a porta ${port} (${label}) ja esta em uso nesta maquina." >&2
+    echo "      Descubra quem esta usando:" >&2
+    echo "        docker ps --format 'table {{.Names}}\t{{.Ports}}'" >&2
+    echo "        netstat -ano | grep ':${port} '" >&2
+    echo "      Ou escolha outra porta:  ${var}=1${port} ./kind/deploy-local.sh" >&2
+    exit 1
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# 1. Cluster
+# ---------------------------------------------------------------------------
+NODE_NAME="${CLUSTER_NAME}-control-plane"
+
+if kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
+  echo "==> Cluster '$CLUSTER_NAME' ja existe"
+  # extraPortMappings so vale no momento da criacao do no: um cluster criado
+  # antes, ou com outras portas, nunca vai publicar essas portas no host.
+  if ! docker port "$NODE_NAME" 2>/dev/null | grep -q ":${APP_HOST_PORT}$"; then
+    echo "AVISO: o no '$NODE_NAME' nao publica a porta ${APP_HOST_PORT} no host." >&2
+    echo "       O deploy vai funcionar, mas http://localhost:${APP_HOST_PORT} nao respondera." >&2
+    echo "       Para corrigir, recrie o cluster:  ./kind/down.sh && ./kind/deploy-local.sh" >&2
+  fi
+else
+  check_port_free "$APP_HOST_PORT" "aplicacao" "APP_HOST_PORT"
+  check_port_free "$KEYCLOAK_HOST_PORT" "keycloak" "KEYCLOAK_HOST_PORT"
+
+  echo "==> Criando cluster '$CLUSTER_NAME' (app: ${APP_HOST_PORT}, keycloak: ${KEYCLOAK_HOST_PORT})"
+  CLUSTER_CONFIG="$(mktemp)"
+  trap 'rm -f "$CLUSTER_CONFIG"' EXIT
+  sed -e "s|hostPort: 18080|hostPort: ${APP_HOST_PORT}|" \
+      -e "s|hostPort: 18081|hostPort: ${KEYCLOAK_HOST_PORT}|" \
+      "$SCRIPT_DIR/kind-cluster.yaml" > "$CLUSTER_CONFIG"
+  kind create cluster --config "$CLUSTER_CONFIG"
+fi
+
+kubectl config use-context "kind-${CLUSTER_NAME}" >/dev/null
+echo "==> Contexto kubectl: $(kubectl config current-context)"
+
+# ---------------------------------------------------------------------------
+# 2. Imagem da aplicacao
+# O kind nao enxerga o daemon local do Docker: a imagem precisa ser carregada
+# para dentro do no com 'kind load'.
+# ---------------------------------------------------------------------------
+if [[ "$SKIP_BUILD" != "true" ]]; then
+  echo "==> Buildando a imagem $IMAGE (pode demorar no primeiro build)"
+  docker build -t "$IMAGE" "$ROOT_DIR"
+fi
+
+echo "==> Carregando $IMAGE no cluster"
+kind load docker-image "$IMAGE" --name "$CLUSTER_NAME"
+
+# ---------------------------------------------------------------------------
+# 3. Secrets (valores de desenvolvimento)
+# ---------------------------------------------------------------------------
+echo "==> Aplicando Secrets"
+kubectl create secret generic db-credentials \
+  --from-literal=POSTGRES_USER="${POSTGRES_USER:-user}" \
+  --from-literal=POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-password}" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic keycloak-credentials \
+  --from-literal=KEYCLOAK_ADMIN_USER="${KEYCLOAK_ADMIN_USER:-admin}" \
+  --from-literal=KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-admin}" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+# Placeholder: a imagem local nao precisa de credencial, mas o Deployment
+# referencia imagePullSecrets e o kubelet loga warning se o secret nao existir.
+kubectl create secret docker-registry ghcr-creds \
+  --docker-server=ghcr.io \
+  --docker-username=local \
+  --docker-password=local \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+# ---------------------------------------------------------------------------
+# 4. ConfigMaps gerados a partir de conf/ (mesmos arquivos do docker-compose)
+# ---------------------------------------------------------------------------
+echo "==> Aplicando ConfigMaps"
+kubectl create configmap postgres-initdb \
+  --from-file="$ROOT_DIR/conf/init-db/" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create configmap keycloak-realm \
+  --from-file=realm.json="$ROOT_DIR/conf/realm-export.json" \
+  -n "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl apply -f "$K8S_DIR/app/configmap.yaml" -n "$NAMESPACE"
+
+# ---------------------------------------------------------------------------
+# 5. PostgreSQL
+# ---------------------------------------------------------------------------
+echo "==> Aplicando PostgreSQL"
+kubectl apply -f "$K8S_DIR/postgres/pvc.yaml" -n "$NAMESPACE"
+kubectl apply -f "$K8S_DIR/postgres/deployment.yaml" -n "$NAMESPACE"
+kubectl rollout status deployment/postgres -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
+
+# ---------------------------------------------------------------------------
+# 6. Keycloak
+# ---------------------------------------------------------------------------
+echo "==> Aplicando Keycloak (issuer: $KEYCLOAK_URL)"
+sed "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$K8S_DIR/keycloak/deployment.yaml" \
+  | kubectl apply -n "$NAMESPACE" -f -
+kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
+
+# ---------------------------------------------------------------------------
+# 7. Aplicacao (1 replica local, para economizar CPU/memoria da maquina)
+# ---------------------------------------------------------------------------
+echo "==> Aplicando aplicacao"
+sed -e "s|__IMAGE__|${IMAGE}|g" \
+    -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" \
+    -e "s|^  replicas: 2$|  replicas: 1|" "$K8S_DIR/app/deployment.yaml" \
+  | kubectl apply -n "$NAMESPACE" -f -
+
+# ---------------------------------------------------------------------------
+# 8. Converte os Services para NodePort (aplicado DEPOIS dos manifests, que
+#    declaram LoadBalancer para o GKE)
+# ---------------------------------------------------------------------------
+kubectl apply -f "$SCRIPT_DIR/nodeport-services.yaml" -n "$NAMESPACE"
+
+kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
+
+# ---------------------------------------------------------------------------
+# 9. Smoke test
+# ---------------------------------------------------------------------------
+echo "==> Verificando /actuator/health"
+HEALTH="$(curl -fsS --max-time 10 "http://localhost:${APP_HOST_PORT}/actuator/health" 2>/dev/null || echo 'indisponivel')"
+
+cat <<RESUMO
+
+==========================================
+ Ambiente local no ar (cluster: $CLUSTER_NAME)
+==========================================
+ App       : http://localhost:${APP_HOST_PORT}
+ Health    : http://localhost:${APP_HOST_PORT}/actuator/health  -> $HEALTH
+ Swagger   : http://localhost:${APP_HOST_PORT}/swagger-ui/index.html
+ Keycloak  : ${KEYCLOAK_URL}  (admin / admin)
+
+ Token de teste:
+   curl -X POST "${KEYCLOAK_URL}/realms/Fiap/protocol/openid-connect/token" \\
+     -d "client_id=oficina" -d "username=admin" -d "password=admin" \\
+     -d "grant_type=password"
+
+ Destruir: ./kind/down.sh
+==========================================
+RESUMO
+
+kubectl get pods,svc -n "$NAMESPACE"

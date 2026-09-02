@@ -1,80 +1,55 @@
 package br.com.fiap.oficina.application.service
 
-import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.domain.repository.VeiculoRepository
+import br.com.fiap.oficina.application.dto.VeiculoRequest
+import br.com.fiap.oficina.application.dto.VeiculoResponse
+import br.com.fiap.oficina.application.mapper.VeiculoMapper
+import br.com.fiap.oficina.domain.usecase.veiculo.AtualizarVeiculoUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorIdUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculoPorPlacaUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.BuscarVeiculosPorMotoristaUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.CriarVeiculoUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.ListarVeiculosUseCase
+import br.com.fiap.oficina.domain.usecase.veiculo.RemoverVeiculoUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Service
 
-data class VeiculoComando(
-    val marca: String,
-    val nome: String,
-    val modelo: String,
-    val ano: String,
-    val placa: String,
-    val motoristaId: Id,
-)
-
 @Service
-class VeiculoService(private val repository: VeiculoRepository, private val clienteRepository: ClienteRepository) {
-    fun salvarVeiculo(comando: VeiculoComando): Veiculo {
-        require(!repository.existePorPlaca(comando.placa)) { "Veiculo já cadastrado" }
-
-        val motorista =
-            clienteRepository.buscarPorId(comando.motoristaId)
-                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
-
-        return repository.salvar(
-            Veiculo.criar(
-                marca = comando.marca,
-                nome = comando.nome,
-                modelo = comando.modelo,
-                ano = comando.ano,
-                placa = comando.placa,
-                motorista = motorista,
-            ),
-        )
+class VeiculoService(
+    private val criarVeiculoUseCase: CriarVeiculoUseCase,
+    private val listarVeiculosUseCase: ListarVeiculosUseCase,
+    private val buscarVeiculoPorIdUseCase: BuscarVeiculoPorIdUseCase,
+    private val buscarVeiculoPorPlacaUseCase: BuscarVeiculoPorPlacaUseCase,
+    private val buscarVeiculosPorMotoristaUseCase: BuscarVeiculosPorMotoristaUseCase,
+    private val atualizarVeiculoUseCase: AtualizarVeiculoUseCase,
+    private val removerVeiculoUseCase: RemoverVeiculoUseCase,
+    private val mapper: VeiculoMapper,
+) {
+    fun criar(request: VeiculoRequest): VeiculoResponse {
+        val veiculo = mapper.toDomain(request)
+        val response = criarVeiculoUseCase.executar(veiculo)
+        return mapper.toResponse(response)
     }
 
-    fun atualizarVeiculo(id: Id, comando: VeiculoComando): Veiculo {
-        val existente =
-            repository.buscarPorId(id)
-                ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $id")
+    fun listarTodos(): List<VeiculoResponse> = listarVeiculosUseCase.executar().map { mapper.toResponse(it) }
 
-        if (existente.placa != comando.placa) {
-            require(!repository.existePorPlaca(comando.placa)) {
-                "Já existe um veículo cadastrado com a placa: ${comando.placa}"
-            }
-        }
-
-        val motorista =
-            clienteRepository.buscarPorId(comando.motoristaId)
-                ?: throw IllegalArgumentException("Cliente não encontrado com o ID: ${comando.motoristaId}")
-
-        return repository.salvar(
-            Veiculo(
-                id = existente.id,
-                marca = comando.marca,
-                nome = comando.nome,
-                modelo = comando.modelo,
-                ano = comando.ano,
-                placa = comando.placa,
-                motorista = motorista,
-            ),
-        )
+    fun buscarPorId(id: String): VeiculoResponse {
+        val resultado = buscarVeiculoPorIdUseCase.executar(Id.fromString(id))
+        return mapper.toResponse(resultado)
     }
 
-    fun removerVeiculo(id: Id) {
-        repository.buscarPorId(id)
-            ?: throw IllegalArgumentException("Veículo não encontrado com o ID: $id")
-        repository.remover(id)
+    fun buscarPorPlaca(placa: String): VeiculoResponse {
+        val resultado = buscarVeiculoPorPlacaUseCase.executar(placa)
+        return mapper.toResponse(resultado)
     }
 
-    fun buscarPorId(id: Id): Veiculo? = repository.buscarPorId(id)
+    fun buscarPorMotorista(motoristaId: String): List<VeiculoResponse> =
+        buscarVeiculosPorMotoristaUseCase.executar(Id.fromString(motoristaId)).map { mapper.toResponse(it) }
 
-    fun buscarPorPlaca(placa: String): Veiculo? = repository.buscarPorPlaca(placa)
+    fun atualizar(id: String, request: VeiculoRequest): VeiculoResponse {
+        val veiculo = mapper.toDomain(request.copy(id = id))
+        val response = atualizarVeiculoUseCase.executar(veiculo)
+        return mapper.toResponse(response)
+    }
 
-    fun buscarPorMotorista(motoristaId: Id): List<Veiculo> = repository.buscarPorMotorista(motoristaId)
-
-    fun listarTodos(): List<Veiculo> = repository.listarTodos()
+    fun remover(id: String) = removerVeiculoUseCase.executar(Id.fromString(id))
 }
