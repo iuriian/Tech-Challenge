@@ -214,6 +214,8 @@ jobs:
 
       - name: Create cluster secrets from Secret Manager
         run: |
+          set -euo pipefail
+
           DB_PASSWORD=$(gcloud secrets versions access latest \
             --secret="${{ secrets.GKE_CLUSTER }}-db-password" \
             --project="${{ secrets.GCP_PROJECT_ID }}")
@@ -226,19 +228,28 @@ jobs:
           echo "::add-mask::$DB_PASSWORD"
           echo "::add-mask::$KC_PASSWORD"
 
+          if [ -z "$DB_PASSWORD" ]; then
+            echo "::error::Secret Manager devolveu senha vazia para ${{ secrets.GKE_CLUSTER }}-db-password"
+            exit 1
+          fi
+          if [ -z "$KC_PASSWORD" ]; then
+            echo "::error::Secret Manager devolveu senha vazia para ${{ secrets.GKE_CLUSTER }}-keycloak-admin-password"
+            exit 1
+          fi
+
           kubectl create secret generic db-credentials \
             --from-literal=POSTGRES_USER=user \
             --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create Keycloak Secret
-        run: |
           kubectl create secret generic keycloak-credentials \
             --from-literal=KEYCLOAK_ADMIN_USER=admin \
             --from-literal=KEYCLOAK_ADMIN_PASSWORD="$KC_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "✅ Secrets db-credentials e keycloak-credentials aplicados"
 
       - name: Create GHCR pull secret
         run: |
