@@ -5,8 +5,8 @@ import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Veiculo
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.VeiculoJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.jpa.VeiculoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.VeiculoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.repository.VeiculoJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
 import org.junit.jupiter.api.Assertions.assertTrue

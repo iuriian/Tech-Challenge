@@ -1,20 +1,28 @@
 package br.com.fiap.oficina.application
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.PecaRequest
+import br.com.fiap.oficina.application.mapper.PecaMapper
 import br.com.fiap.oficina.application.service.PecaService
 import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.repository.PecaRepository
+import br.com.fiap.oficina.domain.exception.PecaNaoEncontradoException
+import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
+import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
+import br.com.fiap.oficina.domain.usecase.peca.CriarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.DeletarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ListarPecasUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ReativarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
+import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
 import br.com.fiap.oficina.domain.valueobject.Id
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.never
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
@@ -23,15 +31,51 @@ import java.math.BigDecimal
 @ExtendWith(MockitoExtension::class)
 class PecaServiceTest {
     @Mock
-    lateinit var repository: PecaRepository
+    lateinit var criarPecaUseCase: CriarPecaUseCase
 
-    @InjectMocks
-    lateinit var service: PecaService
+    @Mock
+    lateinit var listarPecasUseCase: ListarPecasUseCase
 
+    @Mock
+    lateinit var buscarPecaPorCodigoUseCase: BuscarPecaPorCodigoUseCase
+
+    @Mock
+    lateinit var buscarPecaPorNomeUseCase: BuscarPecaPorNomeUseCase
+
+    @Mock
+    lateinit var atualizarPecaUseCase: AtualizarPecaUseCase
+
+    @Mock
+    lateinit var retirarPecasUseCase: RetirarPecasUseCase
+
+    @Mock
+    lateinit var reporPecasUseCase: ReporPecasUseCase
+
+    @Mock
+    lateinit var reativarPecaUseCase: ReativarPecaUseCase
+
+    @Mock
+    lateinit var deletarPecaUseCase: DeletarPecaUseCase
+
+    private val mapper = PecaMapper()
+    private lateinit var service: PecaService
     private lateinit var peca: Peca
 
     @BeforeEach
     fun setup() {
+        service =
+            PecaService(
+                criarPecaUseCase,
+                listarPecasUseCase,
+                buscarPecaPorCodigoUseCase,
+                buscarPecaPorNomeUseCase,
+                atualizarPecaUseCase,
+                retirarPecasUseCase,
+                reporPecasUseCase,
+                reativarPecaUseCase,
+                deletarPecaUseCase,
+                mapper,
+            )
         peca =
             Peca(
                 id = Id.generate(),
@@ -43,114 +87,125 @@ class PecaServiceTest {
     }
 
     @Test
-    fun `deve salvar peca quando codigo nao existe`() {
-        `when`(repository.existePorCodigo("PEC001")).thenReturn(false)
-        `when`(repository.salvar(peca)).thenReturn(peca)
+    fun `deve criar peca`() {
+        val request =
+            PecaRequest(
+                codigo = "PEC001",
+                nome = "Filtro de Óleo",
+                precoDeVenda = 45.00,
+                qtdEstoque = 10,
+            )
+        `when`(criarPecaUseCase.executar(anyObject())).thenReturn(peca)
 
-        assertEquals(peca, service.salvarPeca(peca))
-        verify(repository).salvar(peca)
+        val response = service.criar(request)
+
+        assertEquals("PEC001", response.codigo)
+        assertEquals("Filtro de Óleo", response.nome)
+        verify(criarPecaUseCase).executar(anyObject())
     }
 
     @Test
-    fun `deve rejeitar peca com codigo ja cadastrado`() {
-        `when`(repository.existePorCodigo("PEC001")).thenReturn(true)
+    fun `deve listar pecas`() {
+        `when`(listarPecasUseCase.executar()).thenReturn(listOf(peca))
 
-        val exception =
-            assertThrows(IllegalArgumentException::class.java) {
-                service.salvarPeca(peca)
-            }
+        val response = service.listar()
 
-        assertEquals("Peça já cadastrada", exception.message)
-        verify(repository, never()).salvar(peca)
+        assertEquals(1, response.size)
+        assertEquals("PEC001", response.first().codigo)
     }
 
     @Test
-    fun `deve atualizar dados da peca`() {
-        `when`(repository.buscarAtivoPorCodigo("PEC001")).thenReturn(peca)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Peca>(0) }
+    fun `deve buscar peca por codigo`() {
+        `when`(buscarPecaPorCodigoUseCase.executar("PEC001")).thenReturn(peca)
 
-        val dados = peca.copy(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00"))
-        val resultado = service.atualizarPeca("PEC001", dados)
+        val response = service.buscarPorCodigo("PEC001")
 
-        assertEquals("Filtro Novo", resultado.nome)
-        assertEquals(BigDecimal("60.00"), resultado.precoDeVenda)
+        assertEquals("PEC001", response.codigo)
+    }
+
+    @Test
+    fun `deve propagar excecao ao buscar por codigo inexistente`() {
+        `when`(buscarPecaPorCodigoUseCase.executar("XPTO"))
+            .thenThrow(PecaNaoEncontradoException.porCodigo("XPTO"))
+
+        assertThrows(PecaNaoEncontradoException::class.java) {
+            service.buscarPorCodigo("XPTO")
+        }
+    }
+
+    @Test
+    fun `deve buscar peca por nome`() {
+        `when`(buscarPecaPorNomeUseCase.executar("Filtro de Óleo")).thenReturn(peca)
+
+        val response = service.buscarPorNome("Filtro de Óleo")
+
+        assertEquals("Filtro de Óleo", response.nome)
+    }
+
+    @Test
+    fun `deve propagar excecao ao buscar por nome inexistente`() {
+        `when`(buscarPecaPorNomeUseCase.executar("Inexistente"))
+            .thenThrow(PecaNaoEncontradoException.porNome("Inexistente"))
+
+        assertThrows(PecaNaoEncontradoException::class.java) {
+            service.buscarPorNome("Inexistente")
+        }
+    }
+
+    @Test
+    fun `deve atualizar peca`() {
+        val request = PecaRequest(nome = "Filtro Novo", precoDeVenda = 60.00)
+        val atualizada = peca.copy(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00"))
+        `when`(atualizarPecaUseCase.executar(anyObject(), anyObject())).thenReturn(atualizada)
+
+        val response = service.atualizar("PEC001", request)
+
+        assertEquals("Filtro Novo", response.nome)
+        assertEquals(60.00, response.precoDeVenda)
     }
 
     @Test
     fun `deve retirar pecas do estoque`() {
-        `when`(repository.buscarAtivoPorCodigo("PEC001")).thenReturn(peca)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Peca>(0) }
+        val atualizada = peca.copy(qtdEstoque = 7)
+        `when`(retirarPecasUseCase.executar("PEC001", 3)).thenReturn(atualizada)
 
-        assertEquals(7, service.retirarPecas("PEC001", 3)?.qtdEstoque)
+        val response = service.retirar("PEC001", 3)
+
+        assertEquals(7, response.qtdEstoque)
     }
 
     @Test
     fun `deve repor pecas no estoque`() {
-        `when`(repository.buscarAtivoPorCodigo("PEC001")).thenReturn(peca)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Peca>(0) }
+        val atualizada = peca.copy(qtdEstoque = 15)
+        `when`(reporPecasUseCase.executar("PEC001", 5)).thenReturn(atualizada)
 
-        assertEquals(15, service.reporPecas("PEC001", 5)?.qtdEstoque)
+        val response = service.repor("PEC001", 5)
+
+        assertEquals(15, response.qtdEstoque)
     }
 
     @Test
-    fun `deve desativar peca`() {
-        `when`(repository.buscarAtivoPorCodigo("PEC001")).thenReturn(peca)
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Peca>(0) }
+    fun `deve reativar peca`() {
+        `when`(reativarPecaUseCase.executar("PEC001")).thenReturn(true)
 
-        assertTrue(service.desativarPeca("PEC001"))
-        assertTrue(service.deletarPeca("PEC001"))
+        assertEquals(true, service.reativar("PEC001"))
     }
 
     @Test
-    fun `deve reativar peca existente`() {
-        `when`(repository.buscarPorCodigo("PEC001")).thenReturn(peca.copy(ativo = false))
-        `when`(repository.salvar(anyObject())).thenAnswer { it.getArgument<Peca>(0) }
+    fun `deve deletar peca`() {
+        `when`(deletarPecaUseCase.executar("PEC001")).thenReturn(true)
 
-        assertTrue(service.reativarPeca("PEC001"))
+        assertEquals(true, service.deletar("PEC001"))
     }
 
     @Test
-    fun `deve retornar false ao reativar peca inexistente`() {
-        `when`(repository.buscarPorCodigo("XPTO")).thenReturn(null)
+    fun `deve propagar excecao ao deletar peca inexistente`() {
+        doThrow(PecaNaoEncontradoException.porCodigo("XPTO"))
+            .`when`(deletarPecaUseCase)
+            .executar("XPTO")
 
-        assertFalse(service.reativarPeca("XPTO"))
-        verify(repository, never()).salvar(peca)
-    }
-
-    @Test
-    fun `deve buscar peca ativa por codigo`() {
-        `when`(repository.buscarAtivoPorCodigo("PEC001")).thenReturn(peca)
-
-        assertEquals(peca, service.buscarPorCodigo("PEC001"))
-    }
-
-    @Test
-    fun `deve lancar excecao ao buscar peca inexistente por codigo`() {
-        `when`(repository.buscarAtivoPorCodigo("XPTO")).thenReturn(null)
-
-        val exception =
-            assertThrows(IllegalArgumentException::class.java) {
-                service.buscarPorCodigo("XPTO")
-            }
-
-        assertEquals("Peça não encontrada", exception.message)
-    }
-
-    @Test
-    fun `deve delegar buscas e listagens ao repositorio`() {
-        val id = Id.generate()
-        `when`(repository.buscarAtivoPorNome("Filtro de Óleo")).thenReturn(peca)
-        `when`(repository.existeAtivoPorCodigo("PEC001")).thenReturn(true)
-        `when`(repository.buscarPorId(id)).thenReturn(peca)
-        `when`(repository.buscarPorCodigo("PEC001")).thenReturn(peca)
-        `when`(repository.existePorCodigo("PEC001")).thenReturn(true)
-        `when`(repository.listarAtivos()).thenReturn(listOf(peca))
-
-        assertEquals(peca, service.buscarPorNome("Filtro de Óleo"))
-        assertTrue(service.existePorCodigo("PEC001"))
-        assertEquals(peca, service.buscarGerencialPorId(id))
-        assertEquals(peca, service.buscarEntreTodosPorCodigo("PEC001"))
-        assertTrue(service.existeEntreTodosPorCodigo("PEC001"))
-        assertEquals(listOf(peca), service.listarPecas())
+        assertThrows(PecaNaoEncontradoException::class.java) {
+            service.deletar("XPTO")
+        }
     }
 }
