@@ -66,6 +66,23 @@ if ! kubectl get secret keycloak-credentials -n "$NAMESPACE" >/dev/null 2>&1; th
 fi
 
 # ---------------------------------------------------------------------------
+# 1b. Checksum dos secrets, injetado no pod template dos Deployments.
+# E o que faz uma senha corrigida realmente chegar ao pod: o template muda, o
+# Kubernetes cria um ReplicaSet novo e o pod antigo e substituido. Sem isso o
+# apply e um no-op e o pod continua com o valor antigo.
+# ---------------------------------------------------------------------------
+if command -v sha256sum >/dev/null 2>&1; then
+  HASHER=(sha256sum)
+else
+  HASHER=(shasum -a 256)
+fi
+
+SECRETS_HASH="$(kubectl get secret db-credentials keycloak-credentials \
+  -n "$NAMESPACE" -o jsonpath='{range .items[*]}{.metadata.name}={.data}{end}' \
+  | "${HASHER[@]}" | cut -c1-16)"
+echo "==> Checksum dos secrets: $SECRETS_HASH"
+
+# ---------------------------------------------------------------------------
 # 2. ConfigMaps gerados a partir dos arquivos versionados em conf/
 #    (evita duplicar realm e script de init entre docker-compose e Kubernetes)
 # ---------------------------------------------------------------------------
@@ -125,7 +142,8 @@ echo "==> Aplicando Keycloak"
 echo "    O primeiro boot leva ~2 min (augmentation do Quarkus + import do realm)."
 echo "    Ate la o startupProbe registra 'connection refused' na porta 9000: e esperado."
 echo "    NAO interrompa - o Ctrl+C aqui mata o script inteiro, antes de aplicar a app."
-sed "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/keycloak/deployment.yaml" \
+sed -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" \
+    -e "s|__SECRETS_HASH__|${SECRETS_HASH}|g" "$SCRIPT_DIR/keycloak/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
@@ -134,7 +152,8 @@ kubectl rollout status deployment/keycloak -n "$NAMESPACE" --timeout="$ROLLOUT_T
 # ---------------------------------------------------------------------------
 echo "==> Aplicando aplicacao"
 sed -e "s|__IMAGE__|${IMAGE}|g" \
-    -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/app/deployment.yaml" \
+    -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" \
+    -e "s|__SECRETS_HASH__|${SECRETS_HASH}|g" "$SCRIPT_DIR/app/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 

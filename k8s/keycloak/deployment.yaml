@@ -13,6 +13,12 @@ spec:
       app: keycloak
   template:
     metadata:
+      annotations:
+        # Substituido pelo deploy.sh por um hash do conteudo dos secrets.
+        # Sem isto, corrigir uma senha nao chega ao pod: o template continua
+        # identico, o `kubectl apply` vira no-op, nenhum ReplicaSet novo e
+        # criado e o pod antigo segue reiniciando com o valor velho.
+        checksum/secrets: "__SECRETS_HASH__"
       labels:
         app: keycloak
     spec:
