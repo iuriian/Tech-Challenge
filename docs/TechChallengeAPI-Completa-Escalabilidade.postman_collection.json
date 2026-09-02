@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "4f8de937-772d-4e0c-8d0b-b01ccf5a5ba0",
+    "_postman_id": "e0b19a3c-51a9-4b81-85e1-988ead61e29c",
     "name": "TechChallenge API - Completa + Escalabilidade",
-    "description": "# TechChallenge API - Collection completa + escalabilidade\n\nCollection com **todas as APIs do projeto** (oficina mecânica - FIAP Tech Challenge) mais um\ncenário de **escalabilidade automática** que simula aumento de carga com múltiplas ordens de serviço.\n\n## Estrutura\n\n| Pasta | Conteúdo |\n|-------|----------|\n| `00` | Token do Keycloak, health/readiness/liveness e OpenAPI (endpoints públicos) |\n| `01` | `/funcionarios` |\n| `02` | `/clientes` |\n| `03` | `/pecas` (CRUD + estoque + soft delete) |\n| `04` | `/veiculos` |\n| `05` | `/catalogo/servicos` - catálogo de serviços oferecidos |\n| `06` | `/servicos` - ordens de serviço (criação, consulta, orçamento, métricas) |\n| `07` | `/servicos/{id}/avancar` e `/status` - máquina de estados da OS |\n| `99` | **Cenário de escalabilidade automática** (ver descricao da pasta) |\n\n## Ordem de execução sugerida\n\n**01 - Funcionários** -> **02 - Clientes** -> **03 - Peças** -> **04 - Veículos** ->\n**05 - Catálogo de serviços** -> **06 - Ordens de serviço** -> **07 - Fluxo de status**\n\nOs scripts de teste salvam automaticamente os ids em variaveis de coleção\n(`funcionarioId`, `clienteId`, `pecaId`, `veiculoId`, `servicoCatalogoId`, `servicoId`),\nentão basta rodar na ordem.\n\n## Autenticação\n\nA collection usa **OAuth2 password grant** contra o Keycloak (realm `Fiap`) no nível raiz;\nas pastas herdam essa configuração. Ajuste `keycloakUrl`, `clientId`, `username` e `password`\ne clique em **Get New Access Token**. Os endpoints de `/actuator/health/**`, `/actuator/info`,\n`/swagger-ui/**` e `/v3/api-docs/**` são públicos e usam `No Auth`.\n\n## Variaveis principais\n\n- `baseUrl` - URL da API (`http://127.0.0.1:8080` no docker-compose; o Service `app` no cluster)\n- `keycloakUrl` - URL do Keycloak (`http://localhost:8081` no docker-compose)\n- variaveis `load*` - usadas exclusivamente pela pasta `99`\n\n## Observações sobre payloads\n\n- Ordens de serviço usam `itens` com `tipo` (`SERVICO` | `PECA`) e `referenciaId` = **UUID**\n  do serviço do catálogo ou da peça (não o código da peça).\n- `codigo` da peça aceita de 3 a 10 caracteres.\n- `placa` aceita formato antigo (`ABC1234`) ou Mercosul (`ABC1D23`).\n- `tipoPessoa`: `PESSOA_FISICA` | `PESSOA_JURIDICA` (documento validado por dígito verificador).\n",
+    "description": "# TechChallenge API - Collection completa + escalabilidade\n\nCollection com **todas as APIs do projeto** (oficina mecânica - FIAP Tech Challenge) mais um\ncenário de **escalabilidade automática** que simula aumento de carga com múltiplas ordens de serviço.\n\n## Estrutura\n\n| Pasta | Conteúdo |\n|-------|----------|\n| `00` | Token do Keycloak, health/readiness/liveness e OpenAPI (endpoints públicos) |\n| `01` | `/funcionarios` |\n| `02` | `/clientes` |\n| `03` | `/pecas` (CRUD + estoque + soft delete) |\n| `04` | `/veiculos` |\n| `05` | `/catalogo/servicos` - catálogo de serviços oferecidos |\n| `06` | `/servicos` - ordens de serviço (criação, consulta, orçamento, métricas) |\n| `07` | `/servicos/{id}/avancar` e `/status` - máquina de estados da OS |\n| `99` | **Cenário de escalabilidade automática** (ver descricao da pasta) |\n\n## Ordem de execução sugerida\n\n**01 - Funcionários** -> **02 - Clientes** -> **03 - Peças** -> **04 - Veículos** ->\n**05 - Catálogo de serviços** -> **06 - Ordens de serviço** -> **07 - Fluxo de status**\n\nOs scripts de teste salvam automaticamente os ids em variáveis de coleção\n(`funcionarioId`, `clienteId`, `pecaId`, `veiculoId`, `servicoCatalogoId`, `servicoId`),\nentão basta rodar na ordem.\n\n## Autenticação (automática)\n\nA auth da collection é **Bearer `{{accessToken}}`** e um **pre-request script no nível da\ncollection** obtém e renova o token no Keycloak sozinho, via Direct Access Grant. **Não e\npreciso clicar em \"Get New Access Token\"**: basta ter as variáveis corretas e disparar\nqualquer request.\n\nIsso também é o que faz a pasta `99` funcionar: a auth OAuth2 da UI do Postman não renova\ntoken durante uma rodada longa do Runner, e o token do Keycloak expira em ~5 minutos.\n\nUsuários já provisionados no realm (`conf/realm-export.json`):\n\n| username | password | role |\n|----------|----------|------|\n| `admin` | `admin` | `ADMIN` |\n| `atendente` | `atendente` | `ATENDENTE` |\n| `mecanico` | `mecanico` | `MECANICO` |\n| `clientepadrao` | `clientepadrao` | `CLIENTE` |\n\nOs endpoints `/actuator/health/**`, `/actuator/info`, `/swagger-ui/**` e `/v3/api-docs/**`\nsão públicos e usam `No Auth`.\n\n## Variáveis principais\n\n- `baseUrl` - URL da API (`http://127.0.0.1:8080` no docker-compose; o Service `app` no cluster)\n- `keycloakUrl` - URL do Keycloak (`http://localhost:8081` no docker-compose)\n- `realm` - `Fiap`\n- `clientId` - `oficina` (client público, com Direct Access Grants habilitado)\n- `username` / `password` - `admin` / `admin` por padrão\n- variáveis `load*` - usadas exclusivamente pela pasta `99`\n\n## Diagnóstico de 401 e 403\n\n**`401 Unauthorized`** = a API não recebeu um token valido. Nesta ordem:\n\n1. **`clientId` errado.** O client do realm chama-se **`oficina`**. Com outro valor o Keycloak\n   devolve `invalid_client` e nenhum token chega na API. Veja o console do Postman: o script de\n   auth loga o erro do Keycloak.\n2. **Token não aplicado no request.** Confirme que o request está com **Auth = Inherit from\n   parent**. Se voce trocou a auth do request para `No Auth`, nenhum header é enviado.\n3. **`iss` divergente.** A API valida `issuer-uri = ${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`.\n   Se o token foi emitido por `http://localhost:8081` mas a API sobe com\n   `KEYCLOAK_URL=http://keycloak:8080` (ou o contrário), o token é rejeitado. O `keycloakUrl`\n   da collection precisa ser **a mesma URL pública** configurada na aplicação.\n4. **Token expirado.** O padrão do Keycloak é 5 minutos; o script renova sozinho, mas se voce\n   fixou um token na mao ele vence. Deixe `accessToken` vazio para o script assumir.\n\n**`403 Forbidden`** = o token chegou, mas falta a role. As roles são **de client**, lidas de\n`resource_access[azp].roles` - ou seja, só valem quando `azp` (o `client_id` do token) e\n`oficina`. Rode `00 - Autenticacao e observabilidade > Obter token no Keycloak (manual)`: ele\nimprime `azp`, `iss` e as roles do token no console. `POST /pecas`, por exemplo, exige `ADMIN`.\n\n## Observações sobre payloads\n\n- Ordens de serviço usam `itens` com `tipo` (`SERVICO` | `PECA`) e `referenciaId` = **UUID**\n  do serviço do catálogo ou da peça (não o código da peça).\n- `codigo` da peça aceita de 3 a 10 caracteres.\n- `placa` aceita formato antigo (`ABC1234`) ou Mercosul (`ABC1D23`).\n- `tipoPessoa`: `PESSOA_FISICA` | `PESSOA_JURIDICA` (documento validado por dígito verificador).\n",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -53,19 +53,19 @@
               ]
             },
             "url": {
-              "raw": "{{keycloakUrl}}/realms/Fiap/protocol/openid-connect/token",
+              "raw": "{{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token",
               "host": [
                 "{{keycloakUrl}}"
               ],
               "path": [
                 "realms",
-                "Fiap",
+                "{{realm}}",
                 "protocol",
                 "openid-connect",
                 "token"
               ]
             },
-            "description": "A collection já usa OAuth2 (password grant) no nível raiz, então normalmente não e preciso rodar este request. Ele existe para depurar problemas de autenticação e para popular a variavel `accessToken`, usada por scripts."
+            "description": "**Não é obrigatório rodar este request.** O pre-request script da collection já obtém e renova o token automaticamente antes de cada chamada.\n\nUse-o para depurar: além de salvar `accessToken`, ele imprime no console o `azp`, o `iss` e as roles do token - os três motivos mais comuns de `401`/`403`.\n\nO client `oficina` e público (`publicClient: true`) com Direct Access Grants habilitado, por isso o grant `password` funciona sem `client_secret`."
           },
           "response": [],
           "event": [
@@ -77,10 +77,25 @@
                 "requests": {},
                 "exec": [
                   "pm.test('Token emitido', () => pm.response.to.have.status(200));",
+                  "",
                   "if (pm.response.code === 200) {",
                   "    const body = pm.response.json();",
                   "    pm.collectionVariables.set('accessToken', body.access_token);",
-                  "    console.log('accessToken salvo (expira em ' + body.expires_in + 's)');",
+                  "    pm.collectionVariables.set('accessTokenExpiraEm',",
+                  "        Math.floor(Date.now() / 1000) + (body.expires_in || 300));",
+                  "    console.log('[auth] accessToken salvo (expira em ' + body.expires_in + 's)');",
+                  "",
+                  "    // Mostra as roles do token para facilitar o diagnostico de 403.",
+                  "    try {",
+                  "        const payload = JSON.parse(atob(body.access_token.split('.')[1]));",
+                  "        const azp = payload.azp;",
+                  "        const roles = ((payload.resource_access || {})[azp] || {}).roles || [];",
+                  "        console.log('[auth] azp=' + azp + ' | iss=' + payload.iss + ' | roles=' + JSON.stringify(roles));",
+                  "    } catch (e) {",
+                  "        console.log('[auth] nao foi possivel decodificar o token.');",
+                  "    }",
+                  "} else {",
+                  "    console.error('[auth] Keycloak respondeu ' + pm.response.code + ': ' + pm.response.text());",
                   "}"
                 ]
               }
@@ -303,7 +318,7 @@
           ]
         }
       ],
-      "description": "Autenticação e endpoints públicos.\n\nTodos os endpoints de negocio exigem JWT do Keycloak (realm `Fiap`). Os paths `/actuator/health/**`, `/actuator/info`, `/swagger-ui/**` e `/v3/api-docs/**` são liberados e por isso os requests desta pasta usam `No Auth`."
+      "description": "Autenticação e endpoints públicos.\n\nTodos os endpoints de negócio exigem JWT do Keycloak (realm `Fiap`). Os paths `/actuator/health/**`, `/actuator/info`, `/swagger-ui/**` e `/v3/api-docs/**` são liberados e por isso os requests desta pasta usam `No Auth`."
     },
     {
       "name": "01 - Funcionários",
@@ -4224,46 +4239,11 @@
     }
   ],
   "auth": {
-    "type": "oauth2",
-    "oauth2": [
+    "type": "bearer",
+    "bearer": [
       {
-        "key": "scope",
-        "value": "openid profile",
-        "type": "string"
-      },
-      {
-        "key": "accessTokenUrl",
-        "value": "{{keycloakUrl}}/realms/Fiap/protocol/openid-connect/token",
-        "type": "string"
-      },
-      {
-        "key": "grant_type",
-        "value": "password_credentials",
-        "type": "string"
-      },
-      {
-        "key": "username",
-        "value": "{{username}}",
-        "type": "string"
-      },
-      {
-        "key": "password",
-        "value": "{{password}}",
-        "type": "string"
-      },
-      {
-        "key": "clientId",
-        "value": "{{clientId}}",
-        "type": "string"
-      },
-      {
-        "key": "client_authentication",
-        "value": "body",
-        "type": "string"
-      },
-      {
-        "key": "addTokenTo",
-        "value": "header",
+        "key": "token",
+        "value": "{{accessToken}}",
         "type": "string"
       }
     ]
@@ -4276,7 +4256,54 @@
         "packages": {},
         "requests": {},
         "exec": [
-          ""
+          "// ---------------------------------------------------------------------------",
+          "// Autenticacao automatica (Keycloak - Direct Access Grant / password).",
+          "//",
+          "// A auth da collection e Bearer {{accessToken}}. Este script busca um token novo",
+          "// sempre que nao existe um valido, o que faz a collection funcionar igual no app,",
+          "// no Collection Runner e no newman - a auth OAuth2 da UI do Postman exige clicar",
+          "// em 'Get New Access Token' e nao renova o token durante uma rodada de carga.",
+          "// ---------------------------------------------------------------------------",
+          "const agora = Math.floor(Date.now() / 1000);",
+          "const token = pm.collectionVariables.get('accessToken');",
+          "const expiraEm = Number(pm.collectionVariables.get('accessTokenExpiraEm') || 0);",
+          "",
+          "// Renova 30s antes de expirar para nao pegar o token no limite.",
+          "if (!token || expiraEm <= agora + 30) {",
+          "    const keycloakUrl = pm.collectionVariables.get('keycloakUrl');",
+          "    const realm = pm.collectionVariables.get('realm');",
+          "",
+          "    pm.sendRequest({",
+          "        url: keycloakUrl + '/realms/' + realm + '/protocol/openid-connect/token',",
+          "        method: 'POST',",
+          "        header: { 'Content-Type': 'application/x-www-form-urlencoded' },",
+          "        body: {",
+          "            mode: 'urlencoded',",
+          "            urlencoded: [",
+          "                { key: 'grant_type', value: 'password' },",
+          "                { key: 'client_id', value: pm.collectionVariables.get('clientId') },",
+          "                { key: 'username', value: pm.collectionVariables.get('username') },",
+          "                { key: 'password', value: pm.collectionVariables.get('password') },",
+          "                { key: 'scope', value: 'openid profile' }",
+          "            ]",
+          "        }",
+          "    }, function (err, res) {",
+          "        if (err) {",
+          "            console.error('[auth] falha ao contatar o Keycloak em ' + keycloakUrl + ': ' + err);",
+          "            return;",
+          "        }",
+          "        if (res.code !== 200) {",
+          "            console.error('[auth] Keycloak respondeu ' + res.code + ': ' + res.text());",
+          "            console.error('[auth] confira as variaveis keycloakUrl, realm, clientId, username e password.');",
+          "            return;",
+          "        }",
+          "        const body = res.json();",
+          "        pm.collectionVariables.set('accessToken', body.access_token);",
+          "        pm.collectionVariables.set('accessTokenExpiraEm',",
+          "            Math.floor(Date.now() / 1000) + (body.expires_in || 300));",
+          "        console.log('[auth] token renovado (expira em ' + body.expires_in + 's)');",
+          "    });",
+          "}"
         ]
       }
     },
@@ -4304,6 +4331,16 @@
       "type": "string"
     },
     {
+      "key": "realm",
+      "value": "Fiap",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "oficina",
+      "type": "string"
+    },
+    {
       "key": "username",
       "value": "admin",
       "type": "string"
@@ -4314,13 +4351,13 @@
       "type": "string"
     },
     {
-      "key": "clientId",
-      "value": "fiap-client",
+      "key": "accessToken",
+      "value": "",
       "type": "string"
     },
     {
-      "key": "accessToken",
-      "value": "",
+      "key": "accessTokenExpiraEm",
+      "value": "0",
       "type": "string"
     },
     {

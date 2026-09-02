@@ -18,6 +18,7 @@ empacotado em container e entregue num cluster GKE.
 | [versionamento.md](versionamento.md) | Como as branches se organizam (GitFlow), como nomear commits e branches, quando incrementar a versão e como a imagem é identificada |
 | [ci.md](ci.md) | O que roda a cada Pull Request, o que reprova e como reproduzir na sua máquina |
 | [cd.md](cd.md) | Como um push em `release/*` vira aplicação no ar em staging, e como voltar atrás |
+| [escalabilidade.md](escalabilidade.md) | Como provocar o autoscaling e comprovar que o HPA criou réplicas |
 
 ## Domínio e arquitetura
 
@@ -28,6 +29,7 @@ empacotado em container e entregue num cluster GKE.
 | [eventstorming.drawio](eventstorming.drawio) | Event storming do fluxo de ordem de serviço |
 | [relatorio-vulnerabilidades.md](relatorio-vulnerabilidades.md) | Levantamento manual de vulnerabilidades das dependências |
 | [TechChallengeAPI .postman_collection.json](TechChallengeAPI%20.postman_collection.json) | Coleção Postman com os endpoints da API |
+| [TechChallengeAPI-Completa-Escalabilidade.postman_collection.json](TechChallengeAPI-Completa-Escalabilidade.postman_collection.json) | Coleção Postman completa (todas as APIs) + pasta de carga do cenário de escalabilidade |
 
 ## Fora desta pasta
 
