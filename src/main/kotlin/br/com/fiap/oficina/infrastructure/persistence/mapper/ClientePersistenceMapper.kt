@@ -5,10 +5,10 @@ import br.com.fiap.oficina.domain.entity.Contato
 import br.com.fiap.oficina.domain.entity.Endereco
 import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.ClienteJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.entity.ContatoJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.entity.DocumentoEmbeddable
-import br.com.fiap.oficina.infrastructure.persistence.entity.EnderecoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ClienteJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ContatoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.DocumentoEmbeddable
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.EnderecoJpaEntity
 import org.springframework.stereotype.Component
 
 @Component

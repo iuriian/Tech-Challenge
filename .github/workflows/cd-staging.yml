@@ -154,6 +154,9 @@ jobs:
     name: Deploy to Staging
     needs: [build, promote]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     environment:
       name: staging
       url: ${{ steps.expose.outputs.url }}
@@ -166,19 +169,17 @@ jobs:
       - name: Check environment configuration
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
           GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
           GKE_ZONE: ${{ vars.GKE_ZONE }}
         run: |
+          # As senhas do banco e do Keycloak nao aparecem aqui: sao geradas pelo
+          # Terraform e lidas do Secret Manager no passo de criacao dos secrets.
           MISSING=()
-          [ -n "$GCP_SA_KEY" ]              || MISSING+=("secret GCP_SA_KEY")
-          [ -n "$DB_PASSWORD" ]             || MISSING+=("secret DB_PASSWORD")
-          [ -n "$KEYCLOAK_ADMIN_PASSWORD" ] || MISSING+=("secret KEYCLOAK_ADMIN_PASSWORD")
-          [ -n "$GCP_PROJECT_ID" ]          || MISSING+=("variable GCP_PROJECT_ID")
-          [ -n "$GKE_CLUSTER" ]             || MISSING+=("variable GKE_CLUSTER")
-          [ -n "$GKE_ZONE" ]                || MISSING+=("variable GKE_ZONE")
+          [ -n "$GCP_SA_KEY" ]     || MISSING+=("secret GCP_SA_KEY")
+          [ -n "$GCP_PROJECT_ID" ] || MISSING+=("variable GCP_PROJECT_ID")
+          [ -n "$GKE_CLUSTER" ]    || MISSING+=("variable GKE_CLUSTER")
+          [ -n "$GKE_ZONE" ]       || MISSING+=("variable GKE_ZONE")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Configuracao ausente no Environment 'staging': ${MISSING[*]}"
@@ -213,19 +214,29 @@ jobs:
           kubectl get namespace ${{ env.KUBE_NAMESPACE }} >/dev/null 2>&1 \
             || kubectl create namespace ${{ env.KUBE_NAMESPACE }}
 
-      - name: Create Database Secret
+      - name: Create cluster secrets from Secret Manager
         run: |
+          DB_PASSWORD=$(gcloud secrets versions access latest \
+            --secret="${{ vars.GKE_CLUSTER }}-db-password" \
+            --project="${{ vars.GCP_PROJECT_ID }}")
+          KC_PASSWORD=$(gcloud secrets versions access latest \
+            --secret="${{ vars.GKE_CLUSTER }}-keycloak-admin-password" \
+            --project="${{ vars.GCP_PROJECT_ID }}")
+
+          # Valores lidos em runtime nao sao mascarados automaticamente pelo
+          # GitHub; sem isto, um comando verboso poderia imprimi-los no log.
+          echo "::add-mask::$DB_PASSWORD"
+          echo "::add-mask::$KC_PASSWORD"
+
           kubectl create secret generic db-credentials \
             --from-literal=POSTGRES_USER=user \
-            --from-literal=POSTGRES_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Create Keycloak Secret
-        run: |
           kubectl create secret generic keycloak-credentials \
             --from-literal=KEYCLOAK_ADMIN_USER=admin \
-            --from-literal=KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}' \
+            --from-literal=KEYCLOAK_ADMIN_PASSWORD="$KC_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 

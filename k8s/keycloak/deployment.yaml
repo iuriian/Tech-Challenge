@@ -80,12 +80,15 @@ spec:
             - name: realm
               mountPath: /opt/keycloak/data/import
               readOnly: true
+          # 120 x 5s = 10 min. e2-medium tem CPU compartilhada e a augmentation
+          # do Quarkus e pesada: em maquina maior o boot levou ~2 min, aqui pode
+          # passar de 5. Estourar o startupProbe reinicia o container em loop.
           startupProbe:
             httpGet:
               path: /health/started
               port: management
             periodSeconds: 5
-            failureThreshold: 60
+            failureThreshold: 120
           readinessProbe:
             httpGet:
               path: /health/ready

@@ -1,150 +1,121 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.PecaRequest
+import br.com.fiap.oficina.application.dto.PecaResponse
 import br.com.fiap.oficina.application.service.PecaService
-import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
-import br.com.fiap.oficina.presentation.dto.PecaDto
-import br.com.fiap.oficina.presentation.mapper.PecaMapper
-import org.junit.Assert.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
-import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 class PecaControllerUnitTest {
     private val service = mock(PecaService::class.java)
-    private val controller = PecaController(service, PecaMapper())
+    private val controller = PecaController(service)
 
-    private val peca =
-        Peca(
-            id = Id.generate(),
+    private val pecaResponse =
+        PecaResponse(
+            id = "00000000-0000-0000-0000-000000000001",
             codigo = "PEC001",
             nome = "Filtro de Óleo",
-            precoDeVenda = BigDecimal("45.00"),
+            precoDeVenda = 45.00,
             qtdEstoque = 10,
+            ativo = true,
         )
 
-    private fun pecaDto() = PecaDto(
+    private fun pecaRequest() = PecaRequest(
         codigo = "PEC001",
         nome = "Filtro de Óleo",
-        precoDeVenda = BigDecimal("45.00"),
+        precoDeVenda = 45.00,
         qtdEstoque = 10,
     )
 
-    @Test
-    fun `criar deve retornar dto da peca salva`() {
-        `when`(service.salvarPeca(anyObject())).thenReturn(peca)
+    @BeforeEach
+    fun setupRequestContext() {
+        val request = MockHttpServletRequest("POST", "/pecas")
+        RequestContextHolder.setRequestAttributes(ServletRequestAttributes(request))
+    }
 
-        val dto = controller.criar(pecaDto())
-
-        assertEquals("PEC001", dto.codigo)
-        assertEquals(peca.id.valor, dto.id)
+    @AfterEach
+    fun clearRequestContext() {
+        RequestContextHolder.resetRequestAttributes()
     }
 
     @Test
-    fun `criar deve traduzir conflito em 409`() {
-        `when`(service.salvarPeca(anyObject())).thenThrow(IllegalArgumentException("Peça já cadastrada"))
+    fun `criar deve retornar dto da peca salva`() {
+        `when`(service.criar(anyObject())).thenReturn(pecaResponse)
 
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                controller.criar(pecaDto())
-            }
+        val response = controller.criar(pecaRequest())
 
-        assertEquals(HttpStatus.CONFLICT, exception.statusCode)
+        assertEquals("PEC001", response.body?.codigo)
+        assertEquals(201, response.statusCode.value())
     }
 
     @Test
     fun `atualizar deve retornar dto atualizado`() {
-        `when`(service.atualizarPeca(anyObject(), anyObject())).thenReturn(peca)
+        `when`(service.atualizar(anyObject(), anyObject())).thenReturn(pecaResponse)
 
         val dto =
             controller.atualizar(
                 "PEC001",
-                PecaAtualizacaoDto(nome = "Filtro Novo", precoDeVenda = BigDecimal("60.00")),
+                PecaRequest(nome = "Filtro Novo", precoDeVenda = 60.00),
             )
 
-        assertEquals("PEC001", dto?.codigo)
+        assertEquals("PEC001", dto.codigo)
     }
 
     @Test
     fun `retirarPecas deve retornar dto`() {
-        `when`(service.retirarPecas("PEC001", 3)).thenReturn(peca)
+        `when`(service.retirar("PEC001", 3)).thenReturn(pecaResponse)
 
-        assertNotNull(controller.retirarPecas("PEC001", 3))
-    }
-
-    @Test
-    fun `retirarPecas deve traduzir erro em 400`() {
-        `when`(service.retirarPecas("PEC001", 99))
-            .thenThrow(IllegalArgumentException("Quantidade em estoque insuficiente"))
-
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                controller.retirarPecas("PEC001", 99)
-            }
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
+        assertEquals("PEC001", controller.retirarPecas("PEC001", 3).codigo)
     }
 
     @Test
     fun `reporPecas deve retornar dto`() {
-        `when`(service.reporPecas("PEC001", 5)).thenReturn(peca)
+        `when`(service.repor("PEC001", 5)).thenReturn(pecaResponse)
 
-        assertNotNull(controller.reporPecas("PEC001", 5))
-    }
-
-    @Test
-    fun `reporPecas deve traduzir erro em 400`() {
-        `when`(service.reporPecas("PEC001", -1))
-            .thenThrow(IllegalArgumentException("Quantidade para reposição deve ser maior que zero"))
-
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
-                controller.reporPecas("PEC001", -1)
-            }
-
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
+        assertEquals("PEC001", controller.reporPecas("PEC001", 5).codigo)
     }
 
     @Test
     fun `reativar deve delegar ao service`() {
-        `when`(service.reativarPeca("PEC001")).thenReturn(true)
+        `when`(service.reativar("PEC001")).thenReturn(true)
 
-        assertTrue(controller.reativar("PEC001"))
+        assertEquals(true, controller.reativar("PEC001"))
     }
 
     @Test
     fun `deletar deve delegar ao service`() {
-        `when`(service.deletarPeca("PEC001")).thenReturn(true)
+        controller.deletar("PEC001")
 
-        assertTrue(controller.deletar("PEC001"))
+        verify(service).deletar("PEC001")
     }
 
     @Test
     fun `listar deve mapear todas as pecas`() {
-        `when`(service.listarPecas()).thenReturn(listOf(peca))
+        `when`(service.listar()).thenReturn(listOf(pecaResponse))
 
         assertEquals(1, controller.listar().size)
     }
 
     @Test
     fun `buscarPorCodigo deve mapear resultado`() {
-        `when`(service.buscarPorCodigo("PEC001")).thenReturn(peca)
+        `when`(service.buscarPorCodigo("PEC001")).thenReturn(pecaResponse)
 
-        assertEquals("PEC001", controller.buscarPorCodigo("PEC001")?.codigo)
+        assertEquals("PEC001", controller.buscarPorCodigo("PEC001").codigo)
     }
 
     @Test
     fun `buscarPorNome deve mapear resultado`() {
-        `when`(service.buscarPorNome("Filtro de Óleo")).thenReturn(peca)
+        `when`(service.buscarPorNome("Filtro de Óleo")).thenReturn(pecaResponse)
 
-        assertEquals("PEC001", controller.buscarPorNome("Filtro de Óleo")?.codigo)
+        assertEquals("PEC001", controller.buscarPorNome("Filtro de Óleo").codigo)
     }
 }

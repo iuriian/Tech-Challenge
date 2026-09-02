@@ -1,15 +1,14 @@
 package br.com.fiap.oficina.presentation.controller
 
+import br.com.fiap.oficina.application.dto.PecaRequest
+import br.com.fiap.oficina.application.dto.PecaResponse
 import br.com.fiap.oficina.application.service.PecaService
-import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
-import br.com.fiap.oficina.presentation.dto.PecaDto
-import br.com.fiap.oficina.presentation.mapper.PecaMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
-import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -19,29 +18,28 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @RestController
 @RequestMapping("/pecas")
 @Tag(name = "Peças", description = "Operações relacionadas ao gerenciamento de peças e estoque")
-class PecaController(private val service: PecaService, private val mapper: PecaMapper) {
+class PecaController(private val pecaService: PecaService) {
     @PostMapping
     @RolesAllowed("ADMIN")
-    @ResponseStatus(HttpStatus.CREATED)
     @Operation(
         summary = "Criar uma nova peça",
         description = "Cadastra uma nova peça no sistema. Retorna conflito (409) se o código já existir.",
     )
-    fun criar(@Valid @RequestBody peca: PecaDto): PecaDto {
-        val entity = mapper.toEntity(peca)
-
-        return try {
-            mapper.toDto(service.salvarPeca(entity))
-        } catch (exception: IllegalArgumentException) {
-            throw ResponseStatusException(HttpStatus.CONFLICT, exception.message, exception)
-        }
+    fun criar(@Valid @RequestBody peca: PecaRequest): ResponseEntity<PecaResponse> {
+        val response = pecaService.criar(peca)
+        val location =
+            ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/codigo/{codigo}")
+                .buildAndExpand(response.codigo)
+                .toUri()
+        return ResponseEntity.created(location).body(response)
     }
 
     @PutMapping("/{codigo}")
@@ -53,12 +51,8 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
     fun atualizar(
         @Parameter(description = "Código da peça a ser atualizada", required = true, example = "PEC001")
         @PathVariable codigo: String,
-        @Valid @RequestBody peca: PecaAtualizacaoDto,
-    ): PecaDto? {
-        val entity = mapper.toEntity(peca)
-
-        return service.atualizarPeca(codigo, entity).let { mapper.toDto(it) }
-    }
+        @Valid @RequestBody peca: PecaRequest,
+    ): PecaResponse = pecaService.atualizar(codigo, peca)
 
     @PatchMapping("/{codigo}/estoque/retirar")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -71,11 +65,7 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser retirada do estoque", required = true, example = "5")
         @RequestParam qtd: Int,
-    ): PecaDto? = try {
-        service.retirarPecas(codigo, qtd)?.let { mapper.toDto(it) }
-    } catch (exception: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-    }
+    ): PecaResponse = pecaService.retirar(codigo, qtd)
 
     @PatchMapping("/{codigo}/estoque/repor")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -88,11 +78,7 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
         @PathVariable codigo: String,
         @Parameter(description = "Quantidade a ser reposta no estoque", required = true, example = "10")
         @RequestParam qtd: Int,
-    ): PecaDto? = try {
-        service.reporPecas(codigo, qtd)?.let { mapper.toDto(it) }
-    } catch (exception: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.BAD_REQUEST, exception.message, exception)
-    }
+    ): PecaResponse = pecaService.repor(codigo, qtd)
 
     @PatchMapping("/{codigo}/reativar")
     @RolesAllowed("ADMIN")
@@ -103,7 +89,7 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
     fun reativar(
         @Parameter(description = "Código da peça a ser reativada", required = true, example = "PEC001")
         @PathVariable codigo: String,
-    ): Boolean = service.reativarPeca(codigo)
+    ): Boolean = pecaService.reativar(codigo)
 
     @DeleteMapping("/{codigo}")
     @RolesAllowed("ADMIN")
@@ -114,7 +100,9 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
     fun deletar(
         @Parameter(description = "Código da peça a ser desativada", required = true, example = "PEC001")
         @PathVariable codigo: String,
-    ): Boolean = service.deletarPeca(codigo)
+    ) {
+        pecaService.deletar(codigo)
+    }
 
     @GetMapping
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -122,7 +110,7 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
         summary = "Listar peças",
         description = "Lista todas as peças cadastradas no sistema",
     )
-    fun listar(): List<PecaDto> = service.listarPecas().map { mapper.toDto(it) }
+    fun listar(): List<PecaResponse> = pecaService.listar()
 
     @GetMapping("/codigo/{codigo}")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -133,7 +121,7 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
     fun buscarPorCodigo(
         @Parameter(description = "Código da peça", required = true, example = "PEC001")
         @PathVariable codigo: String,
-    ): PecaDto? = service.buscarPorCodigo(codigo).let { mapper.toDto(it) }
+    ): PecaResponse = pecaService.buscarPorCodigo(codigo)
 
     @GetMapping("/nome/{nome}")
     @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
@@ -144,5 +132,5 @@ class PecaController(private val service: PecaService, private val mapper: PecaM
     fun buscarPorNome(
         @Parameter(description = "Nome da peça", required = true, example = "Filtro de óleo")
         @PathVariable nome: String,
-    ): PecaDto? = service.buscarPorNome(nome)?.let { mapper.toDto(it) }
+    ): PecaResponse = pecaService.buscarPorNome(nome)
 }

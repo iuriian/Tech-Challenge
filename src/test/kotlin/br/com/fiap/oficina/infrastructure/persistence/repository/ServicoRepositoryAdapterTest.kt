@@ -3,10 +3,9 @@ package br.com.fiap.oficina.infrastructure.persistence.repository
 import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.Servico
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.ServicoJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.jpa.ServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ServicoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.repository.ServicoJpaRepository
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.repository.ServicoRepositoryAdapter
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull

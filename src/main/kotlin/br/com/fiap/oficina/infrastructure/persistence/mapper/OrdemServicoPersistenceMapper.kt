@@ -5,8 +5,8 @@ import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.domain.valueobject.ItemOrcamento
 import br.com.fiap.oficina.domain.valueobject.NumeroOrdemServico
 import br.com.fiap.oficina.domain.valueobject.Orcamento
-import br.com.fiap.oficina.infrastructure.persistence.entity.ItemOrcamentoJpaEntity
-import br.com.fiap.oficina.infrastructure.persistence.entity.OrdemServicoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ItemOrcamentoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.OrdemServicoJpaEntity
 import org.springframework.stereotype.Component
 import java.time.Duration
 

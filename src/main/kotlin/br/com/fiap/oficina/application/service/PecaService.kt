@@ -1,73 +1,67 @@
 package br.com.fiap.oficina.application.service
 
-import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.repository.PecaRepository
-import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.application.dto.PecaRequest
+import br.com.fiap.oficina.application.dto.PecaResponse
+import br.com.fiap.oficina.application.mapper.PecaMapper
+import br.com.fiap.oficina.domain.usecase.peca.AtualizarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorCodigoUseCase
+import br.com.fiap.oficina.domain.usecase.peca.BuscarPecaPorNomeUseCase
+import br.com.fiap.oficina.domain.usecase.peca.CriarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.DeletarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ListarPecasUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ReativarPecaUseCase
+import br.com.fiap.oficina.domain.usecase.peca.ReporPecasUseCase
+import br.com.fiap.oficina.domain.usecase.peca.RetirarPecasUseCase
 import org.springframework.stereotype.Service
 
 @Service
-class PecaService(private val repository: PecaRepository) {
-    fun salvarPeca(peca: Peca): Peca {
-        require(!repository.existePorCodigo(peca.codigo)) { "Peça já cadastrada" }
-
-        return repository.salvar(peca)
+class PecaService(
+    private val criarPecaUseCase: CriarPecaUseCase,
+    private val listarPecasUseCase: ListarPecasUseCase,
+    private val buscarPecaPorCodigoUseCase: BuscarPecaPorCodigoUseCase,
+    private val buscarPecaPorNomeUseCase: BuscarPecaPorNomeUseCase,
+    private val atualizarPecaUseCase: AtualizarPecaUseCase,
+    private val retirarPecasUseCase: RetirarPecasUseCase,
+    private val reporPecasUseCase: ReporPecasUseCase,
+    private val reativarPecaUseCase: ReativarPecaUseCase,
+    private val deletarPecaUseCase: DeletarPecaUseCase,
+    private val mapper: PecaMapper,
+) {
+    fun criar(request: PecaRequest): PecaResponse {
+        val peca = mapper.toDomain(request)
+        val response = criarPecaUseCase.executar(peca)
+        return mapper.toResponse(response)
     }
 
-    fun atualizarPeca(codigo: String, dadosAtualizados: Peca): Peca {
-        val peca = buscarPorCodigo(codigo)
+    fun listar(): List<PecaResponse> = listarPecasUseCase.executar().map { mapper.toResponse(it) }
 
-        return repository.salvar(
-            peca.copy(
-                nome = dadosAtualizados.nome,
-                descricao = dadosAtualizados.descricao,
-                fabricante = dadosAtualizados.fabricante,
-                fornecedor = dadosAtualizados.fornecedor,
-                precoDeCompra = dadosAtualizados.precoDeCompra,
-                precoDeVenda = dadosAtualizados.precoDeVenda,
-            ),
-        )
+    fun buscarPorCodigo(codigo: String): PecaResponse {
+        val resultado = buscarPecaPorCodigoUseCase.executar(codigo)
+        return mapper.toResponse(resultado)
     }
 
-    fun retirarPecas(codigo: String, qtd: Int): Peca? {
-        val peca = buscarPorCodigo(codigo)
-
-        return repository.salvar(peca.retirarPecas(qtd))
+    fun buscarPorNome(nome: String): PecaResponse {
+        val resultado = buscarPecaPorNomeUseCase.executar(nome)
+        return mapper.toResponse(resultado)
     }
 
-    fun reporPecas(codigo: String, qtd: Int): Peca? {
-        val peca = buscarPorCodigo(codigo)
-
-        return repository.salvar(peca.reporPecas(qtd))
+    fun atualizar(codigo: String, request: PecaRequest): PecaResponse {
+        val dadosAtualizados = mapper.toDomain(request.copy(codigo = codigo))
+        val response = atualizarPecaUseCase.executar(codigo, dadosAtualizados)
+        return mapper.toResponse(response)
     }
 
-    fun desativarPeca(codigo: String): Boolean {
-        val peca = buscarPorCodigo(codigo)
-
-        repository.salvar(peca.desativar())
-        return true
+    fun retirar(codigo: String, qtd: Int): PecaResponse {
+        val response = retirarPecasUseCase.executar(codigo, qtd)
+        return mapper.toResponse(response)
     }
 
-    fun deletarPeca(codigo: String) = desativarPeca(codigo)
-
-    fun reativarPeca(codigo: String): Boolean {
-        val peca = buscarEntreTodosPorCodigo(codigo) ?: return false
-
-        repository.salvar(peca.reativar())
-        return true
+    fun repor(codigo: String, qtd: Int): PecaResponse {
+        val response = reporPecasUseCase.executar(codigo, qtd)
+        return mapper.toResponse(response)
     }
 
-    fun buscarPorCodigo(codigo: String) =
-        repository.buscarAtivoPorCodigo(codigo) ?: throw IllegalArgumentException("Peça não encontrada")
+    fun reativar(codigo: String): Boolean = reativarPecaUseCase.executar(codigo)
 
-    fun buscarPorNome(nome: String) = repository.buscarAtivoPorNome(nome)
-
-    fun existePorCodigo(codigo: String) = repository.existeAtivoPorCodigo(codigo)
-
-    fun buscarGerencialPorId(id: Id) = repository.buscarPorId(id)
-
-    fun buscarEntreTodosPorCodigo(codigo: String) = repository.buscarPorCodigo(codigo)
-
-    fun existeEntreTodosPorCodigo(codigo: String) = repository.existePorCodigo(codigo)
-
-    fun listarPecas() = repository.listarAtivos()
+    fun deletar(codigo: String): Boolean = deletarPecaUseCase.executar(codigo)
 }

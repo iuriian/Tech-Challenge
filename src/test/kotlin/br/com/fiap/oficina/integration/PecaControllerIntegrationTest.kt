@@ -1,7 +1,6 @@
 package br.com.fiap.oficina.integration
 
-import br.com.fiap.oficina.presentation.dto.PecaAtualizacaoDto
-import br.com.fiap.oficina.presentation.dto.PecaDto
+import br.com.fiap.oficina.application.dto.PecaRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
@@ -10,7 +9,6 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.put
-import java.math.BigDecimal
 
 /**
  * Testes de integração do fluxo de peças/estoque. Peças de seed usadas:
@@ -19,14 +17,14 @@ import java.math.BigDecimal
 class PecaControllerIntegrationTest : AbstractIntegrationTest() {
     private fun novaPecaJson(codigo: String = "PEC999", nome: String = "Peça de Teste") =
         objectMapper.writeValueAsString(
-            PecaDto(
+            PecaRequest(
                 codigo = codigo,
                 nome = nome,
                 descricao = "Peça criada em teste de integração",
                 fabricante = "ACME",
                 fornecedor = "Fornecedor Teste",
-                precoDeCompra = BigDecimal("10.00"),
-                precoDeVenda = BigDecimal("25.00"),
+                precoDeCompra = 10.00,
+                precoDeVenda = 25.00,
                 qtdEstoque = 30,
             ),
         )
@@ -123,13 +121,13 @@ class PecaControllerIntegrationTest : AbstractIntegrationTest() {
     fun `deve atualizar dados de uma peca`() {
         val atualizacao =
             objectMapper.writeValueAsString(
-                PecaAtualizacaoDto(
+                PecaRequest(
                     nome = "Filtro de Óleo Premium",
                     descricao = "Atualizado em teste",
                     fabricante = "Bosch",
                     fornecedor = "AutoParts Ltda",
-                    precoDeCompra = BigDecimal("28.00"),
-                    precoDeVenda = BigDecimal("50.00"),
+                    precoDeCompra = 28.00,
+                    precoDeVenda = 50.00,
                 ),
             )
 

@@ -4,8 +4,8 @@ import br.com.fiap.oficina.anyObject
 import br.com.fiap.oficina.domain.entity.OrdemServico
 import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
 import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.infrastructure.persistence.entity.OrdemServicoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.jpa.OrdemServicoJpaRepository
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.OrdemServicoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.mapper.OrdemServicoPersistenceMapper
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

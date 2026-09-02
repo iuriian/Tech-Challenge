@@ -1,7 +1,7 @@
 package br.com.fiap.oficina.infrastructure.persistence.jpa
 
 import br.com.fiap.oficina.domain.enum.OrdemServicoStatus
-import br.com.fiap.oficina.infrastructure.persistence.entity.OrdemServicoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.OrdemServicoJpaEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.time.Instant
