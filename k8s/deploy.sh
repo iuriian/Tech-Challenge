@@ -22,7 +22,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Tempo maximo (segundos) de espera pelo IP externo do Service do Keycloak.
 KEYCLOAK_IP_TIMEOUT="${KEYCLOAK_IP_TIMEOUT:-300}"
-ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-600s}"
+ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-900s}"
 
 if [[ -z "$IMAGE" ]]; then
   echo "Uso: $0 <IMAGEM> [AMBIENTE] [NAMESPACE]" >&2
