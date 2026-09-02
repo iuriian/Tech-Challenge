@@ -8,7 +8,7 @@ import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceM
 import org.springframework.stereotype.Component
 
 @Component
-class VeiculoRepositoryAdapter(
+class VeiculoRepositoryImpl(
     private val jpaRepository: VeiculoJpaRepository,
     private val mapper: VeiculoPersistenceMapper,
 ) : VeiculoRepository {
