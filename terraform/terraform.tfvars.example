@@ -8,8 +8,12 @@ cluster_name = "tech-challenge-staging"
 
 # e2-medium e o minimo que comporta a stack; e2-small deixa a app em Pending
 machine_type = "e2-medium"
-node_count   = 1
 disk_size_gb = 30
+
+# Faixa do cluster autoscaler. O HPA da aplicacao escala ate 3 replicas; estes
+# valores garantem que existam nos para elas.
+min_node_count = 1
+max_node_count = 3
 
 # Spot: 60-91% mais barato. A VM pode ser reivindicada e os pods reagendam.
 use_spot_vms = true

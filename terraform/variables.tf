@@ -40,10 +40,20 @@ variable "machine_type" {
   default     = "e2-medium"
 }
 
-variable "node_count" {
-  description = "Numero de nos no pool"
+# O HPA (k8s/app/hpa.yaml) escala a aplicacao ate 3 replicas. Sem autoscaling
+# no node pool, essas replicas extras ficariam em Pending: um unico e2-medium
+# nao tem CPU para elas. Os dois autoscalers sao complementares - o HPA cria
+# pods, o cluster autoscaler cria nos.
+variable "min_node_count" {
+  description = "Minimo de nos no pool"
   type        = number
   default     = 1
+}
+
+variable "max_node_count" {
+  description = "Maximo de nos que o cluster autoscaler pode criar"
+  type        = number
+  default     = 3
 }
 
 # Spot VMs custam 60-91% menos. A VM pode ser reivindicada pelo Google com 25s

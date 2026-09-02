@@ -259,6 +259,7 @@ jobs:
             -f k8s/postgres/pvc.yaml \
             -f k8s/postgres/deployment.yaml \
             -f k8s/keycloak/service.yaml \
+            -f k8s/app/hpa.yaml \
             -n ${{ env.KUBE_NAMESPACE }}
 
       - name: Deploy to Kubernetes
