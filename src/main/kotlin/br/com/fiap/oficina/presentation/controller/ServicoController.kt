@@ -79,7 +79,6 @@ class ServicoController(private val service: ServicoService) {
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ADMIN")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "Desativar serviço",
         description = "Desativa logicamente um serviço do catálogo",

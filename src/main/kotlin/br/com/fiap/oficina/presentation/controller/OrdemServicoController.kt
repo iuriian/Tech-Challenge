@@ -161,7 +161,6 @@ class OrdemServicoController(private val service: OrdemServicoService) {
 
     @DeleteMapping("/{id}")
     @RolesAllowed("ATENDENTE", "ADMIN")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(
         summary = "Excluir ordem de serviço",
         description = "Exclui uma ordem de serviço pelo identificador",

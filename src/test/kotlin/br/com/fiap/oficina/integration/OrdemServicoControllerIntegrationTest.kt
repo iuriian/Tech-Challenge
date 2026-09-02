@@ -270,7 +270,7 @@ class OrdemServicoControllerIntegrationTest : AbstractIntegrationTest() {
 
     @Test
     @WithMockUser(roles = ["ATENDENTE"])
-    fun `deve deletar ordem de servico retornando 204`() {
+    fun `deve deletar ordem de servico retornando 200`() {
         val ordemServicoCriada =
             criarOrdemServico()
 
@@ -279,7 +279,7 @@ class OrdemServicoControllerIntegrationTest : AbstractIntegrationTest() {
                 "/servicos/${ordemServicoCriada.id}",
             ).andExpect {
                 status {
-                    isNoContent()
+                    isOk()
                 }
             }
 
