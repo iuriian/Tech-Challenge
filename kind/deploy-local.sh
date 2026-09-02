@@ -163,6 +163,25 @@ kubectl apply -f "$SCRIPT_DIR/nodeport-services.yaml" -n "$NAMESPACE"
 kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
 # ---------------------------------------------------------------------------
+# 10. metrics-server + HPA
+#
+# Diferente do GKE, o kind NAO traz metrics-server. Sem ele o HPA fica preso em
+# <unknown> indefinidamente, mesmo com tudo o mais correto. O --kubelet-insecure-tls
+# e necessario porque os certificados do kubelet no kind nao sao validos para o
+# metrics-server.
+# ---------------------------------------------------------------------------
+if ! kubectl get deployment metrics-server -n kube-system >/dev/null 2>&1; then
+  echo "==> Instalando metrics-server (nao vem no kind)"
+  kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+  kubectl patch deployment metrics-server -n kube-system --type=json \
+    -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+  kubectl rollout status deployment/metrics-server -n kube-system --timeout=180s
+fi
+
+echo "==> Aplicando HPA"
+kubectl apply -f "$K8S_DIR/app/hpa.yaml" -n "$NAMESPACE"
+
+# ---------------------------------------------------------------------------
 # 9. Smoke test
 # ---------------------------------------------------------------------------
 echo "==> Verificando /actuator/health"

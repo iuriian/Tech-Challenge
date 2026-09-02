@@ -135,6 +135,11 @@ sed -e "s|__IMAGE__|${IMAGE}|g" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
 
+# HPA depois do Deployment: aplicado antes, o alvo nao existiria. No GKE o
+# metrics-server ja vem instalado, entao nao ha nada a provisionar.
+echo "==> Aplicando HPA"
+kubectl apply -f "$SCRIPT_DIR/app/hpa.yaml" -n "$NAMESPACE"
+
 # ---------------------------------------------------------------------------
 # 7. Resumo
 # ---------------------------------------------------------------------------

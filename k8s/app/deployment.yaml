@@ -5,8 +5,9 @@ metadata:
   labels:
     app: app
 spec:
-  # Staging roda com 1 replica: nao ha requisito de disponibilidade aqui.
-  replicas: 1
+  # `replicas` e omitido de proposito: quem controla a contagem e o HPA
+  # (k8s/app/hpa.yaml). Declarar aqui faria cada `kubectl apply` resetar o valor
+  # e brigar com o autoscaler.
   strategy:
     type: RollingUpdate
     rollingUpdate:
