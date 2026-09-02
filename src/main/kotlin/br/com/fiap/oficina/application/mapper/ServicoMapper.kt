@@ -1,61 +1,28 @@
 package br.com.fiap.oficina.application.mapper
 
-import br.com.fiap.oficina.application.dto.ItemOrcamentoDto
-import br.com.fiap.oficina.application.dto.OrcamentoDto
-import br.com.fiap.oficina.application.dto.PecaServicoDto
-import br.com.fiap.oficina.application.dto.ServicoDto
-import br.com.fiap.oficina.application.dto.TempoMedioExecucaoDto
-import br.com.fiap.oficina.servico.application.dto.TempoMedioExecucao
-import br.com.fiap.oficina.servico.domain.entities.OrdemServico
-import br.com.fiap.oficina.servico.domain.valueobjects.Orcamento
+import br.com.fiap.oficina.application.dto.ServicoRequest
+import br.com.fiap.oficina.application.dto.ServicoResponse
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.valueobject.Id
 import org.springframework.stereotype.Component
 
 @Component
 class ServicoMapper {
-    fun toResponse(ordemServico: OrdemServico): ServicoDto = ServicoDto(
-        id = ordemServico.id.valor,
-        descricao = ordemServico.descricao,
-        status = ordemServico.status,
-        funcionarioId =
-        ordemServico.funcionarioId.valor
-            .toString(),
-        clienteId =
-        ordemServico.clienteId.valor
-            .toString(),
-        veiculoId =
-        ordemServico.veiculoId.valor
-            .toString(),
-        pecas =
-        ordemServico.pecas.map {
-            PecaServicoDto(
-                it.peca.id.valor
-                    .toString(),
-                it.quantidade,
-            )
-        },
-        dataAbertura = ordemServico.dataAbertura,
-        dataInicioExecucao = ordemServico.dataInicioExecucao,
-        dataFinalizacao = ordemServico.dataFinalizacao,
+    fun toDomain(request: ServicoRequest): Servico = Servico.criar(
+        descricao = request.descricao,
+        valor = request.valor,
     )
 
-    fun toResponse(tempo: TempoMedioExecucao): TempoMedioExecucaoDto = TempoMedioExecucaoDto(
-        totalServicosFinalizados = tempo.totalServicosFinalizados,
-        tempoMedioMinutos = tempo.tempoMedioMinutos,
+    fun toDomain(id: Id, request: ServicoRequest): Servico = Servico(
+        id = id,
+        descricao = request.descricao,
+        valor = request.valor,
     )
 
-    fun toResponse(orcamento: Orcamento): OrcamentoDto = OrcamentoDto(
-        servicoId = orcamento.ordemServicoId.valor,
-        itens =
-        orcamento.itens.map { item ->
-            ItemOrcamentoDto(
-                pecaId = item.referenciaId.valor,
-                codigo = item.codigoReferencia.orEmpty(),
-                nome = item.descricao,
-                precoUnitario = item.valorUnitario,
-                quantidade = item.quantidade,
-                subtotal = item.subtotal,
-            )
-        },
-        valorTotal = orcamento.valorTotal,
+    fun toResponse(servico: Servico): ServicoResponse = ServicoResponse(
+        id = servico.id.valor,
+        descricao = servico.descricao,
+        valor = servico.valor,
+        ativo = servico.ativo,
     )
 }

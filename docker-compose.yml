@@ -46,7 +46,7 @@ services:
       start_period: 40s
 
   app:
-    profiles: ["full"] 
+    profiles: ["full"]
     build:
       context: .
       dockerfile: Dockerfile

@@ -1,10 +1,8 @@
 package br.com.fiap.oficina.domain.usecase.servico
 
-import br.com.fiap.oficina.servico.domain.entities.Servico
-import br.com.fiap.oficina.servico.domain.repositories.ServicoRepository
-import org.springframework.stereotype.Service
+import br.com.fiap.oficina.domain.entity.Servico
+import br.com.fiap.oficina.domain.repository.ServicoRepository
 
-@Service
 class ListarServicosAtivosUseCase(private val repository: ServicoRepository) {
     fun executar(): List<Servico> = repository.listarAtivos()
 }

@@ -1,12 +1,12 @@
-package br.com.fiap.oficina.presentation.dto
+package br.com.fiap.oficina.application.dto
 
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import java.util.UUID
 
-data class VeiculoDTO(
-    @Size(min = 3, max = 20) val nome: String,
+data class VeiculoRequest(
+    @field:Size(min = 3, max = 20)
+    val nome: String,
     val marca: String,
     val modelo: String,
     val ano: String,
@@ -15,6 +15,7 @@ data class VeiculoDTO(
         message = "Placa inválida. Use o formato antigo (ABC1234) ou Mercosul (ABC1D23)",
     )
     val placa: String,
-    @field:NotNull val motoristaId: String,
-    val id: UUID? = null,
+    @field:NotNull
+    val motoristaId: String,
+    val id: String? = null,
 )
