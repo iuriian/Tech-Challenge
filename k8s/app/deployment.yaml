@@ -5,15 +5,10 @@ metadata:
   labels:
     app: app
 spec:
-  # Staging roda com 1 replica: nao ha requisito de alta disponibilidade aqui e
-  # o cluster e pequeno. maxUnavailable: 1 permite derrubar o pod antigo antes de
-  # subir o novo - com 1 replica isso significa uma breve indisponibilidade, mas
-  # dispensa ter capacidade para dois pods simultaneos durante o rollout.
-  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
+      maxSurge: 0
       maxUnavailable: 1
   selector:
     matchLabels:
@@ -94,9 +89,6 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 3
-          # requests dimensionam o AGENDAMENTO; limits, o teto de uso. Requests
-          # enxutos permitem caber em nos pequenos, e os limits generosos deixam
-          # a JVM usar mais quando ha folga. Overcommit consciente, so em staging.
           resources:
             requests:
               cpu: 100m

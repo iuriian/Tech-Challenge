@@ -154,6 +154,9 @@ jobs:
     name: Deploy to Staging
     needs: [build, promote]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     environment:
       name: staging
       url: ${{ steps.expose.outputs.url }}
@@ -166,16 +169,12 @@ jobs:
       - name: Check environment configuration
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
           GKE_ZONE: ${{ secrets.GKE_ZONE }}
         run: |
           MISSING=()
           [ -n "$GCP_SA_KEY" ]              || MISSING+=("secret GCP_SA_KEY")
-          [ -n "$DB_PASSWORD" ]             || MISSING+=("secret DB_PASSWORD")
-          [ -n "$KEYCLOAK_ADMIN_PASSWORD" ] || MISSING+=("secret KEYCLOAK_ADMIN_PASSWORD")
           [ -n "$GCP_PROJECT_ID" ]          || MISSING+=("secret GCP_PROJECT_ID")
           [ -n "$GKE_CLUSTER" ]             || MISSING+=("secret GKE_CLUSTER")
           [ -n "$GKE_ZONE" ]                || MISSING+=("secret GKE_ZONE")
@@ -186,9 +185,9 @@ jobs:
             exit 1
           fi
 
-          # Cluster, zona e projeto sao secrets: no log apareceriam mascarados
-          # como ***, entao nao ha o que imprimir alem do namespace.
           echo "✅ Environment 'staging' configurado"
+          echo "   Cluster:   $GKE_CLUSTER ($GKE_ZONE)"
+          echo "   Projeto:   $GCP_PROJECT_ID"
           echo "   Namespace: ${{ env.KUBE_NAMESPACE }}"
 
       - name: Setup Google Cloud
@@ -213,11 +212,23 @@ jobs:
           kubectl get namespace ${{ env.KUBE_NAMESPACE }} >/dev/null 2>&1 \
             || kubectl create namespace ${{ env.KUBE_NAMESPACE }}
 
-      - name: Create Database Secret
+      - name: Create cluster secrets from Secret Manager
         run: |
+          DB_PASSWORD=$(gcloud secrets versions access latest \
+            --secret="${{ secrets.GKE_CLUSTER }}-db-password" \
+            --project="${{ secrets.GCP_PROJECT_ID }}")
+          KC_PASSWORD=$(gcloud secrets versions access latest \
+            --secret="${{ secrets.GKE_CLUSTER }}-keycloak-admin-password" \
+            --project="${{ secrets.GCP_PROJECT_ID }}")
+
+          # Valores lidos em runtime nao sao mascarados automaticamente pelo
+          # GitHub; sem isto, um comando verboso poderia imprimi-los no log.
+          echo "::add-mask::$DB_PASSWORD"
+          echo "::add-mask::$KC_PASSWORD"
+
           kubectl create secret generic db-credentials \
             --from-literal=POSTGRES_USER=user \
-            --from-literal=POSTGRES_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            --from-literal=POSTGRES_PASSWORD="$DB_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -225,7 +236,7 @@ jobs:
         run: |
           kubectl create secret generic keycloak-credentials \
             --from-literal=KEYCLOAK_ADMIN_USER=admin \
-            --from-literal=KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}' \
+            --from-literal=KEYCLOAK_ADMIN_PASSWORD="$KC_PASSWORD" \
             -n ${{ env.KUBE_NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
@@ -248,6 +259,7 @@ jobs:
             -f k8s/postgres/pvc.yaml \
             -f k8s/postgres/deployment.yaml \
             -f k8s/keycloak/service.yaml \
+            -f k8s/app/hpa.yaml \
             -n ${{ env.KUBE_NAMESPACE }}
 
       - name: Deploy to Kubernetes

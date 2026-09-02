@@ -40,5 +40,23 @@ data class Veiculo(
                 motorista = motorista,
             )
         }
+
+        fun reconstruir(
+            id: String,
+            marca: String,
+            nome: String,
+            modelo: String,
+            ano: String,
+            placa: String,
+            motorista: Cliente,
+        ): Veiculo = Veiculo(
+            id = Id.fromString(id),
+            marca = marca,
+            nome = nome,
+            modelo = modelo,
+            ano = ano,
+            placa = placa,
+            motorista = motorista,
+        )
     }
 }

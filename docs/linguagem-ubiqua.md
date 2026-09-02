@@ -93,7 +93,7 @@ Definidos no Keycloak e aplicados via `@RolesAllowed` (ver `KeycloakJwtRoleConve
 
 ## Veículo
 
-`domain/entity/Veiculo.kt`, `VeiculoService`, `VeiculoController`, `VeiculoDTO`.
+`domain/entity/Veiculo.kt`, `VeiculoService`, `VeiculoController`, `VeiculoRequest`, `VeiculoResponse`.
 
 | Termo         | Definição                                                             | Atributo                        |
 |---------------|-----------------------------------------------------------------------|---------------------------------|
@@ -106,7 +106,7 @@ Definidos no Keycloak e aplicados via `@RolesAllowed` (ver `KeycloakJwtRoleConve
 
 ## Peça
 
-`domain/entity/Peca.kt`, `PecaService`, `PecaController`, `PecaDto` / `PecaAtualizacaoDto`.
+`domain/entity/Peca.kt`, `PecaService`, `PecaController`, `PecaRequest` / `PecaResponse`.
 
 | Termo                          | Definição                                                     | Atributo / Método                  |
 |--------------------------------|---------------------------------------------------------------|------------------------------------|

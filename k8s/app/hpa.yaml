@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# HorizontalPodAutoscaler da aplicacao.
+#
+# Fica em k8s/ (e nao no Terraform) pelo mesmo criterio do resto: min/max de
+# replicas e alvo de CPU sao decisoes da aplicacao e mudam com ela.
+#
+# A contrapartida no Terraform e o autoscaling do node pool: o HPA cria pods,
+# e o cluster autoscaler cria nos para eles. Sem os dois, escalar so produz
+# pods em Pending.
+#
+# O Deployment NAO declara `replicas`: quando um HPA existe, deixar o campo no
+# manifest faz cada `kubectl apply` resetar a contagem e brigar com o autoscaler.
+# ---------------------------------------------------------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app
+  labels:
+    app: app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # 70% do REQUEST (100m), nao do limite. Com requests enxutos o gatilho
+          # dispara cedo - e o comportamento desejado em staging, onde o objetivo
+          # e demonstrar o escalonamento.
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      # Evita oscilacao: so reduz apos 5 min de carga baixa sustentada.
+      stabilizationWindowSeconds: 300

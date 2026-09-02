@@ -1,5 +1,6 @@
 package br.com.fiap.oficina.infrastructure.persistence.entity
 
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.PecaJpaEntity
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

@@ -20,6 +20,7 @@ bin/
 ### IntelliJ IDEA ###
 .idea
 .idea/
+.run/
 *.iws
 *.iml
 *.ipr
@@ -54,3 +55,18 @@ docker-compose.override.yaml
 # OS
 .DS_Store
 Thumbs.db
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Credenciais GCP
+key.json
+*-key.json
+sa-key*.json
+gcp-credentials*.json
+application_default_credentials.json

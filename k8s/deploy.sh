@@ -22,7 +22,7 @@ ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Tempo maximo (segundos) de espera pelo IP externo do Service do Keycloak.
 KEYCLOAK_IP_TIMEOUT="${KEYCLOAK_IP_TIMEOUT:-300}"
-ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-600s}"
+ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-900s}"
 
 if [[ -z "$IMAGE" ]]; then
   echo "Uso: $0 <IMAGEM> [AMBIENTE] [NAMESPACE]" >&2
@@ -137,6 +137,11 @@ sed -e "s|__IMAGE__|${IMAGE}|g" \
     -e "s|__KEYCLOAK_URL__|${KEYCLOAK_URL}|g" "$SCRIPT_DIR/app/deployment.yaml" \
   | kubectl apply -n "$NAMESPACE" -f -
 kubectl rollout status deployment/app -n "$NAMESPACE" --timeout="$ROLLOUT_TIMEOUT"
+
+# HPA depois do Deployment: aplicado antes, o alvo nao existiria. No GKE o
+# metrics-server ja vem instalado, entao nao ha nada a provisionar.
+echo "==> Aplicando HPA"
+kubectl apply -f "$SCRIPT_DIR/app/hpa.yaml" -n "$NAMESPACE"
 
 # ---------------------------------------------------------------------------
 # 7. Resumo
