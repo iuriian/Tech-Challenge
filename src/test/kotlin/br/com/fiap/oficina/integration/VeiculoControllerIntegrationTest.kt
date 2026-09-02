@@ -1,7 +1,8 @@
 package br.com.fiap.oficina.integration
 
+import br.com.fiap.oficina.application.dto.VeiculoRequest
+import br.com.fiap.oficina.application.dto.VeiculoResponse
 import br.com.fiap.oficina.domain.repository.ClienteRepository
-import br.com.fiap.oficina.presentation.dto.VeiculoDTO
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,7 +29,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
         motoristaId: String = motoristaSeedId().toString(),
         nome: String = "Carro de Teste",
     ) = objectMapper.writeValueAsString(
-        VeiculoDTO(
+        VeiculoRequest(
             nome = nome,
             marca = "Honda",
             modelo = "Civic",
@@ -52,7 +53,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
                     jsonPath("$.placa") { value("TST1A23") }
                 }.andReturn()
 
-        val criado: VeiculoDTO = objectMapper.readValue(response.response.contentAsString)
+        val criado: VeiculoResponse = objectMapper.readValue(response.response.contentAsString)
 
         mockMvc
             .get("/veiculos/${criado.id}")
@@ -119,11 +120,18 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
                 }.andExpect { status { isCreated() } }
                 .andReturn()
 
-        val criado: VeiculoDTO = objectMapper.readValue(response.response.contentAsString)
+        val criado: VeiculoResponse = objectMapper.readValue(response.response.contentAsString)
 
         val atualizado =
             objectMapper.writeValueAsString(
-                criado.copy(modelo = "Civic Touring"),
+                VeiculoRequest(
+                    nome = criado.nome,
+                    marca = criado.marca,
+                    modelo = "Civic Touring",
+                    ano = criado.ano,
+                    placa = criado.placa,
+                    motoristaId = criado.motoristaId,
+                ),
             )
 
         mockMvc
@@ -147,7 +155,7 @@ class VeiculoControllerIntegrationTest : AbstractIntegrationTest() {
                 }.andExpect { status { isCreated() } }
                 .andReturn()
 
-        val criado: VeiculoDTO = objectMapper.readValue(response.response.contentAsString)
+        val criado: VeiculoResponse = objectMapper.readValue(response.response.contentAsString)
 
         mockMvc
             .delete("/veiculos/${criado.id}")

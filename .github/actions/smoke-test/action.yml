@@ -1,5 +1,5 @@
 name: Smoke Test Docker
-description: 'Validar que a imagem Docker sobe e responde antes de fazer push/deploy'
+description: 'Sobe a imagem com um PostgreSQL descartavel e valida os endpoints do actuator antes do push/deploy'
 
 inputs:
   image-tag:
@@ -7,14 +7,24 @@ inputs:
     required: true
 
   port:
-    description: 'Porta para testar'
+    description: 'Porta no host para publicar a aplicacao (o container sempre escuta em 8080)'
     required: false
     default: '8080'
 
   timeout:
-    description: 'Timeout em segundos para app ficar ready'
+    description: 'Timeout em segundos para a aplicacao responder /actuator/health'
     required: false
-    default: '60'
+    default: '180'
+
+  with-postgres:
+    description: 'Sobe um PostgreSQL descartavel na mesma rede (a aplicacao roda Flyway no boot)'
+    required: false
+    default: 'true'
+
+  env:
+    description: 'Variaveis de ambiente da aplicacao, uma por linha no formato CHAVE=valor'
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -28,114 +38,123 @@ runs:
           exit 1
         fi
 
-    - name: Start Docker container
-      id: start
+    - name: Start PostgreSQL
+      if: inputs.with-postgres == 'true'
       shell: bash
       run: |
+        set -e
+        docker network create smoke-net 2>/dev/null || true
+
+        docker run -d --name smoke-db --network smoke-net \
+          -e POSTGRES_DB=oficina \
+          -e POSTGRES_USER=user \
+          -e POSTGRES_PASSWORD=password \
+          postgres:16-alpine
+
+        echo "⏳ Aguardando PostgreSQL..."
+        for i in $(seq 1 30); do
+          if docker exec smoke-db pg_isready -U user -d oficina >/dev/null 2>&1; then
+            echo "✅ PostgreSQL pronto (${i}s)"
+            exit 0
+          fi
+          sleep 1
+        done
+
+        echo "❌ PostgreSQL nao ficou pronto"
+        docker logs smoke-db
+        exit 1
+
+    - name: Start application container
+      shell: bash
+      env:
+        SMOKE_ENV: ${{ inputs.env }}
+      run: |
+        set -e
         IMAGE="${{ inputs.image-tag }}"
-        PORT=${{ inputs.port }}
+        PORT="${{ inputs.port }}"
 
-        echo "🚀 Starting container from image: $IMAGE"
+        ENV_FILE="$(mktemp)"
+        printf '%s\n' "$SMOKE_ENV" | grep -v '^[[:space:]]*$' > "$ENV_FILE" || true
 
-        # Iniciar container com health check
-        docker run -d --name smoke-test \
-          -p $PORT:$PORT \
-          --health-cmd="curl -f http://localhost:$PORT/actuator/health || exit 1" \
-          --health-interval=5s \
-          --health-timeout=3s \
-          --health-start-period=30s \
-          --health-retries=5 \
+        echo "🚀 Subindo container a partir de: $IMAGE"
+        echo "   Variaveis de ambiente:"
+        sed 's/\(PASSWORD=\).*/\1***/' "$ENV_FILE" | sed 's/^/     /'
+
+        NETWORK_ARG=""
+        if [ "${{ inputs.with-postgres }}" = "true" ]; then
+          NETWORK_ARG="--network smoke-net"
+        fi
+
+        # A prontidao e verificada do runner (curl do host), e nao por HEALTHCHECK
+        # do Docker: a imagem runtime nao garante ter curl instalado.
+        docker run -d --name smoke-test $NETWORK_ARG \
+          -p "${PORT}:8080" \
+          --env-file "$ENV_FILE" \
           "$IMAGE"
 
-        # Esperar container ficar healthy
-        TIMEOUT=${{ inputs.timeout }}
+        rm -f "$ENV_FILE"
+
+        TIMEOUT="${{ inputs.timeout }}"
         ELAPSED=0
+        echo "⏳ Aguardando /actuator/health (max ${TIMEOUT}s)..."
 
-        echo "⏳ Waiting for container to be healthy (max ${TIMEOUT}s)..."
+        while [ "$ELAPSED" -lt "$TIMEOUT" ]; do
+          if ! docker ps --format '{{.Names}}' | grep -q '^smoke-test$'; then
+            echo "❌ O container morreu durante o boot"
+            docker logs smoke-test
+            exit 1
+          fi
 
-        while [ $ELAPSED -lt $TIMEOUT ]; do
-          STATUS=$(docker inspect -f '{{.State.Health.Status}}' smoke-test 2>/dev/null || echo "none")
-
-          if [ "$STATUS" = "healthy" ]; then
-            echo "✅ Container is healthy (${ELAPSED}s)"
+          if curl -fsS "http://localhost:${PORT}/actuator/health" >/dev/null 2>&1; then
+            echo "✅ Aplicacao respondendo (${ELAPSED}s)"
             exit 0
           fi
 
-          sleep 1
-          ELAPSED=$((ELAPSED + 1))
+          sleep 3
+          ELAPSED=$((ELAPSED + 3))
         done
 
-        echo "❌ Container failed to become healthy after ${TIMEOUT}s"
-        echo ""
-        echo "Container logs:"
+        echo "❌ A aplicacao nao respondeu em ${TIMEOUT}s"
         docker logs smoke-test
         exit 1
 
     - name: Run smoke tests
-      id: tests
       shell: bash
       run: |
-        set -e
-        PORT=${{ inputs.port }}
-
-        echo "🧪 Running smoke tests..."
-        echo ""
-
+        PORT="${{ inputs.port }}"
         FAILED=0
 
-        # Test 1: Health
-        echo -n "  [1/4] /actuator/health ... "
-        if curl -s -f http://localhost:$PORT/actuator/health > /dev/null; then
-          echo "✅"
-        else
-          echo "❌"
-          FAILED=$((FAILED + 1))
-        fi
-
-        # Test 2: Liveness
-        echo -n "  [2/4] /actuator/health/liveness ... "
-        if curl -s -f http://localhost:$PORT/actuator/health/liveness > /dev/null; then
-          echo "✅"
-        else
-          echo "❌"
-          FAILED=$((FAILED + 1))
-        fi
-
-        # Test 3: Readiness
-        echo -n "  [3/4] /actuator/health/readiness ... "
-        if curl -s -f http://localhost:$PORT/actuator/health/readiness > /dev/null; then
-          echo "✅"
-        else
-          echo "❌"
-          FAILED=$((FAILED + 1))
-        fi
-
-        # Test 4: Info
-        echo -n "  [4/4] /actuator/info ... "
-        if curl -s -f http://localhost:$PORT/actuator/info > /dev/null; then
-          echo "✅"
-        else
-          echo "❌"
-          FAILED=$((FAILED + 1))
-        fi
+        echo "🧪 Rodando smoke tests..."
+        for endpoint in \
+          /actuator/health \
+          /actuator/health/liveness \
+          /actuator/health/readiness \
+          /actuator/info \
+          /v3/api-docs \
+          /swagger-ui/index.html
+        do
+          printf '  %-35s ' "$endpoint"
+          if curl -fsS "http://localhost:${PORT}${endpoint}" >/dev/null 2>&1; then
+            echo "✅"
+          else
+            echo "❌"
+            FAILED=$((FAILED + 1))
+          fi
+        done
 
         echo ""
-
-        if [ $FAILED -eq 0 ]; then
-          echo "✅ All smoke tests passed!"
-          exit 0
+        if [ "$FAILED" -eq 0 ]; then
+          echo "✅ Todos os smoke tests passaram"
         else
-          echo "❌ $FAILED test(s) failed"
+          echo "❌ $FAILED teste(s) falharam"
+          docker logs smoke-test
           exit 1
         fi
 
-    - name: Stop Docker container
+    - name: Cleanup
       if: always()
       shell: bash
       run: |
-        if docker ps -a | grep -q smoke-test; then
-          echo "🛑 Stopping container..."
-          docker stop smoke-test 2>/dev/null || true
-          docker rm smoke-test 2>/dev/null || true
-          echo "✅ Container stopped"
-        fi
+        docker rm -f smoke-test smoke-db 2>/dev/null || true
+        docker network rm smoke-net 2>/dev/null || true
+        echo "🧹 Ambiente de smoke test removido"

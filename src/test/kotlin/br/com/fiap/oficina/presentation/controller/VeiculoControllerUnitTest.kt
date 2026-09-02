@@ -1,73 +1,85 @@
 package br.com.fiap.oficina.presentation.controller
 
 import br.com.fiap.oficina.anyObject
+import br.com.fiap.oficina.application.dto.VeiculoRequest
+import br.com.fiap.oficina.application.dto.VeiculoResponse
 import br.com.fiap.oficina.application.service.VeiculoService
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.valueobject.Documento
-import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.presentation.dto.VeiculoDTO
-import br.com.fiap.oficina.presentation.mapper.VeiculoMapper
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import kotlin.test.assertEquals
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 class VeiculoControllerUnitTest {
     private val service = mock(VeiculoService::class.java)
-    private val controller = VeiculoController(service, VeiculoMapper())
+    private val controller = VeiculoController(service)
 
-    private val motorista =
-        Cliente(
-            id = Id.generate(),
-            nome = "Dono",
-            documento = Documento.cpf("39053344705"),
-            email = "dono@example.com",
-        )
-
-    private val veiculo =
-        Veiculo(
-            id = Id.generate(),
-            marca = "Volkswagen",
+    private val veiculoResponse =
+        VeiculoResponse(
+            id = "00000000-0000-0000-0000-000000000010",
             nome = "Gol",
+            marca = "Volkswagen",
             modelo = "Gol 1.6",
             ano = "2020",
             placa = "ABC1D23",
-            motorista = motorista,
+            motoristaId = "00000000-0000-0000-0000-000000000050",
         )
+
+    private fun veiculoRequest() = VeiculoRequest(
+        nome = "Gol",
+        marca = "Volkswagen",
+        modelo = "Gol 1.6",
+        ano = "2020",
+        placa = "ABC1D23",
+        motoristaId = "00000000-0000-0000-0000-000000000050",
+    )
+
+    @BeforeEach
+    fun setupRequestContext() {
+        val request = MockHttpServletRequest("POST", "/veiculos")
+        RequestContextHolder.setRequestAttributes(ServletRequestAttributes(request))
+    }
+
+    @AfterEach
+    fun clearRequestContext() {
+        RequestContextHolder.resetRequestAttributes()
+    }
 
     @Test
     fun `criar deve retornar dto do veiculo salvo`() {
-        `when`(service.salvarVeiculo(anyObject())).thenReturn(veiculo)
+        `when`(service.criar(anyObject())).thenReturn(veiculoResponse)
 
-        val dto =
-            controller.criar(
-                VeiculoDTO("Gol", "Volkswagen", "Gol 1.6", "2020", "ABC1D23", motorista.id.valor.toString()),
-            )
+        val response = controller.criar(veiculoRequest())
 
-        assertEquals("ABC1D23", dto.placa)
-        assertEquals(motorista.id.valor.toString(), dto.motoristaId)
+        assertEquals("ABC1D23", response.body?.placa)
+        assertEquals(201, response.statusCode.value())
     }
 
     @Test
     fun `buscarVeiculoPorId deve mapear resultado`() {
-        val id = veiculo.id.valor
-        `when`(service.buscarPorId(Id.fromString(id.toString()))).thenReturn(veiculo)
+        `when`(service.buscarPorId(veiculoResponse.id)).thenReturn(veiculoResponse)
 
-        assertEquals("Gol", controller.buscarVeiculoPorId(id.toString())?.nome)
+        assertEquals("Gol", controller.buscarVeiculoPorId(veiculoResponse.id).nome)
     }
 
     @Test
-    fun `buscarVeiculoPorPlaca deve mapear resultado`() {
-        `when`(service.buscarPorPlaca("ABC1D23")).thenReturn(veiculo)
+    fun `atualizar deve retornar dto do veiculo atualizado`() {
+        `when`(service.atualizar(anyObject(), anyObject())).thenReturn(veiculoResponse)
 
-        assertEquals("Gol", controller.buscarVeiculoPorPlaca("ABC1D23")?.nome)
+        val response = controller.atualizar(veiculoResponse.id, veiculoRequest())
+
+        assertEquals("ABC1D23", response.placa)
     }
 
     @Test
-    fun `buscarVeiculosPorMotorista deve mapear lista`() {
-        `when`(service.buscarPorMotorista(motorista.id)).thenReturn(listOf(veiculo))
+    fun `remover deve delegar ao service`() {
+        controller.remover(veiculoResponse.id)
 
-        assertEquals(1, controller.buscarVeiculosPorMotorista(motorista.id.valor.toString()).size)
+        verify(service).remover(veiculoResponse.id)
     }
 }
