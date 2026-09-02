@@ -15,7 +15,7 @@ CLUSTER_NAME="${CLUSTER_NAME:-oficina-local}"
 IMAGE="${IMAGE:-oficina-app:local}"
 NAMESPACE="${NAMESPACE:-default}"
 SKIP_BUILD="${SKIP_BUILD:-false}"
-ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-600s}"
+ROLLOUT_TIMEOUT="${ROLLOUT_TIMEOUT:-900s}"
 
 # Portas publicadas na maquina host. Os padroes evitam as portas usadas pelo
 # docker-compose (80, 5432, 8081, 8090) e as portas 8080/8081, comuns demais.

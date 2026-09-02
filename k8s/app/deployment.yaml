@@ -5,12 +5,17 @@ metadata:
   labels:
     app: app
 spec:
-  replicas: 2
+  # Staging roda com 1 replica: nao ha requisito de disponibilidade aqui.
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      # maxSurge: 0 derruba o pod antigo ANTES de subir o novo. Com um unico no
+      # e2-medium nao ha CPU para dois pods da app ao mesmo tempo - surgir
+      # travaria o rollout em Pending. O custo e uma breve indisponibilidade a
+      # cada deploy, aceitavel em staging.
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: app
