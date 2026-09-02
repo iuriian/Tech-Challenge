@@ -9,6 +9,8 @@ resource "google_service_account" "ci" {
   account_id   = var.ci_service_account_id
   display_name = "GitHub Actions - deploy de staging"
   description  = "Autentica o workflow cd-staging.yml no cluster GKE"
+
+  depends_on = [google_project_service.iam]
 }
 
 # container.developer permite obter credenciais do cluster e gerenciar recursos

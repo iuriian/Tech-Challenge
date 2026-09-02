@@ -17,6 +17,8 @@ resource "google_container_cluster" "staging" {
   # padrao (true) para nao apagar o cluster por acidente.
   deletion_protection = false
 
+  network         = var.network
+  subnetwork      = var.subnetwork
   networking_mode = "VPC_NATIVE"
   ip_allocation_policy {}
 
@@ -24,7 +26,12 @@ resource "google_container_cluster" "staging" {
     channel = "REGULAR"
   }
 
-  depends_on = [google_project_service.container]
+  depends_on = [
+    google_project_service.container,
+    google_project_service.compute,
+    google_project_service.logging,
+    google_project_service.monitoring,
+  ]
 }
 
 resource "google_container_node_pool" "primary" {

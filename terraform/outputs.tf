@@ -13,6 +13,19 @@ output "ci_service_account_email" {
   value       = google_service_account.ci.email
 }
 
+output "secret_names" {
+  description = "Nomes dos segredos no Secret Manager que o cd-staging.yml consome"
+  value = {
+    db_password             = google_secret_manager_secret.db_password.secret_id
+    keycloak_admin_password = google_secret_manager_secret.keycloak_admin_password.secret_id
+  }
+}
+
+output "keycloak_admin_password_command" {
+  description = "Como ler a senha do admin do Keycloak quando precisar dela"
+  value       = "gcloud secrets versions access latest --secret=${google_secret_manager_secret.keycloak_admin_password.secret_id}"
+}
+
 output "get_credentials_command" {
   description = "Aponta o kubectl local para o cluster"
   value = join(" ", [

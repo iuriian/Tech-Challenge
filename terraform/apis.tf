@@ -16,3 +16,31 @@ resource "google_project_service" "compute" {
   service            = "compute.googleapis.com"
   disable_on_destroy = false
 }
+
+# A configuracao padrao do GKE envia logs e metricas para o Cloud Operations.
+# Sem estas APIs, a criacao do cluster falha em um projeto novo.
+resource "google_project_service" "logging" {
+  project            = var.project_id
+  service            = "logging.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "monitoring" {
+  project            = var.project_id
+  service            = "monitoring.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Necessaria para criar a service account do CI (iam.tf).
+resource "google_project_service" "iam" {
+  project            = var.project_id
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Guarda as senhas do banco e do admin do Keycloak (secrets.tf).
+resource "google_project_service" "secretmanager" {
+  project            = var.project_id
+  service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}

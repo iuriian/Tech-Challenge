@@ -15,6 +15,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 8.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   # State remoto. NUNCA versione o arquivo de state: ele grava valores de
@@ -27,10 +31,11 @@ terraform {
   #
   # Depois descomente e rode `terraform init -migrate-state`.
   #
-  # backend "gcs" {
-  #   bucket = "SEU_PROJECT_ID-tfstate"
-  #   prefix = "tech-challenge/staging"
-  # }
+  # backend nao aceita variaveis - o nome do bucket precisa ser literal.
+  backend "gcs" {
+    bucket = "tech-challenge-507123-tfstate"
+    prefix = "tech-challenge/staging"
+  }
 }
 
 provider "google" {

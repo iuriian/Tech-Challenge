@@ -114,6 +114,53 @@ Para desligar: `use_spot_vms = false`.
 `terraform destroy` ao terminar e `terraform apply` (10 min) quando precisar leva
 o custo para perto de zero — e exercita o Terraform a cada ciclo.
 
+## Senhas: geradas aqui, guardadas no Secret Manager
+
+`DB_PASSWORD` e `KEYCLOAK_ADMIN_PASSWORD` **não existem mais no GitHub**. O
+Terraform gera com `random_password`, guarda no Secret Manager, e dá à service
+account do CI permissão de leitura **apenas nesses dois segredos**. O
+`cd-staging.yml` os busca em tempo de deploy com a própria credencial do GCP.
+
+Ganho: nenhuma pessoa digita, copia ou cola essas senhas.
+
+### O state passa a ser crítico
+
+`random_password` grava o valor gerado **no state do Terraform** — usar o Secret
+Manager não muda isso. Com state local, as senhas ficam num arquivo na sua
+máquina. Por isso o backend GCS deixa de ser recomendação e vira requisito
+prático aqui.
+
+### Consultando as senhas
+
+```bash
+terraform output -raw keycloak_admin_password_command   # mostra o comando
+gcloud secrets versions access latest --secret=tech-challenge-staging-keycloak-admin-password
+```
+
+### Rotação — leia antes de rodar
+
+Recriar a senha do banco **não** basta:
+
+```bash
+terraform taint random_password.db && terraform apply   # NÃO faça isso sozinho
+```
+
+O `POSTGRES_PASSWORD` só é aplicado na **primeira inicialização** do PostgreSQL.
+Com o volume já inicializado, o banco continua com a senha antiga enquanto a
+aplicação passa a usar a nova — e ela para de conectar. Para rotacionar de fato,
+uma das duas:
+
+```bash
+# A - alterar no banco em execução
+kubectl exec deploy/postgres -n tech-challenge-staging --   psql -U user -c "ALTER USER user WITH PASSWORD 'nova-senha'"
+
+# B - recriar o volume (staging: o Flyway reconstrói tudo)
+kubectl delete deploy postgres && kubectl delete pvc postgres-data
+```
+
+A senha do Keycloak não tem essa restrição: ela cria um admin temporário a cada
+boot, então basta o novo deploy.
+
 ## Alinhamento com o GitHub
 
 O `cd-staging.yml` lê estes três como **variables** (não secrets):

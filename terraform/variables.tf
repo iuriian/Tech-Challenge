@@ -62,6 +62,20 @@ variable "disk_size_gb" {
   default     = 30
 }
 
+# Nem todo projeto tem a VPC 'default' - varias organizacoes a removem por
+# politica. Deixar explicito evita um erro obscuro na criacao do cluster.
+variable "network" {
+  description = "Nome da VPC onde o cluster sera criado"
+  type        = string
+  default     = "default"
+}
+
+variable "subnetwork" {
+  description = "Nome da subnet. Deve existir na regiao configurada."
+  type        = string
+  default     = "default"
+}
+
 variable "ci_service_account_id" {
   description = "ID da service account usada pelo GitHub Actions"
   type        = string
