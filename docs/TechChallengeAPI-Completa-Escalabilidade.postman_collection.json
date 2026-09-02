@@ -1,0 +1,4462 @@
+{
+  "info": {
+    "_postman_id": "4f8de937-772d-4e0c-8d0b-b01ccf5a5ba0",
+    "name": "TechChallenge API - Completa + Escalabilidade",
+    "description": "# TechChallenge API - Collection completa + escalabilidade\n\nCollection com **todas as APIs do projeto** (oficina mecânica - FIAP Tech Challenge) mais um\ncenário de **escalabilidade automática** que simula aumento de carga com múltiplas ordens de serviço.\n\n## Estrutura\n\n| Pasta | Conteúdo |\n|-------|----------|\n| `00` | Token do Keycloak, health/readiness/liveness e OpenAPI (endpoints públicos) |\n| `01` | `/funcionarios` |\n| `02` | `/clientes` |\n| `03` | `/pecas` (CRUD + estoque + soft delete) |\n| `04` | `/veiculos` |\n| `05` | `/catalogo/servicos` - catálogo de serviços oferecidos |\n| `06` | `/servicos` - ordens de serviço (criação, consulta, orçamento, métricas) |\n| `07` | `/servicos/{id}/avancar` e `/status` - máquina de estados da OS |\n| `99` | **Cenário de escalabilidade automática** (ver descricao da pasta) |\n\n## Ordem de execução sugerida\n\n**01 - Funcionários** -> **02 - Clientes** -> **03 - Peças** -> **04 - Veículos** ->\n**05 - Catálogo de serviços** -> **06 - Ordens de serviço** -> **07 - Fluxo de status**\n\nOs scripts de teste salvam automaticamente os ids em variaveis de coleção\n(`funcionarioId`, `clienteId`, `pecaId`, `veiculoId`, `servicoCatalogoId`, `servicoId`),\nentão basta rodar na ordem.\n\n## Autenticação\n\nA collection usa **OAuth2 password grant** contra o Keycloak (realm `Fiap`) no nível raiz;\nas pastas herdam essa configuração. Ajuste `keycloakUrl`, `clientId`, `username` e `password`\ne clique em **Get New Access Token**. Os endpoints de `/actuator/health/**`, `/actuator/info`,\n`/swagger-ui/**` e `/v3/api-docs/**` são públicos e usam `No Auth`.\n\n## Variaveis principais\n\n- `baseUrl` - URL da API (`http://127.0.0.1:8080` no docker-compose; o Service `app` no cluster)\n- `keycloakUrl` - URL do Keycloak (`http://localhost:8081` no docker-compose)\n- variaveis `load*` - usadas exclusivamente pela pasta `99`\n\n## Observações sobre payloads\n\n- Ordens de serviço usam `itens` com `tipo` (`SERVICO` | `PECA`) e `referenciaId` = **UUID**\n  do serviço do catálogo ou da peça (não o código da peça).\n- `codigo` da peça aceita de 3 a 10 caracteres.\n- `placa` aceita formato antigo (`ABC1234`) ou Mercosul (`ABC1D23`).\n- `tipoPessoa`: `PESSOA_FISICA` | `PESSOA_JURIDICA` (documento validado por dígito verificador).\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Autenticação e observabilidade",
+      "item": [
+        {
+          "name": "Obter token no Keycloak (manual)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "openid profile",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{keycloakUrl}}/realms/Fiap/protocol/openid-connect/token",
+              "host": [
+                "{{keycloakUrl}}"
+              ],
+              "path": [
+                "realms",
+                "Fiap",
+                "protocol",
+                "openid-connect",
+                "token"
+              ]
+            },
+            "description": "A collection já usa OAuth2 (password grant) no nível raiz, então normalmente não e preciso rodar este request. Ele existe para depurar problemas de autenticação e para popular a variavel `accessToken`, usada por scripts."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Token emitido', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken', body.access_token);",
+                  "    console.log('accessToken salvo (expira em ' + body.expires_in + 's)');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health (geral)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Endpoint público (permitAll no SecurityConfig). Usado pelas probes do Kubernetes."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Aplicacao UP', function () {",
+                  "    pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health - readiness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health/readiness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health",
+                "readiness"
+              ]
+            },
+            "description": "Grupo `readiness` (readinessState + db). É o mesmo path do startupProbe/readinessProbe do Deployment."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health - liveness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health/liveness",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health",
+                "liveness"
+              ]
+            },
+            "description": "Grupo `liveness`. Path do livenessProbe do Deployment."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "info"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OpenAPI (v3/api-docs)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs"
+              ]
+            },
+            "description": "Contrato OpenAPI gerado pelo springdoc. O Swagger UI fica em `{{baseUrl}}/swagger-ui.html`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Autenticação e endpoints públicos.\n\nTodos os endpoints de negocio exigem JWT do Keycloak (realm `Fiap`). Os paths `/actuator/health/**`, `/actuator/info`, `/swagger-ui/**` e `/v3/api-docs/**` são liberados e por isso os requests desta pasta usam `No Auth`."
+    },
+    {
+      "name": "01 - Funcionários",
+      "item": [
+        {
+          "name": "Criar funcionário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Eduardo Mecânico\",\n  \"cargo\": \"MECANICO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios"
+              ]
+            },
+            "description": "`cargo` aceita os valores do enum `Cargo`: `ATENDENTE` ou `MECANICO`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('funcionarioId', String(body.id));",
+                  "            console.log('funcionarioId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos os funcionários",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar funcionário por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/id/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "id",
+                "{{funcionarioId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar funcionário por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/nome/Carlos Eduardo Mecânico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "nome",
+                "Carlos Eduardo Mecânico"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar funcionário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Eduardo Mecânico Sênior\",\n  \"cargo\": \"MECANICO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "{{funcionarioId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deletar funcionário",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios/{{funcionarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios",
+                "{{funcionarioId}}"
+              ]
+            },
+            "description": "ATENCAO: rode por último. Ordens de serviço referenciam o funcionário."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "CRUD de `/funcionarios`. Roles: leitura para ATENDENTE/ADMIN/MECANICO, escrita para ADMIN/ATENDENTE."
+    },
+    {
+      "name": "02 - Clientes",
+      "item": [
+        {
+          "name": "Criar cliente (Pessoa Física)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva Santos\",\n  \"email\": \"joao.santos@email.com.br\",\n  \"numeroDocumento\": \"32958990109\",\n  \"tipoPessoa\": \"PESSOA_FISICA\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"123\",\n    \"complemento\": \"Apto 45\",\n    \"bairro\": \"Jardim Primavera\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"João da Silva Santos\",\n      \"telefone\": \"11987654321\",\n      \"tipo\": \"CELULAR\"\n    },\n    {\n      \"nome\": \"Maria Santos (esposa)\",\n      \"telefone\": \"1133221100\",\n      \"tipo\": \"FIXO\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            },
+            "description": "`numeroDocumento` passa por validação de dígito verificador (CPF)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('clienteId', String(body.id));",
+                  "            console.log('clienteId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar cliente (Pessoa Jurídica)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Transportadora ABC Ltda\",\n  \"email\": \"contato@transportadoraabc.com.br\",\n  \"numeroDocumento\": \"12345678000195\",\n  \"tipoPessoa\": \"PESSOA_JURIDICA\",\n  \"endereco\": {\n    \"logradouro\": \"Avenida Industrial\",\n    \"numero\": \"500\",\n    \"complemento\": \"Galpão 3\",\n    \"bairro\": \"Distrito Industrial\",\n    \"cidade\": \"Guarulhos\",\n    \"estado\": \"SP\",\n    \"cep\": \"07240000\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"Pedro Gerente\",\n      \"telefone\": \"11912345678\",\n      \"tipo\": \"CELULAR\"\n    },\n    {\n      \"nome\": \"Recepção\",\n      \"telefone\": \"1144556677\",\n      \"tipo\": \"FIXO\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            },
+            "description": "`numeroDocumento` passa por validação de dígito verificador (CNPJ)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('clientePjId', String(body.id));",
+                  "            console.log('clientePjId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/nome/João da Silva Santos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "nome",
+                "João da Silva Santos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por CPF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/32958990109",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "32958990109"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por CNPJ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/12345678000195",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "12345678000195"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva Santos\",\n  \"email\": \"joao.santos.novo@email.com.br\",\n  \"numeroDocumento\": \"32958990109\",\n  \"tipoPessoa\": \"PESSOA_FISICA\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"123\",\n    \"complemento\": \"Apto 45\",\n    \"bairro\": \"Jardim Primavera\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"João da Silva Santos\",\n      \"telefone\": \"11999998888\",\n      \"tipo\": \"CELULAR\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "description": "Exige role ADMIN. Rode por último: veículos e ordens de serviço apontam para o cliente."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "CRUD de `/clientes`. `tipoPessoa`: `PESSOA_FISICA` | `PESSOA_JURIDICA`."
+    },
+    {
+      "name": "03 - Peças",
+      "item": [
+        {
+          "name": "Criar peça - Filtro de Óleo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"FILTRO-001\",\n  \"nome\": \"Filtro de Óleo\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0 - compatível com Fiat, VW, GM\",\n  \"fabricante\": \"Mann-Filter\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 15.9,\n  \"precoDeVenda\": 39.9,\n  \"qtdEstoque\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            },
+            "description": "`codigo` tem entre 3 e 10 caracteres (`@Size(min = 3, max = 10)`)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Peca criada', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if ([200, 201].includes(pm.response.code)) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('pecaId', body.id);",
+                  "    pm.collectionVariables.set('pecaCodigo', body.codigo);",
+                  "    console.log('pecaId=' + body.id + ' pecaCodigo=' + body.codigo);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar peça - Pastilha de Freio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"PAST-002\",\n  \"nome\": \"Pastilha de Freio Dianteira\",\n  \"descricao\": \"Pastilha de freio dianteira para veículos de passeio - kit com 4 peças\",\n  \"fabricante\": \"Fras-le\",\n  \"fornecedor\": \"Distribuidora de Freios SP\",\n  \"precoDeCompra\": 45.0,\n  \"precoDeVenda\": 120.0,\n  \"qtdEstoque\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/201)', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar peça - Vela de Ignição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"VELA-003\",\n  \"nome\": \"Vela de Ignição\",\n  \"descricao\": \"Vela de ignição de iridium - alta durabilidade, pack com 4 unidades\",\n  \"fabricante\": \"NGK\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 22.5,\n  \"precoDeVenda\": 65.0,\n  \"qtdEstoque\": 40\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/201)', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar peças",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar peça por código",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/codigo/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "codigo",
+                "{{pecaCodigo}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar peça por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/nome/Filtro de Óleo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "nome",
+                "Filtro de Óleo"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar peça",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"FILTRO-001\",\n  \"nome\": \"Filtro de Óleo\",\n  \"descricao\": \"Filtro de óleo premium - linha leve\",\n  \"fabricante\": \"Mann-Filter\",\n  \"fornecedor\": \"AutoPeças Brasil Ltda\",\n  \"precoDeCompra\": 15.9,\n  \"precoDeVenda\": 44.9,\n  \"qtdEstoque\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Repor estoque (+10)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/estoque/repor?qtd=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "estoque",
+                "repor"
+              ],
+              "query": [
+                {
+                  "key": "qtd",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retirar do estoque (-5)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/estoque/retirar?qtd=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "estoque",
+                "retirar"
+              ],
+              "query": [
+                {
+                  "key": "qtd",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desativar peça (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            },
+            "description": "Desativação lógica: a peça continua no banco com `ativo = false`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reativar peça",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/{{pecaCodigo}}/reativar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "{{pecaCodigo}}",
+                "reativar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "CRUD de `/pecas` + movimentação de estoque. Escrita exige role ADMIN."
+    },
+    {
+      "name": "04 - Veículos",
+      "item": [
+        {
+          "name": "Criar veículo - Onix",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Onix Plus\",\n  \"marca\": \"Chevrolet\",\n  \"modelo\": \"Onix Plus 1.0 Turbo\",\n  \"ano\": \"2022\",\n  \"placa\": \"ABC1D23\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            },
+            "description": "Placa aceita formato antigo (ABC1234) ou Mercosul (ABC1D23). `nome` tem entre 3 e 20 caracteres."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('veiculoId', String(body.id));",
+                  "            console.log('veiculoId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar veículo - HB20",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"HB20 Sedan\",\n  \"marca\": \"Hyundai\",\n  \"modelo\": \"HB20S 1.6 Comfort Plus\",\n  \"ano\": \"2021\",\n  \"placa\": \"XYZ9K87\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/201)', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar veículos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar veículo por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar veículo por placa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/placa/ABC1D23",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "placa",
+                "ABC1D23"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/404)', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar veículos por motorista",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/motorista/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "motorista",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar veículo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Onix Plus Premier\",\n  \"marca\": \"Chevrolet\",\n  \"modelo\": \"Onix Plus 1.0 Turbo Premier\",\n  \"ano\": \"2023\",\n  \"placa\": \"ABC1D23\",\n  \"motoristaId\": \"{{clienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remover veículo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "CRUD de `/veiculos`. `motoristaId` é o id do cliente dono do veículo."
+    },
+    {
+      "name": "05 - Catálogo de serviços",
+      "item": [
+        {
+          "name": "Criar serviço do catálogo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"valor\": 180.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos"
+              ]
+            },
+            "description": "`descricao` tem no máximo 100 caracteres e `valor` deve ser >= 0.00."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('servicoCatalogoId', String(body.id));",
+                  "            console.log('servicoCatalogoId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar serviço - Alinhamento e balanceamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Alinhamento e balanceamento\",\n  \"valor\": 150.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/201)', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar serviço - Revisão de freios",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Revisão completa do sistema de freios\",\n  \"valor\": 320.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/201)', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar serviços ativos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todos os serviços (inclui inativos)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos/todos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos",
+                "todos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar serviço por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos/{{servicoCatalogoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos",
+                "{{servicoCatalogoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar serviço",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Troca de óleo, filtro de óleo e filtro de ar\",\n  \"valor\": 215.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos/{{servicoCatalogoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos",
+                "{{servicoCatalogoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desativar serviço",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos/{{servicoCatalogoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos",
+                "{{servicoCatalogoId}}"
+              ]
+            },
+            "description": "Desativação lógica. Um serviço inativo não pode ser usado em novos orçamentos."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reativar serviço",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos/{{servicoCatalogoId}}/reativar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos",
+                "{{servicoCatalogoId}}",
+                "reativar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Catálogo de serviços oferecidos pela oficina (`/catalogo/servicos`).\n\nNão confundir com `/servicos`, que são as **ordens de serviço**. Os itens de orçamento do tipo `SERVICO` referenciam o `id` de um item deste catálogo."
+    },
+    {
+      "name": "06 - Ordens de serviço (criação e consulta)",
+      "item": [
+        {
+          "name": "Criar ordem de serviço",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Revisão geral: troca de óleo, filtros e verificação de freios\",\n  \"clienteId\": \"{{clienteId}}\",\n  \"funcionarioId\": \"{{funcionarioId}}\",\n  \"veiculoId\": \"{{veiculoId}}\",\n  \"itens\": [\n    {\n      \"tipo\": \"SERVICO\",\n      \"referenciaId\": \"{{servicoCatalogoId}}\",\n      \"quantidade\": 1\n    },\n    {\n      \"tipo\": \"PECA\",\n      \"referenciaId\": \"{{pecaId}}\",\n      \"quantidade\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos"
+              ]
+            },
+            "description": "Os itens do orçamento usam `tipo` (`SERVICO` | `PECA`) e `referenciaId`, que é o **id (UUID)** do serviço do catálogo ou da peça - não o código.\n\nPré-requisitos: rodar antes as pastas 01, 02, 03, 04 e 05."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('servicoId', String(body.id));",
+                  "            console.log('servicoId (ordem de servico) salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar todas as ordens",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar ordem por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar ordens por cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/cliente/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "cliente",
+                "{{clienteId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obter orçamento da ordem",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "orcamento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('valorTotal do orcamento: ' + body.valorTotal);",
+                  "    pm.test('Orcamento tem itens', () => pm.expect(body.itens.length).to.be.above(0));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métrica - tempo médio de execução",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/metricas/tempo-medio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "metricas",
+                "tempo-medio"
+              ]
+            },
+            "description": "Retorna `totalOrdensFinalizadas` e `tempoMedioMinutos` (null quando nenhuma OS foi finalizada)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const b = pm.response.json();",
+                  "    console.log('ordens finalizadas=' + b.totalOrdensFinalizadas + ' tempoMedioMinutos=' + b.tempoMedioMinutos);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar ordem de serviço",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Revisão geral + alinhamento (escopo ampliado pelo cliente)\",\n  \"clienteId\": \"{{clienteId}}\",\n  \"funcionarioId\": \"{{funcionarioId}}\",\n  \"veiculoId\": \"{{veiculoId}}\",\n  \"itens\": [\n    {\n      \"tipo\": \"SERVICO\",\n      \"referenciaId\": \"{{servicoCatalogoId}}\",\n      \"quantidade\": 1\n    },\n    {\n      \"tipo\": \"PECA\",\n      \"referenciaId\": \"{{pecaId}}\",\n      \"quantidade\": 4\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deletar ordem de serviço",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/204)', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Ordens de serviço (`/servicos`). Ordem sugerida de execução da collection inteira:\n\n1. 01 - Funcionários\n2. 02 - Clientes\n3. 03 - Peças\n4. 04 - Veículos\n5. 05 - Catálogo de serviços\n6. 06 - Ordens de serviço\n7. 07 - Fluxo de status"
+    },
+    {
+      "name": "07 - Ordens de serviço (fluxo de status)",
+      "item": [
+        {
+          "name": "1. Avançar: RECEBIDA -> EM_DIAGNOSTICO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('status atual: ' + body.status);",
+                  "    pm.test('Status = EM_DIAGNOSTICO', () => pm.expect(body.status).to.eql('EM_DIAGNOSTICO'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Avançar: EM_DIAGNOSTICO -> AGUARDANDO_APROVACAO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('status atual: ' + body.status);",
+                  "    pm.test('Status = AGUARDANDO_APROVACAO', () => pm.expect(body.status).to.eql('AGUARDANDO_APROVACAO'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3a. Cliente APROVA -> EM_EXECUCAO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_EXECUCAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            },
+            "description": "A partir de AGUARDANDO_APROVACAO as transições válidas são EM_EXECUCAO ou CANCELADA."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('status atual: ' + body.status);",
+                  "    pm.test('Status = EM_EXECUCAO', () => pm.expect(body.status).to.eql('EM_EXECUCAO'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3b. Cliente RECUSA -> CANCELADA",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            },
+            "description": "Caminho alternativo: cancela a OS. Não rode junto com o 3a na mesma ordem."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200/400/409)', function () {",
+                  "    pm.expect([200, 400, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Avançar: EM_EXECUCAO -> FINALIZADA",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('status atual: ' + body.status);",
+                  "    pm.test('Status = FINALIZADA', () => pm.expect(body.status).to.eql('FINALIZADA'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Avançar: FINALIZADA -> ENTREGUE",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "avancar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (200)', function () {",
+                  "    pm.expect([200]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log('status atual: ' + body.status);",
+                  "    pm.test('Status = ENTREGUE', () => pm.expect(body.status).to.eql('ENTREGUE'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Erro esperado: transição inválida (RECEBIDA a partir de ENTREGUE)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RECEBIDA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{servicoId}}",
+                "status"
+              ]
+            },
+            "description": "Cenário negativo: a máquina de estados deve rejeitar a transição."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Status esperado (400/409/422)', function () {",
+                  "    pm.expect([400, 409, 422]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Máquina de estados da OS:\n\n`RECEBIDA -> EM_DIAGNOSTICO -> AGUARDANDO_APROVACAO -> EM_EXECUCAO -> FINALIZADA -> ENTREGUE`\n\nDe `AGUARDANDO_APROVACAO` também e possível ir para `CANCELADA` (recusa do cliente).\n\n- `PATCH /servicos/{id}/avancar` move para o próximo status da sequência.\n- `PATCH /servicos/{id}/status` move para um status especifico (validando a transição)."
+    },
+    {
+      "name": "99 - Escalabilidade automática (carga)",
+      "item": [
+        {
+          "name": "99.01 - Setup: funcionário da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Mecânico Robô Carga\",\n  \"cargo\": \"MECANICO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/funcionarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "funcionarios"
+              ]
+            },
+            "description": "Executa apenas na 1ª iteração. Nas demais é pulado via `pm.execution.skipRequest()`."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadFuncionarioId')) {",
+                  "    pular('funcionario de carga ja existe, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('loadFuncionarioId', String(body.id));",
+                  "            console.log('loadFuncionarioId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.02 - Setup: procurar cliente da carga (CPF)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/{{loadCpf}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "{{loadCpf}}"
+              ]
+            },
+            "description": "Reaproveita o cliente de carga entre execuções, evitando erro de CPF duplicado."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadClienteId')) {",
+                  "    pular('cliente de carga ja resolvido, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body && body.id) {",
+                  "        pm.collectionVariables.set('loadClienteId', String(body.id));",
+                  "        console.log('[setup] cliente de carga reaproveitado: ' + body.id);",
+                  "    }",
+                  "} else {",
+                  "    console.log('[setup] cliente de carga ainda nao existe (sera criado no proximo request)');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.03 - Setup: criar cliente da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente Teste de Carga\",\n  \"email\": \"carga@oficina.local\",\n  \"numeroDocumento\": \"{{loadCpf}}\",\n  \"tipoPessoa\": \"PESSOA_FISICA\",\n  \"endereco\": {\n    \"logradouro\": \"Rua da Carga\",\n    \"numero\": \"1000\",\n    \"complemento\": null,\n    \"bairro\": \"Industrial\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\"\n  },\n  \"contatos\": [\n    {\n      \"nome\": \"Central de Carga\",\n      \"telefone\": \"11900000000\",\n      \"tipo\": \"CELULAR\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadClienteId')) {",
+                  "    pular('cliente de carga ja existe, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('loadClienteId', String(body.id));",
+                  "            console.log('loadClienteId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.04 - Setup: procurar veículo da carga (placa)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/placa/{{loadPlaca}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "placa",
+                "{{loadPlaca}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadVeiculoId')) {",
+                  "    pular('veiculo de carga ja resolvido, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body && body.id) {",
+                  "        pm.collectionVariables.set('loadVeiculoId', String(body.id));",
+                  "        console.log('[setup] veiculo de carga reaproveitado: ' + body.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.05 - Setup: criar veículo da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Veículo Carga\",\n  \"marca\": \"Fiat\",\n  \"modelo\": \"Strada Endurance\",\n  \"ano\": \"2024\",\n  \"placa\": \"{{loadPlaca}}\",\n  \"motoristaId\": \"{{loadClienteId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadVeiculoId')) {",
+                  "    pular('veiculo de carga ja existe, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('loadVeiculoId', String(body.id));",
+                  "            console.log('loadVeiculoId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.06 - Setup: procurar peça da carga (código)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/pecas/codigo/{{loadPecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas",
+                "codigo",
+                "{{loadPecaCodigo}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadPecaId')) {",
+                  "    pular('peca de carga ja resolvida, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    if (body && body.id) {",
+                  "        pm.collectionVariables.set('loadPecaId', String(body.id));",
+                  "        console.log('[setup] peca de carga reaproveitada: ' + body.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.07 - Setup: criar peça da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{loadPecaCodigo}}\",\n  \"nome\": \"Peça de Teste de Carga\",\n  \"descricao\": \"Item usado apenas pelo cenário de escalabilidade\",\n  \"fabricante\": \"Genérico\",\n  \"fornecedor\": \"Genérico\",\n  \"precoDeCompra\": 10.0,\n  \"precoDeVenda\": 25.0,\n  \"qtdEstoque\": 999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "pecas"
+              ]
+            },
+            "description": "Estoque alto de propósito: a criação da OS não baixa estoque, mas evita qualquer limite."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadPecaId')) {",
+                  "    pular('peca de carga ja existe, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('loadPecaId', String(body.id));",
+                  "            console.log('loadPecaId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.08 - Setup: criar serviço de catálogo da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Serviço de teste de carga\",\n  \"valor\": 100.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalogo/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalogo",
+                "servicos"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const pular = function (motivo) {",
+                  "    console.log('[setup] ' + motivo);",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') {",
+                  "        pm.execution.skipRequest();",
+                  "    }",
+                  "};",
+                  "",
+                  "if (pm.collectionVariables.get('loadServicoCatalogoId')) {",
+                  "    pular('servico de catalogo de carga ja existe, pulando request');",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const esperados = [200, 201];",
+                  "pm.test('Status esperado (' + esperados.join('/') + ')', function () {",
+                  "    pm.expect(esperados).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (esperados.includes(pm.response.code)) {",
+                  "    try {",
+                  "        const body = pm.response.json();",
+                  "        if (body && body.id) {",
+                  "            pm.collectionVariables.set('loadServicoCatalogoId', String(body.id));",
+                  "            console.log('loadServicoCatalogoId salvo: ' + body.id);",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Resposta sem corpo JSON.');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.10 - CARGA: criar ordem de serviço",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"{{cargaDescricao}}\",\n  \"clienteId\": \"{{loadClienteId}}\",\n  \"funcionarioId\": \"{{loadFuncionarioId}}\",\n  \"veiculoId\": \"{{loadVeiculoId}}\",\n  \"itens\": [\n    {\n      \"tipo\": \"SERVICO\",\n      \"referenciaId\": \"{{loadServicoCatalogoId}}\",\n      \"quantidade\": 1\n    },\n    {\n      \"tipo\": \"PECA\",\n      \"referenciaId\": \"{{loadPecaId}}\",\n      \"quantidade\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos"
+              ]
+            },
+            "description": "**Escrita**: é o request mais caro do cenário (validação + montagem de orçamento + inserção em 2 tabelas). Rodar N iterações cria N ordens de serviço distintas."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "// Cada iteracao do Runner gera uma OS distinta.",
+                  "const it = pm.info.iteration + 1;",
+                  "const lote = pm.collectionVariables.get('loadLote') || 'lote';",
+                  "pm.variables.set('cargaDescricao', '[CARGA ' + lote + '] Ordem de servico #' + it);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('POST /servicos');",
+                  "",
+                  "pm.test('OS criada', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if ([200, 201].includes(pm.response.code)) {",
+                  "    const body = pm.response.json();",
+                  "    pm.collectionVariables.set('loadOrdemId', String(body.id));",
+                  "    pm.collectionVariables.set('loadOrdensCriadas', Number(pm.collectionVariables.get('loadOrdensCriadas') || 0) + 1);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.11 - CARGA: consultar a OS criada",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{loadOrdemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{loadOrdemId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('GET /servicos/{id}');",
+                  "",
+                  "pm.test('OS encontrada', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.12 - CARGA: obter orçamento da OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{loadOrdemId}}/orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{loadOrdemId}}",
+                "orcamento"
+              ]
+            },
+            "description": "**Leitura com cálculo**: soma os itens do orçamento a cada chamada."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('GET /servicos/{id}/orcamento');",
+                  "",
+                  "pm.test('Orcamento calculado', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.13 - CARGA: listar ordens do cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/cliente/{{loadClienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "cliente",
+                "{{loadClienteId}}"
+              ]
+            },
+            "description": "**Leitura que cresce**: como todas as OS da carga pertencem ao mesmo cliente, o payload aumenta a cada iteração. É o request que melhor evidencia degradação de latência."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('GET /servicos/cliente/{id}');",
+                  "",
+                  "pm.test('Listagem OK', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const total = pm.response.json().length;",
+                  "    console.log('[carga] ordens do cliente de carga: ' + total);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.14 - CARGA: métrica de tempo médio (agregação)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/metricas/tempo-medio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "metricas",
+                "tempo-medio"
+              ]
+            },
+            "description": "**Agregação**: varre as ordens finalizadas para calcular o tempo médio."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('GET /servicos/metricas/tempo-medio');",
+                  "",
+                  "pm.test('Metrica OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.15 - CARGA: avançar status da OS",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicos/{{loadOrdemId}}/avancar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servicos",
+                "{{loadOrdemId}}",
+                "avancar"
+              ]
+            },
+            "description": "**Escrita com regra de domínio**: valida a máquina de estados e atualiza a OS."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('PATCH /servicos/{id}/avancar');",
+                  "",
+                  "pm.test('Transicao aceita', function () {",
+                  "    pm.expect([200, 400, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.20 - Health durante a carga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Se este request começar a falhar ou a estourar timeout durante a rajada, os pods estão saturados e o HPA deveria estar criando réplicas."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "const registrar = function (rotulo) {",
+                  "    const lat = pm.response.responseTime;",
+                  "    let arr = [];",
+                  "    try { arr = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { arr = []; }",
+                  "    arr.push(lat);",
+                  "    if (arr.length > 5000) { arr = arr.slice(-5000); }",
+                  "    pm.collectionVariables.set('loadLatencias', JSON.stringify(arr));",
+                  "    pm.collectionVariables.set('loadTotal', Number(pm.collectionVariables.get('loadTotal') || 0) + 1);",
+                  "    if (pm.response.code >= 400) {",
+                  "        pm.collectionVariables.set('loadErros', Number(pm.collectionVariables.get('loadErros') || 0) + 1);",
+                  "        console.log('[carga][ERRO] ' + rotulo + ' status=' + pm.response.code + ' body=' + pm.response.text().slice(0, 200));",
+                  "    }",
+                  "    console.log('[carga] ' + rotulo + ' it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' status=' + pm.response.code + ' ' + lat + 'ms');",
+                  "};",
+                  "registrar('GET /actuator/health');",
+                  "",
+                  "pm.test('Aplicacao continua UP sob carga', function () {",
+                  "    pm.expect(pm.response.code).to.eql(200);",
+                  "    pm.expect(pm.response.json().status).to.eql('UP');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.21 - Relatório da campanha de carga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Consolida as métricas coletadas pelos requests da pasta e valida os critérios de aceite (`loadP95AlvoMs` e `loadErroMaxPct`). O relatório completo sai no console do Collection Runner na última iteração."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "// Relatorio consolidado. Roda a cada iteracao (resumo curto) e imprime o",
+                  "// relatorio completo na ultima iteracao do Collection Runner.",
+                  "const pct = function (arr, p) {",
+                  "    if (!arr.length) { return 0; }",
+                  "    const ordenado = arr.slice().sort(function (a, b) { return a - b; });",
+                  "    const idx = Math.min(ordenado.length - 1, Math.ceil((p / 100) * ordenado.length) - 1);",
+                  "    return ordenado[Math.max(0, idx)];",
+                  "};",
+                  "",
+                  "let lat = [];",
+                  "try { lat = JSON.parse(pm.collectionVariables.get('loadLatencias') || '[]'); } catch (e) { lat = []; }",
+                  "",
+                  "const total = Number(pm.collectionVariables.get('loadTotal') || 0);",
+                  "const erros = Number(pm.collectionVariables.get('loadErros') || 0);",
+                  "const ordens = Number(pm.collectionVariables.get('loadOrdensCriadas') || 0);",
+                  "const media = lat.length ? Math.round(lat.reduce(function (a, b) { return a + b; }, 0) / lat.length) : 0;",
+                  "const p50 = pct(lat, 50);",
+                  "const p95 = pct(lat, 95);",
+                  "const p99 = pct(lat, 99);",
+                  "const max = lat.length ? Math.max.apply(null, lat) : 0;",
+                  "const taxaErro = total ? (erros / total) * 100 : 0;",
+                  "",
+                  "pm.collectionVariables.set('loadP95', p95);",
+                  "pm.collectionVariables.set('loadTaxaErro', taxaErro.toFixed(2));",
+                  "",
+                  "const ultima = (pm.info.iteration + 1) >= pm.info.iterationCount;",
+                  "",
+                  "if (ultima) {",
+                  "    console.log('==================================================================');",
+                  "    console.log('  RELATORIO DE CARGA - TechChallenge API');",
+                  "    console.log('==================================================================');",
+                  "    console.log('  Lote .......................: ' + pm.collectionVariables.get('loadLote'));",
+                  "    console.log('  Inicio .....................: ' + pm.collectionVariables.get('loadIniciado'));",
+                  "    console.log('  Fim ........................: ' + new Date().toISOString());",
+                  "    console.log('  Iteracoes do Runner ........: ' + pm.info.iterationCount);",
+                  "    console.log('  Ordens de servico criadas ..: ' + ordens);",
+                  "    console.log('  Requisicoes medidas ........: ' + total);",
+                  "    console.log('  Erros (HTTP >= 400) ........: ' + erros + ' (' + taxaErro.toFixed(2) + '%)');",
+                  "    console.log('------------------------------------------------------------------');",
+                  "    console.log('  Latencia media .............: ' + media + ' ms');",
+                  "    console.log('  Latencia p50 ...............: ' + p50 + ' ms');",
+                  "    console.log('  Latencia p95 ...............: ' + p95 + ' ms');",
+                  "    console.log('  Latencia p99 ...............: ' + p99 + ' ms');",
+                  "    console.log('  Latencia maxima ............: ' + max + ' ms');",
+                  "    console.log('------------------------------------------------------------------');",
+                  "    console.log('  Verifique agora o autoscaling:');",
+                  "    console.log('    kubectl get hpa app -w');",
+                  "    console.log('    kubectl get pods -l app=app -w');",
+                  "    console.log('    kubectl top pods -l app=app');",
+                  "    console.log('==================================================================');",
+                  "} else if ((pm.info.iteration + 1) % 25 === 0) {",
+                  "    console.log('[parcial] it=' + (pm.info.iteration + 1) + '/' + pm.info.iterationCount +",
+                  "                ' ordens=' + ordens + ' reqs=' + total + ' p95=' + p95 + 'ms erros=' + taxaErro.toFixed(2) + '%');",
+                  "}",
+                  "",
+                  "// Criterios de aceite do cenario de escalabilidade.",
+                  "const p95Alvo = Number(pm.collectionVariables.get('loadP95AlvoMs') || 1500);",
+                  "const erroMax = Number(pm.collectionVariables.get('loadErroMaxPct') || 5);",
+                  "",
+                  "pm.test('Taxa de erro abaixo de ' + erroMax + '%', function () {",
+                  "    pm.expect(taxaErro).to.be.below(erroMax);",
+                  "});",
+                  "",
+                  "pm.test('p95 abaixo de ' + p95Alvo + 'ms (SLO sob carga)', function () {",
+                  "    pm.expect(p95).to.be.below(p95Alvo);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "99.22 - Reset dos contadores de carga",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Zera contadores e latências entre campanhas, preservando a massa de dados (cliente/veículo/peça/serviço de carga). **Desmarque este request no Collection Runner.**"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "// Este request nao deve entrar em rodadas de carga: ele apenas zera os contadores.",
+                  "// Rode-o manualmente (fora do Runner) antes de iniciar uma nova campanha.",
+                  "['loadIniciado', 'loadLote', 'loadTotal', 'loadErros', 'loadLatencias',",
+                  " 'loadOrdensCriadas', 'loadOrdemId', 'loadP95', 'loadTaxaErro'].forEach(function (v) {",
+                  "    pm.collectionVariables.set(v, '');",
+                  "});",
+                  "console.log('[reset] contadores de carga zerados. Os ids de massa (cliente, veiculo, peca) foram mantidos.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {},
+                "exec": [
+                  "pm.test('Reset concluido', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "# Cenário de escalabilidade automática\n\nSimula o aumento de carga da oficina (**múltiplas ordens de serviço**) para observar o\n`HorizontalPodAutoscaler` reagindo e criando réplicas da aplicação.\n\n## Como o cenário funciona\n\nA pasta é feita para o **Collection Runner** (ou `newman`) rodando **em modo sequencial com\nN iterações**. Cada iteração executa um ciclo completo de oficina:\n\n| # | Request | Tipo de carga |\n|---|---------|---------------|\n| 99.10 | `POST /servicos` | escrita - cria **1 nova OS por iteração** |\n| 99.11 | `GET /servicos/{id}` | leitura pontual |\n| 99.12 | `GET /servicos/{id}/orcamento` | leitura + cálculo |\n| 99.13 | `GET /servicos/cliente/{id}` | leitura que **cresce a cada iteração** |\n| 99.14 | `GET /servicos/metricas/tempo-medio` | agregação |\n| 99.15 | `PATCH /servicos/{id}/avancar` | escrita com regra de domínio |\n| 99.20 | `GET /actuator/health` | disponibilidade sob carga |\n| 99.21 | relatório | p50/p95/p99, taxa de erro, critérios de aceite |\n\nOs requests `99.01` a `99.08` preparam a massa (funcionário, cliente, veículo, peça e serviço\nde catálogo) e são **pulados automaticamente** a partir da 2ª iteração via\n`pm.execution.skipRequest()`.\n\n## Passo a passo\n\n1. **Aponte `baseUrl`** para o ambiente com autoscaling (o Service `app` do cluster,\n   não o `localhost` do docker-compose).\n2. Rode uma vez o request `99.22 - Reset dos contadores de carga` (fora do Runner).\n3. Abra o **Collection Runner**, selecione **apenas esta pasta**, e configure:\n   - **Iterations**: comece com `100`; use `300`-`500` para forçar o scale-up.\n   - **Delay**: `0 ms`.\n   - **Desmarque** o request `99.22`.\n4. Em outro terminal, acompanhe o autoscaling:\n\n```bash\nkubectl get hpa app -w\nkubectl get pods -l app=app -w\nkubectl top pods -l app=app\nkubectl describe hpa app     # eventos SuccessfulRescale\n```\n\n5. Ao final, o relatório consolidado aparece no console do Runner.\n\n## Aumentando a carga além de uma execução sequencial\n\nUma única execução sequencial gera pouca CPU. Para chegar aos 70% de utilização que\ndisparam o HPA, rode **várias execuções em paralelo** com `newman`:\n\n```bash\nnpm install -g newman\n\n# 4 processos simultâneos, 200 iterações cada = 800 ordens de serviço\nfor i in 1 2 3 4; do\n  newman run \"docs/TechChallengeAPI-Completa-Escalabilidade.postman_collection.json\" \\\n    --folder \"99 - Escalabilidade automática (carga)\" \\\n    --iteration-count 200 \\\n    --env-var \"baseUrl=http://localhost:8080\" \\\n    --reporters cli &\ndone\nwait\n```\n\n## O que esperar\n\nA configuração atual (`k8s/app/hpa.yaml`) é:\n\n- `minReplicas: 1`, `maxReplicas: 3`\n- alvo de **70% de utilização de CPU sobre o request de `100m`** - ou seja, o gatilho\n  dispara com ~70m de CPU por pod\n- `scaleDown.stabilizationWindowSeconds: 300` - a redução só acontece após 5 minutos de\n  carga baixa sustentada, então os pods extras permanecem por alguns minutos após o teste\n\nSequência esperada: latência sobe -> CPU do pod passa de 70m -> HPA cria réplicas (até 3)\n-> latência se estabiliza -> após ~5 min de ociosidade o HPA volta para 1 réplica.\n\nSe os pods novos ficarem em `Pending`, falta capacidade de node: é o cluster autoscaler\n(node pool no Terraform) que precisa entrar, não o HPA.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              "// Inicializa a campanha de carga na primeira iteracao do Runner.",
+              "if (!pm.collectionVariables.get('loadIniciado')) {",
+              "    const agora = new Date();",
+              "    pm.collectionVariables.set('loadIniciado', agora.toISOString());",
+              "    pm.collectionVariables.set('loadLote', agora.toISOString().replace(/[-:.TZ]/g, '').slice(0, 14));",
+              "    pm.collectionVariables.set('loadTotal', 0);",
+              "    pm.collectionVariables.set('loadErros', 0);",
+              "    pm.collectionVariables.set('loadOrdensCriadas', 0);",
+              "    pm.collectionVariables.set('loadLatencias', '[]');",
+              "    console.log('[carga] campanha iniciada em ' + agora.toISOString() +",
+              "                ' | iteracoes previstas: ' + pm.info.iterationCount);",
+              "}"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "oauth2",
+    "oauth2": [
+      {
+        "key": "scope",
+        "value": "openid profile",
+        "type": "string"
+      },
+      {
+        "key": "accessTokenUrl",
+        "value": "{{keycloakUrl}}/realms/Fiap/protocol/openid-connect/token",
+        "type": "string"
+      },
+      {
+        "key": "grant_type",
+        "value": "password_credentials",
+        "type": "string"
+      },
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      },
+      {
+        "key": "clientId",
+        "value": "{{clientId}}",
+        "type": "string"
+      },
+      {
+        "key": "client_authentication",
+        "value": "body",
+        "type": "string"
+      },
+      {
+        "key": "addTokenTo",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080",
+      "type": "string"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "fiap-client",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "funcionarioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clientePjId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pecaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pecaCodigo",
+      "value": "FILTRO-001",
+      "type": "string"
+    },
+    {
+      "key": "veiculoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "servicoCatalogoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "servicoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadCpf",
+      "value": "52998224725",
+      "type": "string"
+    },
+    {
+      "key": "loadPlaca",
+      "value": "LOD1A11",
+      "type": "string"
+    },
+    {
+      "key": "loadPecaCodigo",
+      "value": "CARGA-001",
+      "type": "string"
+    },
+    {
+      "key": "loadFuncionarioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadClienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadVeiculoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadPecaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadServicoCatalogoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadOrdemId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadIniciado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadLote",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadTotal",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "loadErros",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "loadOrdensCriadas",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "loadLatencias",
+      "value": "[]",
+      "type": "string"
+    },
+    {
+      "key": "loadP95",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "loadTaxaErro",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "loadP95AlvoMs",
+      "value": "1500",
+      "type": "string"
+    },
+    {
+      "key": "loadErroMaxPct",
+      "value": "5",
+      "type": "string"
+    }
+  ]
+}
