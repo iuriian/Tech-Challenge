@@ -36,7 +36,12 @@ output "get_credentials_command" {
   ])
 }
 
-output "allocatable_note" {
+output "capacity_note" {
   description = "Capacidade util aproximada, para comparar com os requests de k8s/"
-  value       = "${var.node_count}x ${var.machine_type} -> ~${var.node_count * 2.2}Gi utilizaveis; a stack pede 1,75Gi"
+  value = join(" ", [
+    "${var.min_node_count} a ${var.max_node_count}x ${var.machine_type} ->",
+    "~${format("%.1f", var.min_node_count * 2.2)}Gi a",
+    "~${format("%.1f", var.max_node_count * 2.2)}Gi utilizaveis;",
+    "a stack pede ~1,25Gi com 1 replica, e o HPA escala ate ${var.max_node_count}.",
+  ])
 }

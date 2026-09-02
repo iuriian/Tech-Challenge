@@ -35,10 +35,18 @@ resource "google_container_cluster" "staging" {
 }
 
 resource "google_container_node_pool" "primary" {
-  name       = "primary"
-  cluster    = google_container_cluster.staging.name
-  location   = var.zone
-  node_count = var.node_count
+  name     = "primary"
+  cluster  = google_container_cluster.staging.name
+  location = var.zone
+
+  # Com autoscaling ativo usa-se initial_node_count; declarar node_count junto
+  # gera diff perpetuo, porque o autoscaler altera a contagem por fora.
+  initial_node_count = var.min_node_count
+
+  autoscaling {
+    min_node_count = var.min_node_count
+    max_node_count = var.max_node_count
+  }
 
   management {
     auto_repair  = true
@@ -68,8 +76,4 @@ resource "google_container_node_pool" "primary" {
     }
   }
 
-  # Um `gcloud container clusters resize` feito as pressas nao vira drift.
-  lifecycle {
-    ignore_changes = [node_count]
-  }
 }
