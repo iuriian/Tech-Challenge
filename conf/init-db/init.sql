@@ -16,8 +16,3 @@ SELECT 'CREATE DATABASE oficina'
     WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'oficina')\gexec
 
 \c oficina
-
-SELECT 'CREATE DATABASE sonarqube'
-    WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'sonarqube')\gexec
-
-\c sonarqube
