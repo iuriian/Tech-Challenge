@@ -8,11 +8,7 @@ interface ServicoRepository {
 
     fun buscarPorId(id: Id): Servico?
 
+    fun listarAtivos(): List<Servico>
+
     fun listarTodos(): List<Servico>
-
-    fun listarPorCliente(clienteId: Id): List<Servico>
-
-    fun existePorId(id: Id): Boolean
-
-    fun deletarPorId(id: Id)
 }

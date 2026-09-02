@@ -1,115 +1,164 @@
 package br.com.fiap.oficina.infrastructure.persistence.repository
 
 import br.com.fiap.oficina.anyObject
-import br.com.fiap.oficina.domain.entity.Cliente
 import br.com.fiap.oficina.domain.entity.Servico
-import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
-import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
 import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ServicoJpaEntity
 import br.com.fiap.oficina.infrastructure.persistence.jpa.repository.ServicoJpaRepository
-import br.com.fiap.oficina.infrastructure.persistence.mapper.ClientePersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.mapper.PecaPersistenceMapper
 import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
-import br.com.fiap.oficina.infrastructure.persistence.mapper.VeiculoPersistenceMapper
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
+import java.math.BigDecimal
 import java.util.Optional
-import kotlin.test.assertEquals
 
 @ExtendWith(MockitoExtension::class)
 class ServicoRepositoryAdapterTest {
     @Mock
-    lateinit var jpaRepository: ServicoJpaRepository
+    private lateinit var jpaRepository: ServicoJpaRepository
 
-    private val clienteMapper = ClientePersistenceMapper()
-    private val mapper =
-        ServicoPersistenceMapper(
-            clienteMapper,
-            VeiculoPersistenceMapper(clienteMapper),
-            PecaPersistenceMapper(),
-        )
-    private lateinit var adapter: ServicoRepositoryAdapter
-    private lateinit var servico: Servico
-    private lateinit var jpa: ServicoJpaEntity
+    private val mapper = ServicoPersistenceMapper()
 
-    @BeforeEach
-    fun setup() {
-        adapter = ServicoRepositoryAdapter(jpaRepository, mapper)
-        val cliente =
-            Cliente(
-                id = Id.generate(),
-                nome = "Cliente",
-                documento = Documento.cpf("39053344705"),
-                email = "cliente@example.com",
-            )
-        val veiculo =
-            Veiculo(
-                id = Id.generate(),
-                marca = "Volkswagen",
-                nome = "Gol",
-                modelo = "Gol 1.6",
-                ano = "2020",
-                placa = "ABC1D23",
-                motorista = cliente,
-            )
-        val funcionario =
-            br.com.fiap.oficina.domain.entity.Funcionario(
-                id = Id.generate(),
-                nome = "Funcionario Teste",
-                cargo = br.com.fiap.oficina.domain.enum.Cargo.MECANICO,
-            )
-        servico =
-            Servico(
-                id = Id.generate(),
+    @Test
+    fun `deve salvar servico`() {
+        val servico =
+            Servico.criar(
                 descricao = "Troca de óleo",
-                status = ServicoStatus.RECEBIDA,
-                funcionario = funcionario,
-                cliente = cliente,
-                veiculo = veiculo,
+                valor = BigDecimal("150.00"),
             )
-        jpa = mapper.toJpa(servico)
+
+        `when`(jpaRepository.save(anyObject()))
+            .thenAnswer { it.getArgument<ServicoJpaEntity>(0) }
+
+        val adapter =
+            ServicoRepositoryAdapter(
+                jpaRepository = jpaRepository,
+                mapper = mapper,
+            )
+
+        val resultado = adapter.salvar(servico)
+
+        assertEquals(servico, resultado)
+
+        verify(jpaRepository).save(anyObject())
     }
 
     @Test
-    fun `salvar deve persistir e mapear de volta`() {
-        `when`(jpaRepository.save(anyObject())).thenAnswer { it.getArgument<ServicoJpaEntity>(0) }
+    fun `deve buscar servico por id`() {
+        val id = Id.generate()
 
-        assertEquals(servico, adapter.salvar(servico))
+        val entity =
+            ServicoJpaEntity(
+                id = id.valor,
+                descricao = "Alinhamento",
+                valor = BigDecimal("100.00"),
+                ativo = true,
+            )
+
+        `when`(jpaRepository.findById(id.valor))
+            .thenReturn(Optional.of(entity))
+
+        val adapter =
+            ServicoRepositoryAdapter(
+                jpaRepository = jpaRepository,
+                mapper = mapper,
+            )
+
+        val resultado = adapter.buscarPorId(id)
+
+        assertEquals(id, resultado?.id)
+        assertEquals("Alinhamento", resultado?.descricao)
+        assertEquals(BigDecimal("100.00"), resultado?.valor)
+        assertTrue(resultado?.ativo == true)
+
+        verify(jpaRepository).findById(id.valor)
     }
 
     @Test
-    fun `buscarPorId deve mapear quando presente`() {
-        `when`(jpaRepository.findById(servico.id.valor)).thenReturn(Optional.of(jpa))
+    fun `deve retornar nulo quando servico nao existir`() {
+        val id = Id.generate()
 
-        assertEquals(servico, adapter.buscarPorId(servico.id))
+        `when`(jpaRepository.findById(id.valor))
+            .thenReturn(Optional.empty())
+
+        val adapter =
+            ServicoRepositoryAdapter(
+                jpaRepository = jpaRepository,
+                mapper = mapper,
+            )
+
+        val resultado = adapter.buscarPorId(id)
+
+        assertNull(resultado)
+
+        verify(jpaRepository).findById(id.valor)
     }
 
     @Test
-    fun `listarTodos deve mapear lista`() {
-        `when`(jpaRepository.findAll()).thenReturn(listOf(jpa))
+    fun `deve listar somente servicos ativos`() {
+        val entity =
+            ServicoJpaEntity(
+                descricao = "Balanceamento",
+                valor = BigDecimal("80.00"),
+                ativo = true,
+            )
 
-        assertEquals(listOf(servico), adapter.listarTodos())
+        `when`(jpaRepository.findAllByAtivoTrue())
+            .thenReturn(listOf(entity))
+
+        val adapter =
+            ServicoRepositoryAdapter(
+                jpaRepository = jpaRepository,
+                mapper = mapper,
+            )
+
+        val resultado = adapter.listarAtivos()
+
+        assertEquals(1, resultado.size)
+        assertEquals("Balanceamento", resultado.first().descricao)
+        assertTrue(resultado.first().ativo)
+
+        verify(jpaRepository).findAllByAtivoTrue()
     }
 
     @Test
-    fun `existePorId deve delegar ao jpa`() {
-        `when`(jpaRepository.existsById(servico.id.valor)).thenReturn(true)
+    fun `deve listar servicos ativos e inativos`() {
+        val ativo =
+            ServicoJpaEntity(
+                descricao = "Troca de óleo",
+                valor = BigDecimal("150.00"),
+                ativo = true,
+            )
 
-        assertTrue(adapter.existePorId(servico.id))
-    }
+        val inativo =
+            ServicoJpaEntity(
+                descricao = "Alinhamento",
+                valor = BigDecimal("100.00"),
+                ativo = false,
+            )
 
-    @Test
-    fun `deletarPorId deve delegar deleteById`() {
-        adapter.deletarPorId(servico.id)
+        `when`(jpaRepository.findAll())
+            .thenReturn(listOf(ativo, inativo))
 
-        verify(jpaRepository).deleteById(servico.id.valor)
+        val adapter =
+            ServicoRepositoryAdapter(
+                jpaRepository = jpaRepository,
+                mapper = mapper,
+            )
+
+        val resultado = adapter.listarTodos()
+
+        assertEquals(2, resultado.size)
+        assertTrue(resultado.first().ativo)
+        assertFalse(resultado.last().ativo)
+
+        verify(jpaRepository).findAll()
     }
 }

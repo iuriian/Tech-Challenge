@@ -1,17 +1,9 @@
 package br.com.fiap.oficina.presentation.controller
 
-import br.com.fiap.oficina.application.service.PecaServicoComando
-import br.com.fiap.oficina.application.service.ServicoComando
+import br.com.fiap.oficina.application.dto.ServicoRequest
+import br.com.fiap.oficina.application.dto.ServicoResponse
 import br.com.fiap.oficina.application.service.ServicoService
-import br.com.fiap.oficina.domain.enum.ServicoStatus
-import br.com.fiap.oficina.domain.valueobject.Id
-import br.com.fiap.oficina.presentation.dto.AlterarStatusDto
-import br.com.fiap.oficina.presentation.dto.OrcamentoDto
-import br.com.fiap.oficina.presentation.dto.ServicoDto
-import br.com.fiap.oficina.presentation.dto.TempoMedioExecucaoDto
-import br.com.fiap.oficina.presentation.mapper.ServicoMapper
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.annotation.security.RolesAllowed
 import jakarta.validation.Valid
@@ -26,174 +18,80 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
+import java.util.UUID
 
 @RestController
-@RequestMapping("/servicos")
-@Tag(name = "Serviços", description = "Operações relacionadas ao gerenciamento de serviços")
-class ServicoController(private val service: ServicoService, private val mapper: ServicoMapper) {
+@RequestMapping("/catalogo/servicos")
+@Tag(
+    name = "Catálogo de Serviços",
+    description = "Operações relacionadas ao catálogo de serviços da oficina",
+)
+class ServicoController(private val service: ServicoService) {
     @PostMapping
-    @RolesAllowed("ATENDENTE", "ADMIN")
-    @Operation(
-        summary = "Criar um novo servico",
-        description = "Cadastra um novo servico no sistema",
-    )
+    @RolesAllowed("ADMIN")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(
+        summary = "Criar serviço",
+        description = "Cadastra um novo serviço no catálogo da oficina",
+    )
     fun criar(
         @Valid
         @RequestBody
-        dto: ServicoDto,
-    ): ServicoDto {
-        val saved = service.salvar(toComando(dto, id = null))
-
-        return mapper.toResponse(saved)
-    }
-
-    @PutMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN")
-    @Operation(
-        summary = "Atualizar um servico",
-        description = "Atualiza um servico no sistema",
-    )
-    fun atualizar(
-        @Parameter(description = "ID do serviço a ser atualizado", required = true)
-        @PathVariable id: String,
-        @Valid
-        @RequestBody
-        dto: ServicoDto,
-    ): ServicoDto {
-        val saved = service.salvar(toComando(dto, id = Id.fromString(id)))
-
-        return mapper.toResponse(saved)
-    }
-
-    @GetMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
-    @Operation(
-        summary = "Listar servico por ID",
-        description = "Lista um servico do sistema pelo ID. Clientes podem consultar o status da própria OS.",
-    )
-    fun listarPorId(
-        @Parameter(description = "ID do serviço", required = true)
-        @PathVariable id: String,
-    ): ServicoDto? = service.listarPorId(Id.fromString(id))?.let {
-        mapper.toResponse(it)
-    }
-
-    @GetMapping("/{id}/orcamento")
-    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
-    @Operation(
-        summary = "Obter orçamento do servico",
-        description =
-        "Retorna o orçamento do servico, totalizando o valor das peças " +
-            "(preço de venda multiplicado pela quantidade). " +
-            "Clientes podem consultar o orçamento para decidir sobre a aprovação.",
-    )
-    fun obterOrcamento(
-        @Parameter(description = "ID do serviço", required = true)
-        @PathVariable id: String,
-    ): OrcamentoDto = try {
-        mapper.toResponse(service.obterOrcamento(Id.fromString(id)))
-    } catch (exception: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
-    }
-
-    @PatchMapping("/{id}/avancar")
-    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
-    @Operation(
-        summary = "Avançar status da OS",
-        description =
-        "Move a ordem de serviço para o próximo status no fluxo. " +
-            "A partir de AGUARDANDO_APROVACAO o próximo passo é EM_EXECUCAO. " +
-            "Retorna 422 se o serviço já estiver em um estado final.",
-    )
-    fun avancarStatus(
-        @Parameter(description = "ID do serviço", required = true)
-        @PathVariable id: String,
-    ): ServicoDto = try {
-        mapper.toResponse(service.avancarStatus(Id.fromString(id)))
-    } catch (exception: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
-    } catch (exception: IllegalStateException) {
-        throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
-    }
-
-    @PatchMapping("/{id}/status")
-    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
-    @Operation(
-        summary = "Alterar status da OS",
-        description =
-        "Altera o status da ordem de serviço para um status específico, " +
-            "respeitando as transições permitidas pela máquina de estados. " +
-            "Clientes só podem aprovar (EM_EXECUCAO) ou recusar (CANCELADA) a partir de AGUARDANDO_APROVACAO. " +
-            "Retorna 422 se a transição solicitada não for permitida.",
-    )
-    fun alterarStatus(
-        @Parameter(description = "ID do serviço", required = true)
-        @PathVariable id: String,
-        @Valid @RequestBody dto: AlterarStatusDto,
-    ): ServicoDto = try {
-        mapper.toResponse(service.alterarStatus(Id.fromString(id), dto.status))
-    } catch (exception: IllegalArgumentException) {
-        throw ResponseStatusException(HttpStatus.NOT_FOUND, exception.message, exception)
-    } catch (exception: IllegalStateException) {
-        throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.message, exception)
-    }
-
-    @GetMapping("/cliente/{clienteId}")
-    @RolesAllowed("ATENDENTE", "ADMIN", "CLIENTE")
-    @Operation(
-        summary = "Listar serviços por cliente",
-        description =
-        "Lista todas as ordens de serviço associadas a um cliente. " +
-            "Clientes podem usar este endpoint para acompanhar o progresso de seus próprios serviços.",
-    )
-    fun listarPorCliente(
-        @Parameter(description = "ID do cliente", required = true)
-        @PathVariable clienteId: String,
-    ): List<ServicoDto> = service.listarPorCliente(Id.fromString(clienteId)).map { mapper.toResponse(it) }
-
-    @GetMapping("/metricas/tempo-medio")
-    @RolesAllowed("ATENDENTE", "ADMIN")
-    @Operation(
-        summary = "Tempo médio de execução",
-        description =
-        "Retorna o tempo médio (em minutos) entre o início e a finalização dos serviços concluídos, " +
-            "junto com o total de ordens consideradas. Retorna null para tempoMedioMinutos quando não há " +
-            "serviços finalizados.",
-    )
-    fun tempoMedioExecucao(): TempoMedioExecucaoDto = mapper.toResponse(service.calcularTempoMedioExecucao())
+        request: ServicoRequest,
+    ): ServicoResponse = service.criar(request)
 
     @GetMapping
-    @RolesAllowed("ATENDENTE", "ADMIN")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
     @Operation(
-        summary = "Listar servicos",
-        description = "Lista todos os servicos",
+        summary = "Listar serviços ativos",
+        description = "Lista os serviços ativos disponíveis no catálogo",
     )
-    fun listarTodos(): List<ServicoDto> = service.listarTodos().map {
-        mapper.toResponse(it)
-    }
+    fun listarAtivos(): List<ServicoResponse> = service.listarAtivos()
+
+    @GetMapping("/todos")
+    @RolesAllowed("ADMIN")
+    @Operation(
+        summary = "Listar todos os serviços",
+        description = "Lista serviços ativos e inativos para administração do catálogo",
+    )
+    fun listarTodos(): List<ServicoResponse> = service.listarTodos()
+
+    @GetMapping("/{id}")
+    @RolesAllowed("ATENDENTE", "ADMIN", "MECANICO")
+    @Operation(
+        summary = "Buscar serviço",
+        description = "Busca um serviço do catálogo pelo identificador",
+    )
+    fun buscar(@PathVariable id: UUID): ServicoResponse = service.buscar(id)
+
+    @PutMapping("/{id}")
+    @RolesAllowed("ADMIN")
+    @Operation(
+        summary = "Atualizar serviço",
+        description = "Atualiza descrição e valor de um serviço do catálogo",
+    )
+    fun atualizar(
+        @PathVariable id: UUID,
+        @Valid
+        @RequestBody
+        request: ServicoRequest,
+    ): ServicoResponse = service.atualizar(id, request)
 
     @DeleteMapping("/{id}")
-    @RolesAllowed("ATENDENTE", "ADMIN")
+    @RolesAllowed("ADMIN")
     @Operation(
-        summary = "Deletar servico por ID",
-        description = "Deleta um servico do sistema pelo ID",
+        summary = "Desativar serviço",
+        description = "Desativa logicamente um serviço do catálogo",
     )
-    fun deletarPorId(
-        @Parameter(description = "ID do servico a ser removido", required = true)
-        @PathVariable id: String,
-    ) {
-        service.deletarPorId(Id.fromString(id))
+    fun desativar(@PathVariable id: UUID) {
+        service.desativar(id)
     }
 
-    private fun toComando(dto: ServicoDto, id: Id?): ServicoComando = ServicoComando(
-        id = id,
-        descricao = dto.descricao,
-        funcionarioId = Id.fromString(dto.funcionarioId),
-        status = dto.status ?: ServicoStatus.RECEBIDA,
-        clienteId = Id.fromString(dto.clienteId),
-        veiculoId = Id.fromString(dto.veiculoId),
-        pecas = dto.pecas.map { PecaServicoComando(Id.fromString(it.pecaId), it.quantidade) },
+    @PatchMapping("/{id}/reativar")
+    @RolesAllowed("ADMIN")
+    @Operation(
+        summary = "Reativar serviço",
+        description = "Reativa um serviço previamente desativado",
     )
+    fun reativar(@PathVariable id: UUID): ServicoResponse = service.reativar(id)
 }

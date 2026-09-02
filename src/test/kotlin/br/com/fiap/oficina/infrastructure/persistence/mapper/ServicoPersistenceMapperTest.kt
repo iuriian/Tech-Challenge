@@ -1,101 +1,53 @@
 package br.com.fiap.oficina.infrastructure.persistence.mapper
 
-import br.com.fiap.oficina.domain.entity.Cliente
-import br.com.fiap.oficina.domain.entity.Funcionario
-import br.com.fiap.oficina.domain.entity.Peca
-import br.com.fiap.oficina.domain.entity.PecaServico
 import br.com.fiap.oficina.domain.entity.Servico
-import br.com.fiap.oficina.domain.entity.Veiculo
-import br.com.fiap.oficina.domain.enum.Cargo
-import br.com.fiap.oficina.domain.enum.ServicoStatus
-import br.com.fiap.oficina.domain.valueobject.Documento
 import br.com.fiap.oficina.domain.valueobject.Id
+import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.ServicoJpaEntity
+import br.com.fiap.oficina.infrastructure.persistence.mapper.ServicoPersistenceMapper
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import kotlin.test.assertEquals
+import java.util.UUID
 
 class ServicoPersistenceMapperTest {
-    private val clienteMapper = ClientePersistenceMapper()
-    private val mapper =
-        ServicoPersistenceMapper(
-            clienteMapper,
-            VeiculoPersistenceMapper(clienteMapper),
-            PecaPersistenceMapper(),
-        )
-
-    private val cliente =
-        Cliente(
-            id = Id.generate(),
-            nome = "Cliente",
-            documento = Documento.cpf("39053344705"),
-            email = "cliente@example.com",
-        )
-
-    private val veiculo =
-        Veiculo(
-            id = Id.generate(),
-            marca = "Volkswagen",
-            nome = "Gol",
-            modelo = "Gol 1.6",
-            ano = "2020",
-            placa = "ABC1D23",
-            motorista = cliente,
-        )
-
-    private val funcionario =
-        Funcionario(
-            id = Id.generate(),
-            nome = "Funcionario Teste",
-            cargo = Cargo.MECANICO,
-        )
+    private val mapper = ServicoPersistenceMapper()
 
     @Test
-    fun `deve fazer round-trip de servico com pecas`() {
-        val servico =
-            Servico(
-                id = Id.generate(),
+    fun `deve converter entidade jpa para dominio`() {
+        val id = UUID.randomUUID()
+
+        val entity =
+            ServicoJpaEntity(
+                id = id,
                 descricao = "Troca de óleo",
-                status = ServicoStatus.EM_EXECUCAO,
-                funcionario = funcionario,
-                cliente = cliente,
-                veiculo = veiculo,
-                pecas =
-                listOf(
-                    PecaServico(
-                        Peca(Id.generate(), "PEC001", "Filtro", precoDeVenda = BigDecimal.TEN),
-                        BigDecimal("2"),
-                    ),
-                ),
+                valor = BigDecimal("150.00"),
+                ativo = false,
             )
 
-        val jpa = mapper.toJpa(servico)
+        val resultado = mapper.toDomain(entity)
 
-        assertEquals(servico.id.valor, jpa.id)
-        assertEquals(ServicoStatus.EM_EXECUCAO, jpa.status)
-        assertEquals(funcionario.id.valor, jpa.funcionario.id)
-        assertEquals(BigDecimal("2"), jpa.pecas.first().quantidade)
-        assertEquals(servico, mapper.toDomain(jpa))
+        assertEquals(Id(id), resultado.id)
+        assertEquals("Troca de óleo", resultado.descricao)
+        assertEquals(BigDecimal("150.00"), resultado.valor)
+        assertFalse(resultado.ativo)
     }
 
     @Test
-    fun `deve usar status padrao e funcionario zero quando jpa possui nulos`() {
+    fun `deve converter dominio para entidade jpa`() {
         val servico =
             Servico(
                 id = Id.generate(),
-                descricao = "Revisão",
-                status = ServicoStatus.RECEBIDA,
-                funcionario = funcionario,
-                cliente = cliente,
-                veiculo = veiculo,
+                descricao = "Alinhamento",
+                valor = BigDecimal("100.00"),
+                ativo = false,
             )
-        val jpa =
-            mapper.toJpa(servico).apply {
-                status = null
-            }
 
-        val resultado = mapper.toDomain(jpa)
+        val resultado = mapper.toJpaEntity(servico)
 
-        assertEquals(ServicoStatus.RECEBIDA, resultado.status)
-        assertEquals(funcionario.id.valor, resultado.funcionario.id.valor)
+        assertEquals(servico.id.valor, resultado.id)
+        assertEquals(servico.descricao, resultado.descricao)
+        assertEquals(servico.valor, resultado.valor)
+        assertEquals(servico.ativo, resultado.ativo)
     }
 }
