@@ -1,169 +1,240 @@
-# Tech-Challenge - Fase 1
-Sistema Integrado de Atendimento e Execução de Serviços
+# Tech-Challenge — Sistema Integrado de Atendimento e Execução de Serviços
 
-## 📚 Sobre o Projeto
+Sistema de gestão de uma **oficina mecânica**: do cadastro do cliente e do veículo até
+a entrega do serviço executado, passando por diagnóstico, orçamento, aprovação e
+controle de estoque de peças. API REST em Kotlin/Spring Boot, autenticação e perfis no
+Keycloak, PostgreSQL, empacotada em container e entregue em um cluster Kubernetes no
+GKE por pipelines de CI/CD.
 
-Este projeto é um **trabalho acadêmico** desenvolvido para o curso de **Pós-Graduação em Software Architecture** da **FIAP (PosTech)**. O sistema foi criado como parte dos requisitos de avaliação do programa, demonstrando a aplicação prática dos conceitos aprendidos durante o curso.
+Trabalho acadêmico da **Pós-Graduação em Software Architecture — FIAP PosTech**, Grupo 89.
 
-## 🛠️ Tecnologias Utilizadas
+| | |
+|---|---|
+| 📄 **Documento da entrega** | **[docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md)** — solução, objetivos, arquitetura e instruções completas |
+| 📮 **Collection das APIs** | [Postman](docs/TechChallengeAPI%20.postman_collection.json) · Swagger UI em `/swagger-ui/index.html` · OpenAPI em `/v3/api-docs` |
+| 🎥 **Vídeo demonstrativo** | *(preencher com o link do YouTube/Vimeo, até 15 min)* |
+| 🌐 **Ambiente de staging** | *(preencher com a URL publicada pelo pipeline)* |
 
-### Backend
-- **Kotlin** 2.2.x
-- **Java** 21 (LTS)
-- **Spring Boot** 3.4.0
-- **Spring Data JPA**
-- **Spring MVC**
-- ~~**MapStruct** 1.6.3 - Mapeamento de objetos~~ (Removido e alterado para Mapper com Function Extension)
-- **SpringDoc OpenAPI** 2.8.5 - Documentação da API
-
-### Banco de Dados
-- **PostgreSQL** 16
-
-### Autenticação e Autorização
-- **Keycloak** 26.2.1 - Gerenciamento de identidade e acesso
-
-### Infraestrutura
-- **Docker** & **Docker Compose**
-- **Nginx** - Proxy reverso
-
-### Qualidade de Código
-- **JaCoCo** - Cobertura de testes
-- **SonarQube** - Análise estática de código
-
-### Build & Dependências
-- **Gradle** (Kotlin DSL)
-
-## 🚀 Como Executar o Projeto
-
-### Pré-requisitos
-
-- [Docker](https://www.docker.com/) e Docker Compose instalados
-- [JDK 21](https://adoptium.net/) instalado (para execução local)
-- [Gradle](https://gradle.org/) (ou use o wrapper incluso)
-
-### Configuração do Hosts (Opcional)
-
-Para utilizar os domínios configurados no Nginx, adicione as seguintes entradas no arquivo `/etc/hosts` (Linux/Mac) ou `C:\Windows\System32\drivers\etc\hosts` (Windows):
-```
-
-127.0.0.1 sso.postech.com.br
-127.0.0.1 api.postech.com.br
-```
 ---
 
-### Opção 1: Executando com Docker Compose (Infraestrutura Completa)
+## Descrição da solução e objetivos desta fase
 
-Esta opção inicia todos os serviços de infraestrutura: PostgreSQL, Keycloak e Nginx.
+O núcleo do domínio é a **Ordem de Serviço**, governada por uma máquina de estados no
+próprio domínio — não é possível pular etapas nem alterar uma ordem já entregue:
+
+```
+RECEBIDA → EM_DIAGNOSTICO → AGUARDANDO_APROVACAO → EM_EXECUCAO → FINALIZADA → ENTREGUE
+                                     ↓
+                                CANCELADA
+```
+
+Em volta dela: clientes, veículos, funcionários, catálogo de serviços e estoque de
+peças, com acesso controlado por perfil (`ADMIN`, `ATENDENTE`, `MECANICO`, `CLIENTE`).
+
+**Objetivos desta fase.** Nas anteriores a entrega era a aplicação e seu domínio.
+Aqui o objeto de avaliação é *como essa aplicação chega e se mantém no ar*:
+
+1. Containerizar a aplicação em uma imagem enxuta e reproduzível, publicada em registry.
+2. Orquestrar em Kubernetes com probes, limites de recurso, storage persistente,
+   configuração e segredos fora da imagem, e escalonamento horizontal automático.
+3. Provisionar a infraestrutura como código com Terraform.
+4. Automatizar a verificação (CI): formatação, análise estática, testes e cobertura mínima.
+5. Automatizar a entrega (CD): build, teste de fumaça da imagem, promoção e deploy.
+6. Manter o ambiente reproduzível localmente com os mesmos manifests do GKE.
+
+Detalhamento em [docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md#1-descrição-da-solução).
+
+---
+
+## Arquitetura
+
+### Visão geral — componentes, infraestrutura e entrega
+
+[![Arquitetura da solução](docs/arquitetura.png)](docs/arquitetura.svg)
+
+### Componentes da aplicação
+
+| Componente | Tecnologia | Exposição | Função |
+|---|---|---|---|
+| **app** | imagem própria · JRE 21 · Spring Boot 3.4 | Service `LoadBalancer` 80 → 8080 | API REST. Aplica as migrations do Flyway no boot |
+| **keycloak** | Keycloak 26.2.1 | Service `LoadBalancer` 8080 | Emissor dos tokens JWT, realm `Fiap` |
+| **postgres** | PostgreSQL 16-alpine | Service `ClusterIP` 5432 | Bases `oficina` e `keycloak`, com PVC de 10Gi |
+
+Internamente a aplicação segue **Onion Architecture** — o domínio não conhece Spring,
+JPA nem HTTP:
+
+[![Arquitetura de código](docs/arquitetura-codigo.png)](docs/arquitetura-codigo.svg)
+
+### Infraestrutura provisionada
+
+| Provisionado por Terraform | Aplicado pelo pipeline |
+|---|---|
+| Cluster GKE `tech-challenge-staging` (zonal, `us-central1-a`) | Deployments de `app`, `keycloak` e `postgres` |
+| Node pool `e2-medium` spot, autoscaling de 1 a 3 nós | Services, PVC de 10Gi e HPA de 1 a 3 réplicas |
+| Secret Manager com as senhas do banco e do Keycloak | ConfigMaps e Secrets do namespace |
+| Service account `github-actions-cd` e papéis IAM | Namespace e ordem de aplicação (`k8s/deploy.sh`) |
+
+### Fluxo de deploy
+
+```mermaid
+flowchart LR
+    A["push em<br/>release/*"] --> B["build<br/>buildx + push GHCR"]
+    B --> C["smoke test<br/>app + PostgreSQL"]
+    C --> D["promote<br/>tag no digest testado"]
+    D --> E["deploy-staging<br/>k8s/deploy.sh"]
+    E --> F(["URL publicada"])
+```
+
+A imagem é referenciada por **digest** desde o primeiro passo e a tag legível só é
+aplicada depois do smoke test: o que foi testado é exatamente o que sobe no cluster.
+
+---
+
+## Execução local
+
+**Pré-requisitos:** Docker e Docker Compose, JDK 21. O Gradle vem no wrapper.
 
 ```bash
-# Clone o repositório
-git clone <url-do-repositorio>
-cd Tech-Challenge
-
-# Inicie os containers
-docker-compose up -d
-
-# Para verificar os logs
-docker-compose logs -f
-
-# Para parar os containers
-docker-compose down
+cp .env.example .env          # ou ./create-env.sh
 ```
 
-**Serviços disponíveis:**
+**Infraestrutura em container, aplicação na IDE** *(recomendado para desenvolver)*
 
-| Serviço    | URL                          | Credenciais          |
-|------------|------------------------------|----------------------|
-| PostgreSQL | `localhost:5432`             | user / password      |
-| Keycloak   | `http://localhost:8081`      | admin / admin        |
-| Nginx      | `http://localhost:80`        | -                    |
+```bash
+docker compose up -d db keycloak
+./gradlew bootRun             # Windows: gradlew.bat bootRun
+```
+
+**Stack completa em containers**
+
+```bash
+docker compose --profile full up -d
+docker compose logs -f app
+docker compose down
+```
+
+**Kubernetes local com kind** *(valida os mesmos manifests do GKE)*
+
+```bash
+./kind/deploy-local.sh        # cria o cluster, builda a imagem e faz o deploy
+./kind/down.sh                # destrói o cluster
+```
+
+| Serviço | URL | Credenciais |
+|---|---|---|
+| Aplicação (`bootRun`) | <http://localhost:8080> | — |
+| Aplicação (perfil `full`) | <http://localhost:8090> | — |
+| Swagger UI | `<url-da-app>/swagger-ui/index.html` | via Keycloak |
+| Keycloak | <http://localhost:8081> | `admin` / `admin` |
+| PostgreSQL | `localhost:5432` | `user` / `password` |
+
+**Usuários do realm `Fiap`:** `admin`/`admin` (ADMIN), `atendente`/`atendente`
+(ATENDENTE), `mecanico`/`mecanico` (MECANICO), `clientepadrao`/`clientepadrao` (CLIENTE).
+No Swagger, clique em **Authorize**, informe o client `oficina` e faça login.
+
+**Testes**
+
+```bash
+./gradlew test                  # integração exige Docker rodando
+./gradlew jacocoTestReport      # build/reports/jacoco/test/html/index.html
+```
+
+Passo a passo completo, incluindo o Nginx e o arquivo `hosts`:
+[docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md#41-execução-local).
 
 ---
 
-### Opção 2: Executando a Aplicação Spring Boot (Desenvolvimento)
+## Deploy em Kubernetes
 
-Antes de executar a aplicação localmente, certifique-se de que o banco de dados está em execução (via Docker Compose ou instalação local).
+**Pelo pipeline** — um push em `release/*` dispara build, smoke test, promoção e deploy:
 
-```shell script
-# Inicie apenas o banco de dados com Docker
-docker-compose up -d db
-
-# Execute a aplicação usando o Gradle Wrapper
-./gradlew bootRun
-
-# No Windows, use:
-gradlew.bat bootRun
+```bash
+git checkout -b release/1.1.0
+git push -u origin release/1.1.0
 ```
 
+**Manualmente**, com `kubectl` autenticado no cluster:
 
-A aplicação estará disponível em: `http://localhost:8080`
+```bash
+gcloud container clusters get-credentials tech-challenge-staging \
+  --zone us-central1-a --project SEU_PROJECT_ID
+
+kubectl create namespace tech-challenge-staging
+# crie os secrets db-credentials, keycloak-credentials e ghcr-creds
+
+./k8s/deploy.sh ghcr.io/iuriian/tech-challenge@sha256:DIGEST staging tech-challenge-staging
+```
+
+**Verificação e rollback**
+
+```bash
+kubectl get pods,svc,pvc,hpa -n tech-challenge-staging
+kubectl rollout undo deployment/app -n tech-challenge-staging
+```
+
+Secrets, ordem de aplicação e diagnóstico de falhas:
+[docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md#42-deploy-em-kubernetes)
+· [docs/cd.md](docs/cd.md) · [k8s/README.md](k8s/README.md).
 
 ---
 
-### Opção 3: Executando com IDE (IntelliJ IDEA)
+## Provisionamento da infraestrutura com Terraform
 
-1. Importe o projeto como um projeto Gradle
-2. Aguarde a sincronização das dependências
-3. Inicie os serviços de infraestrutura: `docker-compose up -d db keycloak`
-4. Execute a classe principal da aplicação
+```bash
+gcloud auth application-default login
+
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # ajuste project_id
+terraform init
+terraform apply                                # 5 a 10 minutos
+
+terraform output github_environment_variables  # valores para o Environment do GitHub
+eval "$(terraform output -raw get_credentials_command)"
+kubectl get nodes
+```
+
+Configure em Settings → Environments → `staging`: os secrets `GCP_SA_KEY` e
+`GHCR_PAT`, e as variables `GCP_PROJECT_ID`, `GKE_CLUSTER` e `GKE_ZONE`.
+
+Para destruir o ambiente: `terraform destroy`. **Nunca versione o `.tfstate`** — ele
+grava valores sensíveis em texto puro.
+
+Detalhes: [docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md#43-provisionamento-da-infraestrutura-com-terraform)
+· [terraform/README.md](terraform/README.md).
 
 ---
 
-## 📖 Documentação da API
+## Tecnologias
 
-Após iniciar a aplicação, a documentação da API estará disponível via Swagger UI:
+| Camada | Stack |
+|---|---|
+| Backend | Kotlin 2.3 · Java 21 · Spring Boot 3.4 · Spring MVC · Spring Data JPA · Spring Security |
+| Banco | PostgreSQL 16 · Flyway (12 migrations) |
+| Autenticação | Keycloak 26.2.1 · OAuth2 / OIDC · JWT |
+| Documentação | SpringDoc OpenAPI 2.8.5 · Swagger UI |
+| Qualidade | JUnit 5 · Testcontainers · JaCoCo · Detekt · Spotless/ktlint · SonarQube |
+| Build | Gradle (Kotlin DSL) |
+| Container | Docker multi-stage · Docker Compose · GHCR |
+| Orquestração | Kubernetes · GKE · kind (local) |
+| Infraestrutura | Terraform · Google Cloud Platform |
+| CI/CD | GitHub Actions |
 
-- **Swagger UI:** `http://localhost:8080/swagger-ui.html`
-- **OpenAPI JSON:** `http://localhost:8080/v3/api-docs`
+---
 
-### Como acessar o Swagger UI autenticado
+## Documentação
 
-Para testar os endpoints protegidos, siga os passos:
-1. Acesse o [Swagger UI](http://localhost:8080/swagger-ui.html).
-2. Clique no botão **Authorize** (cadeado no topo).
-3. No campo `client_id`, utilize `oficina`.
-4. Utilize um dos usuários abaixo para realizar o login na tela do Keycloak que será exibida (ou via formulário de autorização dependendo da configuração).
+| Documento | Conteúdo |
+|---|---|
+| [docs/solucao-e-arquitetura.md](docs/solucao-e-arquitetura.md) | Documento da entrega: solução, objetivos, arquitetura e instruções |
+| [docs/versionamento.md](docs/versionamento.md) | GitFlow, convenções de commit, SemVer e versionamento da imagem |
+| [docs/ci.md](docs/ci.md) | Pipeline de integração contínua |
+| [docs/cd.md](docs/cd.md) | Pipeline de entrega, rollback e troubleshooting |
+| [docs/adr-001.md](docs/adr-001.md) | Decisão arquitetural: PostgreSQL e Flyway |
+| [docs/linguagem-ubiqua.md](docs/linguagem-ubiqua.md) | Glossário do domínio |
+| [docs/relatorio-vulnerabilidades.md](docs/relatorio-vulnerabilidades.md) | Vulnerabilidades das dependências |
+| [k8s/README.md](k8s/README.md) · [kind/README.md](kind/README.md) · [terraform/README.md](terraform/README.md) | Manifests, ambiente local e infraestrutura |
 
-### Usuários Pré-configurados (Keycloak)
-
-| Usuário         | Senha           | Perfil (Role) |
-|-----------------|-----------------|---------------|
-| `admin`         | `admin`         | ADMIN         |
-| `atendente`     | `atendente`     | ATENDENTE     |
-| `mecanico`      | `mecanico`      | MECANICO      |
-| `clientepadrao` | `clientepadrao` | CLIENTE       |
-
-## 🧪 Executando os Testes
-
-```shell script
-# Executar todos os testes
-./gradlew test
-
-# Executar testes com relatório de cobertura
-./gradlew test jacocoTestReport
-```
-
-
-O relatório de cobertura será gerado em: `build/reports/jacoco/test/html/index.html`
-
-## 📁 Estrutura do Projeto
-
-```
-Tech-Challenge/
-├── conf/                    # Arquivos de configuração
-│   ├── init-db/            # Scripts de inicialização do banco
-│   ├── nginx.conf          # Configuração do Nginx
-│   └── realm-export.json   # Configuração do Realm Keycloak
-├── src/
-│   ├── main/
-│   │   ├── kotlin/         # Código fonte Kotlin
-│   │   └── resources/      # Recursos da aplicação
-│   └── test/               # Testes automatizados
-├── build.gradle.kts        # Configuração do Gradle
-├── docker-compose.yaml     # Orquestração dos containers
-└── README.md
-```
-
+---
 
 ## 👥 Autores
 
