@@ -1,4 +1,4 @@
-package br.com.fiap.oficina.infrastructure.persistence.jpa.repository
+package br.com.fiap.oficina.infrastructure.persistence.jpa
 
 import br.com.fiap.oficina.infrastructure.persistence.jpa.entity.FuncionarioEntity
 import org.springframework.data.jpa.repository.JpaRepository
